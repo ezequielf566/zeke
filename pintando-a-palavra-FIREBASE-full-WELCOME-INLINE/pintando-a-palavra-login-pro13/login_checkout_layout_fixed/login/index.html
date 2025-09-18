@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Pintando a Palavra — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="css/reset.css" rel="stylesheet"/>
+<link href="css/style.css" rel="stylesheet"/>
+<style>
+.login-box {
+  max-width: 380px;
+  margin: 10vh auto;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(0,0,0,.06);
+  text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.login-box h2 {
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #4285F4;
+  color: #fff;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  width: 100%;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s;
+}
+.google-btn img {
+  width: 18px;
+  height: 18px;
+}
+.google-btn:hover {
+  background: #357ae8;
+}
+.keep-logged {
+  margin-top: 12px;
+  display: block;
+  font-size: 14px;
+  color: #333;
+}
+.info-text {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.4;
+}
+
+.page-title {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+.footer {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 12px;
+  color: #666;
+}
+
+.login-container {
+  text-align: center;
+  margin-top: 60px;
+}
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #333;
+}
+.footer {
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  position: fixed;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.login-box {
+  max-width: 380px;
+  margin: 5vh auto; /* move up from 10vh */
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(0,0,0,.06);
+  text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  text-align: center;
+  color: #222;
+}
+.login-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 20px 0;
+  text-align: center;
+  color: #444;
+}
+.footer {
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  position: fixed;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+}
+
+.google-icon{width:18px;height:18px;vertical-align:middle;margin-right:8px}</style><style>
+.welcome-text {
+    text-align: center;
+    font-size: 22px;
+    line-height: 1.6;
+    font-weight: bold;
+}
+</style>
+<style>
+.welcome-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px 20px;
+    margin: 20px auto;
+    max-width: 600px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    text-align: center;
+}
+.welcome-text {
+    font-size: 24px;
+    line-height: 1.8;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+}
+.welcome-btn {
+    display: inline-block;
+    background: #f28b82;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 12px 28px;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.welcome-btn:hover {
+    background: #e57373;
+}
+</style>
+</head>
+<body>
+<header class="header container">
+<div class="brand">
+<img alt="Logo" class="logo" src="images/logo.svg"/>
+<span class="brand-title">Pintando a Palavra</span>
+</div>
+</header>
+<main>
+<section class="hero container balloon-white">
+<div class="hero-text">
+<p class="welcome-text">Transforme histórias bíblicas em momentos especiais de aprendizado<br/>e diversão com seu filho através de ilustrações encantadoras.</p>
+<a class="btn salmon" href="https://pintando-a-palavra.pay.yampi.com.br/pay/INZKNQK27G">Começar Agora</a>
+</div>
+<div class="hero-art">
+<img alt="Crianças ao redor de Jesus pintando" src="images/hero-art.svg"/>
+</div>
+</section>
+<section class="benefits container">
+<div class="benefit balloon-salmon"><h3>+ 200 Ilustrações</h3><p>Biblioteca completa de desenhos bíblicos para colorir.</p></div>
+<div class="benefit balloon-salmon"><h3>Estilo Bobbie Goods</h3><p>Ilustrações encantadoras e acessíveis para crianças.</p></div>
+<div class="benefit balloon-salmon"><h3>Digital + PDF</h3><p>Colorir no app ou imprimir em casa.</p></div>
+<div class="benefit balloon-salmon"><h3>Funciona offline</h3><p>Acesso mesmo sem internet (quando instalado no celular).</p></div>
+<div class="benefit balloon-salmon"><h3>Conteúdo Bônus</h3><p>+ 100 Atividades e<br/>Devocional infantil</p></div>
+</section>
+<section class="plans container" id="planos">
+<div class="plan balloon-white highlight">
+<h3>Pacote Vitalício</h3>
+<p class="price">R$ 19,99</p>
+<ul>
+<li>Pague uma vez e tenha acesso para sempre</li>
+<li>Todas as histórias incluídas</li>
+<li>Colorir no app ou imprimir em PDF</li>
+<li>Atualizações futuras inclusas</li>
+</ul>
+<a class="btn salmon wide" href="https://pintando-a-palavra.pay.yampi.com.br/pay/INZKNQK27G">Adquirir Produto</a>
+</div>
+<div class="plan balloon-white">
+<h3>Teste Gratuito</h3>
+<p class="price">R$ 0</p>
+<ul>
+<li>Acesso limitado à versão demo</li>
+<li>Descubra a experiência</li>
+</ul>
+<a class="btn salmon wide" href="app/index.html">Abrir Demo</a>
+</div>
+</section>
+<section class="login container">
+</section>
+</main>
+<script src="js/main.js" type="module"></script>
+<div class="login-box" id="loginGoogle"><h2>Login</h2><button class="google-btn" id="googleLoginBtn"><img alt="Google Logo" src="2991148.png"/><span>Logar com o Google</span></button><label class="keep-logged"><input id="keepLogged" type="checkbox"/> Manter conectado</label><p class="info-text">Verificaremos seu acesso<br/>Caso não tenha, você será redirecionado ao checkout.</p></div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD4nZO1U5RrZt38s1sKKneRF30e8iTXIL4",
+    authDomain: "pintando-a-palavra-5f46c.firebaseapp.com",
+    projectId: "pintando-a-palavra-5f46c",
+    storageBucket: "pintando-a-palavra-5f46c.firebasestorage.app",
+    messagingSenderId: "278609879698",
+    appId: "1:278609879698:web:bec9357724db90535dfc4b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+  const db = getFirestore(app);
+
+  const MASTER_EMAIL = "ezequielf566@gmail.com";
+  const APP_REDIRECT = "../app/app/index.html";
+  const CHECKOUT_REDIRECT = "https://pintando-a-palavra.pay.yampi.com.br/pay/INZKNQK27G";
+
+  document.getElementById("googleLoginBtn").addEventListener("click", async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      if (user.email === MASTER_EMAIL) {
+        window.location.href = APP_REDIRECT;
+        return;
+      }
+
+      const docRef = doc(db, "usersByEmail", user.email.replace("@","%40"));
+      const snap = await getDoc(docRef);
+
+      if (snap.exists() && snap.data().hasAccess) {
+        window.location.href = APP_REDIRECT;
+      } else {
+        window.location.href = CHECKOUT_REDIRECT;
+      }
+    } catch (error) {
+      console.error("Erro ao logar:", error);
+      alert("Erro no login: " + error.message);
+    }
+  });
+</script>
+</body>
+</html>
