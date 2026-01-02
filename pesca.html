@@ -116,7 +116,7 @@
         <div id="hud">
             <div class="stat" style="border-color: var(--blue);">NÍVEL: <span id="lvl">1</span></div>
             <div class="stat">PONTOS: <span id="pts">0</span></div>
-            <div class="stat" id="time-box" style="border-color: #e67e22;">TEMPO: <span id="time">30</span>s</div>
+            <div class="stat" id="time-box" style="border-color: #e67e22;">TEMPO: <span id="time">60</span>s</div>
         </div>
         <div id="boat-container">
             <img src="barco.png" id="boat-img" alt="Barco">
@@ -145,11 +145,11 @@
     const line = document.getElementById('line');
     const hook = document.getElementById('hook');
     
-    let score = 0, level = 1, timeLeft = 30, active = true;
+    let score = 0, level = 1, timeLeft = 60, active = true;
     let state = 'swing', angle = 0, dir = 1, len = 60, caught = null;
     let items = [];
-    let missionActive = false; // Quando o painel está aberto
-    let inMissionMode = false; // Se existe uma missão em curso
+    let missionActive = false; 
+    let inMissionMode = false; 
 
     const types = {
         'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 0.9, name: 'Peixinhos' },
@@ -162,10 +162,9 @@
     let currentMission = null;
     let missionProgress = 0;
 
-    // Função que dispara a missão com um tempo de respiro
     function scheduleNextMission() {
-        // Respiro entre 6 a 12 segundos (diminui um pouco conforme o nível para ajudar)
-        const waitTime = Math.max(4000, (Math.random() * 8000 + 4000) - (level * 500));
+        // Intervalo equilibrado entre missões
+        const waitTime = Math.max(5000, (Math.random() * 8000 + 5000) - (level * 400));
         
         setTimeout(() => {
             if(active && !inMissionMode) {
@@ -179,10 +178,10 @@
         inMissionMode = true;
 
         const missions = [
-            { target: 'PEIXE', qty: 2 + level, bonus: 8 + level },
-            { target: 'RARO', qty: 2, bonus: 12 },
-            { target: 'TUBARAO', qty: 1, bonus: 15 },
-            { target: 'SAPATO', qty: 2, bonus: 10 }
+            { target: 'PEIXE', qty: 2 + level, bonus: 10 + level },
+            { target: 'RARO', qty: 2, bonus: 15 },
+            { target: 'TUBARAO', qty: 1, bonus: 20 },
+            { target: 'SAPATO', qty: 2, bonus: 12 }
         ];
         
         currentMission = missions[Math.floor(Math.random() * missions.length)];
@@ -201,7 +200,7 @@
                 alert.style.display = 'none'; 
                 missionActive = false; 
             }, 500);
-        }, 3000);
+        }, 3500);
     }
 
     function createPopup(txt, color, x, y) {
@@ -228,7 +227,7 @@
                 x: window.innerWidth + 100, 
                 y: 50 + Math.random() * (window.innerHeight - 300), 
                 t: t,
-                speed: (Math.random() * t.s + 1.2) + (level * 0.2), 
+                speed: (Math.random() * t.s + 1.2) + (level * 0.22), 
                 sinOff: Math.random() * 10
             };
             it.el.className = 'item';
@@ -237,7 +236,7 @@
             container.appendChild(it.el);
             items.push(it);
         }
-        setTimeout(spawn, Math.max(800, 2500 - (level * 150)));
+        setTimeout(spawn, Math.max(700, 2500 - (level * 180)));
     }
 
     function shoot() { 
@@ -255,7 +254,7 @@
         });
 
         if(state === 'swing') {
-            angle += (1.6 + (level * 0.15)) * dir;
+            angle += (1.7 + (level * 0.18)) * dir;
             if(Math.abs(angle) > 65) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
@@ -288,24 +287,20 @@
                     score += caught.t.pts;
                     document.getElementById('pts').innerText = score;
 
-                    // Lógica de Missão com Respiro
                     if(inMissionMode && caught.type === currentMission.target) {
                         missionProgress++;
                         if(missionProgress >= currentMission.qty) {
                             timeLeft += currentMission.bonus;
                             level++;
                             document.getElementById('lvl').innerText = level;
-                            createPopup("CONCLUÍDO! +" + currentMission.bonus + "s", "#2ecc71");
-                            
-                            // Finaliza missão atual e agenda a próxima
+                            createPopup("MISSÃO COMPLETA! +" + currentMission.bonus + "s", "#2ecc71");
                             inMissionMode = false;
                             currentMission = null;
                             scheduleNextMission(); 
                         } else {
-                            createPopup("MISSAO: " + missionProgress + "/" + currentMission.qty, "#f1c40f");
+                            createPopup(missionProgress + "/" + currentMission.qty, "#f1c40f");
                         }
                     } else {
-                        // Se não estiver em missão ou pegou algo diferente, mostra o ponto normal
                         createPopup(caught.t.pts > 0 ? "+" + caught.t.pts : caught.t.pts, caught.t.pts > 0 ? "#fff" : "#e74c3c");
                     }
 
@@ -330,8 +325,7 @@
         }
     }, 1000);
 
-    // Começa com um pequeno delay antes da primeira missão
-    setTimeout(scheduleNextMission, 2000);
+    setTimeout(scheduleNextMission, 3000);
     spawn();
     update();
 </script>
