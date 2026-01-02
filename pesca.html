@@ -2,295 +2,267 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pescador de Milagres - Premium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>Pescador de Milagres - Edição de Luxo</title>
     <style>
         :root {
-            --sky-top: #1a2a3a;
-            --sky-bottom: #f39c12; 
+            --sky: linear-gradient(to bottom, #1a2a3a, #f39c12);
             --gold: #f1c40f;
-            --sea-top: #4fc3f7;
-            --sea-mid: #0288d1;
-            --sea-deep: #012b4d;
-            --sun-ray: rgba(255, 255, 255, 0.1);
+            --sea: linear-gradient(to bottom, #4fc3f7 0%, #0288d1 40%, #012b4d 100%);
         }
 
+        /* RESET E ORIENTAÇÃO */
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; font-family: 'Georgia', serif;
-            background: var(--sky-top);
-            user-select: none; -webkit-user-select: none;
-            touch-action: manipulation;
+            background: #000;
         }
 
-        /* AMBIENTE: CÉU */
-        #sky {
-            position: absolute; top: 0; width: 100%; height: 180px;
-            background: linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-bottom) 100%);
+        /* AVISO DE GIRAR TELA (Para Mobile) */
+        @media screen and (orientation: portrait) {
+            #rotate-warning { display: flex !important; }
         }
 
-        .cloud {
-            position: absolute; background: white; opacity: 0.4;
-            border-radius: 50px; filter: blur(8px);
-            animation: moveClouds linear infinite;
+        #rotate-warning {
+            position: fixed; inset: 0; background: #1a2a3a; color: white;
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; z-index: 9999; text-align: center; padding: 20px;
         }
 
-        @keyframes moveClouds {
-            from { transform: translateX(-200px); }
-            to { transform: translateX(110vw); }
+        #game-canvas {
+            width: 100vw; height: 100vh;
+            position: relative; background: var(--sky);
+            display: flex; flex-direction: column;
         }
 
-        /* AMBIENTE: MAR */
-        #sea {
-            position: absolute; top: 180px; width: 100%; height: calc(100% - 180px);
-            background: linear-gradient(to bottom, var(--sea-top) 0%, var(--sea-mid) 40%, var(--sea-deep) 100%);
-            overflow: hidden;
+        /* HUD */
+        #hud {
+            position: absolute; top: 15px; width: 100%;
+            display: flex; justify-content: center; gap: 50px; z-index: 100;
+            pointer-events: none;
         }
+        .stat {
+            background: rgba(0,0,0,0.6); border: 1px solid var(--gold);
+            padding: 8px 25px; border-radius: 50px; color: white;
+            backdrop-filter: blur(5px); font-weight: bold;
+        }
+
+        /* AMBIENTE */
+        #sky-area { height: 30%; position: relative; overflow: hidden; }
+        #sea-area { height: 70%; background: var(--sea); position: relative; overflow: hidden; }
 
         .sun-rays {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-conic-gradient(from 0deg at 50% -10%, 
-                transparent 0deg 15deg, var(--sun-ray) 20deg 25deg);
-            filter: blur(25px); opacity: 0.6; pointer-events: none;
+            position: absolute; inset: 0;
+            background: repeating-conic-gradient(from 0deg at 50% -10%, transparent 0deg 15deg, rgba(255,255,255,0.08) 20deg 25deg);
+            filter: blur(20px); pointer-events: none;
         }
 
-        .waves-container { position: absolute; top: -25px; width: 100%; height: 50px; z-index: 5; }
-        .wave {
-            position: absolute; width: 200%; height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5,73.84-4.36,147.54,16.88,218.2,35.26,69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" fill="white" opacity="0.3"/></svg>');
-            background-size: 50% 100%; animation: waveFlow 12s linear infinite;
+        /* BARCO */
+        #boat {
+            position: absolute; bottom: -35px; left: 50%;
+            width: 140px; transform: translateX(-50%);
+            z-index: 50; animation: floatBoat 4s ease-in-out infinite;
         }
-        .wave2 { top: 8px; opacity: 0.2; animation-duration: 8s; animation-direction: reverse; }
-
-        @keyframes waveFlow { from { background-position-x: 0; } to { background-position-x: 1200px; } }
-
-        /* PERSONAGEM */
-        #boat-container {
-            position: absolute; top: 120px; left: 50%;
-            width: 120px; height: 80px; transform: translateX(-50%);
-            z-index: 20; animation: boatRock 4s ease-in-out infinite;
+        @keyframes floatBoat {
+            0%, 100% { transform: translateX(-50%) translateY(0) rotate(-2deg); }
+            50% { transform: translateX(-50%) translateY(-5px) rotate(2deg); }
         }
 
-        @keyframes boatRock {
-            0%, 100% { transform: translateX(-50%) rotate(-3deg); }
-            50% { transform: translateX(-50%) rotate(3deg); }
-        }
-
-        /* SISTEMA DE PESCA */
+        /* ANZOL E LINHA */
         #line {
-            position: absolute; top: 168px; left: 50%;
-            width: 2px; height: 0px; background: rgba(255,255,255,0.7);
-            transform-origin: top center; z-index: 10;
-            box-shadow: 0 0 5px rgba(255,255,255,0.5);
+            position: absolute; top: 30%; left: 50%;
+            width: 2px; height: 0; background: rgba(255,255,255,0.5);
+            transform-origin: top center; z-index: 40;
+        }
+        #hook { position: absolute; bottom: -20px; left: -12px; font-size: 25px; }
+
+        /* PEIXES E LIXOS (ITENS) */
+        .item {
+            position: absolute; z-index: 30;
+            transition: transform 0.1s;
+            user-select: none; pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
         }
 
-        #hook {
-            position: absolute; bottom: -18px; left: -12px;
-            width: 24px; height: 24px; font-size: 24px;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
-        }
-
-        /* ELEMENTOS DE JOGO */
-        .item { 
-            position: absolute; z-index: 15; cursor: pointer;
-            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3));
-        }
-
-        .ui-card {
-            background: rgba(0,0,0,0.6); border: 1px solid var(--gold);
-            padding: 12px 25px; border-radius: 20px; color: white;
-            backdrop-filter: blur(8px); box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-            font-size: 18px; font-weight: bold;
-        }
-
-        #hud {
-            position: absolute; top: 25px; width: 100%;
-            display: flex; justify-content: center; gap: 30px; z-index: 100;
+        /* ANIMAÇÃO DE FLUTUAR */
+        @keyframes swim {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, -15px); }
         }
 
         .overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.85);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
             display: none; flex-direction: column; align-items: center;
-            justify-content: center; color: white; z-index: 1000; text-align: center;
-        }
-
-        .btn-restart {
-            margin-top: 20px; padding: 15px 40px; border-radius: 50px;
-            border: none; background: var(--gold); color: black;
-            font-weight: bold; font-size: 18px; cursor: pointer;
+            justify-content: center; color: white; z-index: 2000;
         }
     </style>
 </head>
-<body onclick="handleAction()">
+<body onclick="tentaLancar()">
 
-    <div id="sky">
-        <div class="cloud" style="width:120px; height:45px; top:40px; left:-10%; animation-duration: 25s;"></div>
-        <div class="cloud" style="width:180px; height:60px; top:70px; left:30%; animation-duration: 40s;"></div>
+    <div id="rotate-warning">
+        <div style="font-size: 50px;">🔄</div>
+        <h2>Por favor, gire o celular</h2>
+        <p>Este jogo é melhor aproveitado no modo deitado (paisagem).</p>
     </div>
 
-    <div id="hud">
-        <div class="ui-card">PONTOS: <span id="score" style="color:var(--gold)">0</span></div>
-        <div class="ui-card">TEMPO: <span id="timer">60</span>s</div>
-    </div>
-
-    <div id="boat-container">
-        <svg viewBox="0 0 100 60">
-            <path d="M5,35 L95,35 L85,55 L15,55 Z" fill="#5d4037" /> <path d="M15,35 L85,35 L75,42 L25,42 Z" fill="#795548" /> <circle cx="45" cy="22" r="7" fill="#ffdbac" /> <path d="M40,29 Q45,36 50,29 L53,42 L37,42 Z" fill="#2980b9" /> <line x1="52" y1="32" x2="90" y2="5" stroke="#222" stroke-width="3" /> </svg>
-    </div>
-
-    <div id="line">
-        <div id="hook">🪝</div>
-    </div>
-
-    <div id="sea">
-        <div class="sun-rays"></div>
-        <div class="waves-container">
-            <div class="wave"></div>
-            <div class="wave wave2"></div>
+    <div id="game-canvas">
+        <div id="hud">
+            <div class="stat">PONTOS: <span id="score" style="color:var(--gold)">0</span></div>
+            <div class="stat">TEMPO: <span id="timer">60</span>s</div>
         </div>
-        <div id="items-container"></div>
+
+        <div id="sky-area"></div>
+
+        <div id="sea-area">
+            <div class="sun-rays"></div>
+            <div id="items-container"></div>
+            
+            <div id="boat">
+                <svg viewBox="0 0 100 60">
+                    <path d="M5,35 L95,35 L85,55 L15,55 Z" fill="#5d4037" />
+                    <circle cx="45" cy="22" r="7" fill="#ffdbac" />
+                    <line x1="52" y1="32" x2="95" y2="5" stroke="#222" stroke-width="3" />
+                </svg>
+            </div>
+        </div>
+
+        <div id="line">
+            <div id="hook">🪝</div>
+        </div>
     </div>
 
     <div id="game-over" class="overlay">
-        <h1 style="color: var(--gold); font-size: 40px; margin: 0;">PESCARIA CONCLUÍDA!</h1>
-        <p id="final-score" style="font-size: 28px; margin: 20px;"></p>
-        <button class="btn-restart" onclick="location.reload()">NOVA PESCARIA</button>
+        <h1 style="color:var(--gold)">PESCARIA FINALIZADA</h1>
+        <p id="result-text" style="font-size: 20px;"></p>
+        <button onclick="location.reload()" style="padding: 15px 40px; border-radius: 50px; background:var(--gold); border:none; font-weight:bold; cursor:pointer;">JOGAR NOVAMENTE</button>
     </div>
 
-    <script>
-        const itemsContainer = document.getElementById('items-container');
-        const line = document.getElementById('line');
-        const scoreDisplay = document.getElementById('score');
-        const timerDisplay = document.getElementById('timer');
-        const gameOverScreen = document.getElementById('game-over');
+<script>
+    const itemsContainer = document.getElementById('items-container');
+    const line = document.getElementById('line');
+    const hook = document.getElementById('hook');
+    const scoreText = document.getElementById('score');
+    const timerText = document.getElementById('timer');
 
-        let score = 0;
-        let timeLeft = 60;
-        let gameActive = true;
-        let hookState = 'swinging'; // swinging, launching, retracting
-        let angle = 0;
-        let angleDir = 1;
-        let lineLength = 0;
-        let maxLineLength = window.innerHeight - 250;
-        let currentItem = null;
+    let score = 0, timeLeft = 60, gameActive = true;
+    let state = 'swing', angle = 0, dir = 1, len = 0;
+    let currentCaught = null;
 
-        const fishTypes = [
-            { icon: '🐟', points: 10, weight: 1 },
-            { icon: '🐠', points: 20, weight: 0.8 },
-            { icon: '🐡', points: 30, weight: 1.5 },
-            { icon: '🦈', points: 100, weight: 3.5 },
-            { icon: '🍱', points: 50, weight: 1.2 },
-            { icon: '👞', points: 0, weight: 2 } // Obstáculo: Bota velha
-        ];
+    const types = [
+        { ico: '🐟', pts: 10, w: 1, v: 0.02 }, 
+        { ico: '🐠', pts: 25, w: 0.8, v: 0.04 },
+        { ico: '🐡', pts: 40, w: 1.5, v: 0.015 },
+        { ico: '🦈', pts: 120, w: 4, v: 0.01 },
+        { ico: '👞', pts: -5, w: 2.5, v: 0.005 }, // Lixo subtrai pontos
+        { ico: '🥫', pts: -2, w: 1.2, v: 0.008 }  // Lixo
+    ];
 
-        function spawnItems() {
-            itemsContainer.innerHTML = '';
-            for (let i = 0; i < 15; i++) {
-                const item = document.createElement('div');
-                const type = fishTypes[Math.floor(Math.random() * fishTypes.length)];
-                item.className = 'item';
-                item.innerHTML = type.icon;
-                item.dataset.points = type.points;
-                item.dataset.weight = type.weight;
-                
-                // Distribuição aleatória no mar
-                item.style.left = (Math.random() * 85 + 5) + '%';
-                item.style.top = (Math.random() * 75 + 10) + '%';
-                item.style.fontSize = (25 + (type.weight * 15)) + 'px';
-                
-                itemsContainer.appendChild(item);
-            }
+    let items = [];
+
+    function createItems() {
+        for(let i=0; i<15; i++) {
+            const t = types[Math.floor(Math.random()*types.length)];
+            const obj = {
+                x: Math.random() * 90,
+                y: Math.random() * 80,
+                t: t,
+                off: Math.random() * 100, // Offset para animação individual
+                el: document.createElement('div')
+            };
+            obj.el.className = 'item';
+            obj.el.innerHTML = t.ico;
+            obj.el.style.fontSize = (25 + t.w * 10) + 'px';
+            itemsContainer.appendChild(obj.el);
+            items.push(obj);
         }
+    }
 
-        function handleAction() {
-            if (hookState === 'swinging' && gameActive) {
-                hookState = 'launching';
-            }
-        }
+    function tentaLancar() {
+        if(state === 'swing' && gameActive) state = 'launch';
+    }
 
-        function update() {
-            if (!gameActive) return;
+    function loop() {
+        if(!gameActive) return;
 
-            if (hookState === 'swinging') {
-                angle += 1.8 * angleDir;
-                if (Math.abs(angle) > 75) angleDir *= -1;
-                line.style.transform = `rotate(${angle}deg)`;
-            } 
-            else if (hookState === 'launching') {
-                lineLength += 8;
-                line.style.height = lineLength + 'px';
-                checkCollision();
-                if (lineLength > maxLineLength) hookState = 'retracting';
-            } 
-            else if (hookState === 'retracting') {
-                let speed = 6;
-                if (currentItem) speed = Math.max(1.5, 6 / currentItem.dataset.weight);
-                
-                lineLength -= speed;
-                line.style.height = lineLength + 'px';
+        // 1. Animar itens no mar (Flutuação senoidal)
+        const time = Date.now() * 0.002;
+        items.forEach(it => {
+            if(it === currentCaught) return;
+            // Movimento de "nado" lateral e vertical
+            const shiftX = Math.sin(time + it.off) * 20;
+            const shiftY = Math.cos(time * 0.5 + it.off) * 10;
+            it.el.style.left = `calc(${it.x}% + ${shiftX}px)`;
+            it.el.style.top = `calc(${it.y}% + ${shiftY}px)`;
+        });
 
-                if (currentItem) {
-                    const hookElem = document.getElementById('hook');
-                    currentItem.style.position = 'absolute';
-                    currentItem.style.top = '10px';
-                    currentItem.style.left = '-5px';
-                    hookElem.appendChild(currentItem);
-                }
-
-                if (lineLength <= 0) {
-                    lineLength = 0;
-                    hookState = 'swinging';
-                    if (currentItem) {
-                        score += parseInt(currentItem.dataset.points);
-                        scoreDisplay.innerText = score;
-                        currentItem.remove();
-                        currentItem = null;
-                        // Repovoar se estiver vazio
-                        if (itemsContainer.children.length < 5) spawnItems();
+        // 2. Lógica do Anzol
+        if(state === 'swing') {
+            angle += 1.8 * dir;
+            if(Math.abs(angle) > 75) dir *= -1;
+            line.style.transform = `rotate(${angle}deg)`;
+        } 
+        else if(state === 'launch') {
+            len += 10;
+            line.style.height = len + 'px';
+            
+            // Colisão
+            const hRect = hook.getBoundingClientRect();
+            items.forEach(it => {
+                if(!currentCaught) {
+                    const iRect = it.el.getBoundingClientRect();
+                    if(hRect.left < iRect.right && hRect.right > iRect.left && hRect.top < iRect.bottom && hRect.bottom > iRect.top) {
+                        currentCaught = it;
+                        state = 'back';
                     }
                 }
-            }
-            requestAnimationFrame(update);
+            });
+
+            if(len > window.innerHeight) state = 'back';
         }
+        else if(state === 'back') {
+            let speed = 8;
+            if(currentCaught) speed = Math.max(2, 8 / currentCaught.t.w);
+            len -= speed;
+            line.style.height = len + 'px';
 
-        function checkCollision() {
-            const hookRect = document.getElementById('hook').getBoundingClientRect();
-            const items = document.querySelectorAll('.item');
+            if(currentCaught) {
+                currentCaught.el.style.top = '100%';
+                currentCaught.el.style.left = '50%';
+                currentCaught.el.style.transform = 'translate(-50%, -50%)';
+                hook.appendChild(currentCaught.el);
+            }
 
-            for (let item of items) {
-                if (currentItem) break;
-                const itemRect = item.getBoundingClientRect();
-                
-                // Colisão simples por proximidade
-                if (hookRect.left < itemRect.right && hookRect.right > itemRect.left &&
-                    hookRect.top < itemRect.bottom && hookRect.bottom > itemRect.top) {
-                    currentItem = item;
-                    hookState = 'retracting';
+            if(len <= 0) {
+                len = 0;
+                state = 'swing';
+                if(currentCaught) {
+                    score += currentCaught.t.pts;
+                    scoreText.innerText = score;
+                    currentCaught.el.remove();
+                    items = items.filter(i => i !== currentCaught);
+                    currentCaught = null;
+                    if(items.length < 8) createItems();
                 }
             }
         }
 
-        // Cronômetro do Jogo
-        const gameTimer = setInterval(() => {
-            if (!gameActive) return;
-            timeLeft--;
-            timerDisplay.innerText = timeLeft;
-            if (timeLeft <= 0) {
-                endGame();
-            }
-        }, 1000);
+        requestAnimationFrame(loop);
+    }
 
-        function endGame() {
+    // Timer
+    const clock = setInterval(() => {
+        if(!gameActive) return;
+        timeLeft--;
+        timerText.innerText = timeLeft;
+        if(timeLeft <= 0) {
             gameActive = false;
-            clearInterval(gameTimer);
-            document.getElementById('final-score').innerText = `Você coletou ${score} pontos de milagres!`;
-            gameOverScreen.style.display = 'flex';
+            document.getElementById('game-over').style.display = 'flex';
+            document.getElementById('result-text').innerText = `Você salvou o rio e fez ${score} pontos!`;
         }
+    }, 1000);
 
-        // Inicialização
-        spawnItems();
-        update();
-
-    </script>
+    createItems();
+    loop();
+</script>
 </body>
 </html>
