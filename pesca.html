@@ -3,272 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pescador de Milagres - Versão Final</title>
+    <title>Pescador de Milagres - Premium</title>
     <style>
         :root {
             --gold: #f1c40f;
-            --sky: linear-gradient(to bottom, #1a2a3a, #f39c12);
-            --sea: linear-gradient(to bottom, #4fc3f7 0%, #0288d1 40%, #012b4d 100%);
+            --sky-top: #2c3e50;
+            --sky-bottom: #ff7e5f;
+            --sea-top: #4fc3f7;
+            --sea-deep: #012b4d;
         }
 
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; font-family: 'Georgia', serif; background: #000;
-            user-select: none; -webkit-user-select: none; touch-action: manipulation;
+            overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--sky-top);
+            user-select: none; touch-action: manipulation;
         }
 
-        #game-container {
-            width: 100vw; height: 100vh;
-            background: var(--sky);
-            display: flex; flex-direction: column; position: relative;
+        /* CÉU ESTILIZADO */
+        #sky {
+            position: absolute; top: 0; width: 100%; height: 200px;
+            background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
+            overflow: hidden;
         }
 
-        /* HUD - Interface */
-        #hud {
-            position: absolute; top: 15px; width: 100%;
-            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; z-index: 100;
-        }
-        .stat {
-            background: rgba(0,0,0,0.7); border: 1px solid var(--gold);
-            padding: 6px 15px; border-radius: 20px; color: white; 
-            font-size: 14px; backdrop-filter: blur(5px); font-weight: bold;
+        .sun {
+            position: absolute; bottom: -30px; left: 70%;
+            width: 80px; height: 80px; background: #feb47b;
+            border-radius: 50%; box-shadow: 0 0 40px rgba(254, 180, 123, 0.5);
         }
 
-        /* AMBIENTE MARINHO */
-        #sea-area {
-            position: absolute; top: 180px; width: 100%; height: calc(100% - 180px);
-            background: var(--sea); overflow: hidden;
+        .cloud {
+            position: absolute; background: white; opacity: 0.3;
+            border-radius: 50px; filter: blur(5px);
+            animation: moveClouds linear infinite;
+        }
+
+        @keyframes moveClouds {
+            from { transform: translateX(-150px); }
+            to { transform: translateX(110vw); }
+        }
+
+        /* MAR PROFISSIONAL */
+        #sea {
+            position: absolute; top: 200px; width: 100%; height: calc(100% - 200px);
+            background: linear-gradient(to bottom, var(--sea-top), var(--sea-deep));
+            overflow: hidden;
         }
 
         .sun-rays {
             position: absolute; inset: 0;
-            background: repeating-conic-gradient(from 0deg at 50% -10%, transparent 0deg 15deg, rgba(255,255,255,0.08) 20deg 25deg);
-            filter: blur(20px); pointer-events: none;
+            background: repeating-conic-gradient(from 0deg at 50% -10%, transparent 0deg 15deg, rgba(255,255,255,0.05) 20deg 25deg);
+            filter: blur(15px); pointer-events: none;
         }
 
-        /* BARCO COM FLUTUAÇÃO REALISTA */
-        #boat {
-            position: absolute; top: 125px; left: 50%;
-            width: 110px; z-index: 50;
-            animation: boatSway 5s ease-in-out infinite;
+        /* BARCO E PESCADOR */
+        #boat-container {
+            position: absolute; top: 140px; left: 50%;
+            width: 120px; z-index: 100;
+            animation: boatRock 4s ease-in-out infinite;
         }
 
-        @keyframes boatSway {
-            0%, 100% { transform: translateX(-58%) translateY(0px) rotate(-3deg); }
-            50% { transform: translateX(-42%) translateY(-6px) rotate(3deg); }
+        @keyframes boatRock {
+            0%, 100% { transform: translateX(-55%) translateY(0) rotate(-2deg); }
+            50% { transform: translateX(-45%) translateY(-5px) rotate(2deg); }
         }
 
-        /* ANZOL E LINHA */
+        /* HUD */
+        #hud {
+            position: absolute; top: 20px; width: 100%;
+            display: flex; justify-content: center; gap: 15px; z-index: 200;
+        }
+        .stat {
+            background: rgba(0,0,0,0.5); border: 1px solid var(--gold);
+            padding: 8px 15px; border-radius: 15px; color: white;
+            backdrop-filter: blur(5px); font-weight: bold; font-size: 14px;
+        }
+
+        /* MECÂNICA DE PESCA */
         #line {
-            position: absolute; top: 165px; left: 50%;
-            width: 2px; height: 0; background: rgba(255,255,255,0.6);
-            transform-origin: top center; z-index: 45;
-            /* O anzol segue o balanço do barco suavemente */
-            animation: lineSway 5s ease-in-out infinite;
+            position: absolute; top: 185px; left: 50%;
+            width: 2px; height: 0; background: rgba(255,255,255,0.7);
+            transform-origin: top center; z-index: 50;
         }
+        #hook { position: absolute; bottom: -20px; left: -10px; font-size: 22px; }
 
-        @keyframes lineSway {
-            0%, 100% { transform: translateX(-8px) rotate(0deg); }
-            50% { transform: translateX(8px) rotate(0deg); }
-        }
-
-        #hook { position: absolute; bottom: -22px; left: -11px; font-size: 22px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-
-        /* OBJETOS DA CORRENTEZA */
+        /* ITENS DO MAR */
         .item {
-            position: absolute; white-space: nowrap;
-            user-select: none; pointer-events: none; z-index: 30;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+            position: absolute; z-index: 40; transition: transform 0.1s;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
         }
 
-        /* TELAS DE OVERLAY */
         .overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
             display: none; flex-direction: column; align-items: center;
-            justify-content: center; color: white; z-index: 2000; text-align: center;
-        }
-
-        .btn {
-            margin-top: 25px; padding: 15px 40px; border-radius: 50px;
-            background: var(--gold); border: none; font-weight: bold;
-            font-size: 18px; cursor: pointer; color: #000;
+            justify-content: center; color: white; z-index: 1000;
         }
     </style>
 </head>
-<body onclick="lancarAnzol()">
+<body onclick="shoot()">
 
-    <div id="game-container">
-        <div id="hud">
-            <div class="stat">NÍVEL: <span id="level">1</span></div>
-            <div class="stat">PONTOS: <span id="score">0</span> / <span id="goal">100</span></div>
-            <div class="stat">TEMPO: <span id="timer">60</span>s</div>
-        </div>
-
-        <div id="boat">
-            <svg viewBox="0 0 100 60">
-                <path d="M5,35 L95,35 L85,55 L15,55 Z" fill="#5d4037" />
-                <path d="M15,35 L85,35 L75,42 L25,42 Z" fill="#795548" />
-                <circle cx="45" cy="22" r="7" fill="#ffdbac" />
-                <line x1="52" y1="32" x2="90" y2="5" stroke="#222" stroke-width="3" />
-            </svg>
-        </div>
-
-        <div id="sea-area">
-            <div class="sun-rays"></div>
-            <div id="items-container"></div>
-        </div>
-
-        <div id="line"><div id="hook">🪝</div></div>
+    <div id="sky">
+        <div class="sun"></div>
+        <div class="cloud" style="width:100px; height:30px; top:40px; left:10%; animation-duration: 25s;"></div>
+        <div class="cloud" style="width:140px; height:40px; top:80px; left:40%; animation-duration: 40s;"></div>
     </div>
 
+    <div id="hud">
+        <div class="stat">NÍVEL: <span id="lvl">1</span></div>
+        <div class="stat">PONTOS: <span id="pts">0</span></div>
+        <div class="stat">TEMPO: <span id="time">60</span>s</div>
+    </div>
+
+    <div id="boat-container">
+        <svg viewBox="0 0 100 60">
+            <path d="M5,35 L95,35 L85,55 L15,55 Z" fill="#5d4037" />
+            <path d="M15,35 L85,35 L75,42 L25,42 Z" fill="#795548" />
+            <circle cx="45" cy="22" r="7" fill="#ffdbac" />
+            <line x1="52" y1="32" x2="90" y2="5" stroke="#222" stroke-width="2.5" />
+        </svg>
+    </div>
+
+    <div id="sea">
+        <div class="sun-rays"></div>
+        <div id="container"></div>
+    </div>
+
+    <div id="line"><div id="hook">🪝</div></div>
+
     <div id="game-over" class="overlay">
-        <h1 id="status-title" style="color:var(--gold); font-size: 32px;">PESCARIA ENCERRADA</h1>
-        <p id="result-msg" style="font-size: 20px; padding: 0 20px;"></p>
-        <button class="btn" onclick="location.reload()">RECOMEÇAR</button>
+        <h1 style="color:var(--gold)">FIM DA PESCARIA</h1>
+        <p id="final-pts" style="font-size: 24px"></p>
+        <button onclick="location.reload()" style="padding: 15px 40px; border-radius: 50px; background:var(--gold); border:none; font-weight:bold; cursor:pointer">RECOMEÇAR</button>
     </div>
 
 <script>
-    const itemsContainer = document.getElementById('items-container');
+    const container = document.getElementById('container');
     const line = document.getElementById('line');
     const hook = document.getElementById('hook');
     
-    let score = 0, level = 1, goal = 100, timeLeft = 60;
-    let gameActive = true, state = 'swing', angle = 0, dir = 1, len = 0;
-    let currentCaught = null;
-    let activeItems = [];
+    let score = 0, level = 1, timeLeft = 60, active = true;
+    let state = 'swing', angle = 0, dir = 1, len = 0, caught = null;
+    let items = [];
 
     const types = [
-        { ico: '🐟', pts: 10, w: 1, speed: 1.8 }, 
-        { ico: '🐠', pts: 25, w: 0.8, speed: 3 },
-        { ico: '🐡', pts: 40, w: 1.5, speed: 1.2 },
-        { ico: '🦈', pts: 120, w: 4, speed: 0.8 },
-        { ico: '👞', pts: -20, w: 2.5, speed: 2 }, 
-        { ico: '🥫', pts: -15, w: 1.5, speed: 2.5 }
+        { ico: '🐟', pts: 10, w: 1, s: 2 },
+        { ico: '🐠', pts: 20, w: 0.8, s: 3 },
+        { ico: '🐡', pts: 35, w: 1.5, s: 1.5 },
+        { ico: '🦈', pts: 100, w: 4, s: 1 },
+        { ico: '👞', pts: -15, w: 2, s: 2.5 },
+        { ico: '🥫', pts: -10, w: 1.2, s: 3 }
     ];
 
-    function spawnItem() {
-        if(!gameActive) return;
-        const t = types[Math.floor(Math.random() * types.length)];
-        const item = {
+    function spawn() {
+        if(!active) return;
+        const t = types[Math.floor(Math.random()*types.length)];
+        const it = {
             el: document.createElement('div'),
             x: window.innerWidth + 50,
-            y: Math.random() * (itemsContainer.offsetHeight - 80),
+            y: Math.random() * (container.offsetHeight - 60),
             t: t,
-            speed: (Math.random() * 0.5 + t.speed) + (level * 0.4)
+            speed: (Math.random() * t.s + (level * 0.5)),
+            sinOff: Math.random() * 10
         };
-        item.el.className = 'item';
-        item.el.innerHTML = t.ico;
-        item.el.style.fontSize = (24 + t.w * 8) + 'px';
-        item.el.style.top = item.y + 'px';
-        itemsContainer.appendChild(item.el);
-        activeItems.push(item);
+        it.el.className = 'item';
+        it.el.innerHTML = t.ico;
+        it.el.style.fontSize = (25 + t.w * 8) + 'px';
+        container.appendChild(it.el);
+        items.push(it);
         
-        // Intervalo de spawn diminui conforme o nível aumenta
-        setTimeout(spawnItem, Math.max(400, 1600 - (level * 150)));
+        setTimeout(spawn, Math.max(300, 1500 - (level * 200)));
     }
 
-    function lancarAnzol() {
-        if(state === 'swing' && gameActive) state = 'launch';
+    function shoot() {
+        if(state === 'swing' && active) state = 'launch';
     }
 
-    function loop() {
-        if(!gameActive) return;
+    function update() {
+        if(!active) return;
 
-        // 1. Mover objetos (Correnteza)
-        activeItems.forEach((it, index) => {
-            if(it === currentCaught) return;
+        // Movimento Senoidal e Correnteza Total
+        items.forEach((it, i) => {
+            if(it === caught) return;
             it.x -= it.speed;
+            // Efeito de ondulação suave na vertical
+            const yVar = Math.sin(it.x * 0.02 + it.sinOff) * 2;
             it.el.style.left = it.x + 'px';
+            it.el.style.top = (it.y + yVar) + 'px';
 
             if(it.x < -100) {
                 it.el.remove();
-                activeItems.splice(index, 1);
+                items.splice(i, 1);
             }
         });
 
-        // 2. Lógica do Anzol (Pêndulo e Lançamento)
+        // Pêndulo e Pesca
         if(state === 'swing') {
-            angle += (1.4 + (level * 0.2)) * dir;
+            angle += (1.5 + (level * 0.2)) * dir;
             if(Math.abs(angle) > 75) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
-        } 
-        else if(state === 'launch') {
+        } else if(state === 'launch') {
             len += 12;
             line.style.height = len + 'px';
             
-            // Detecção de colisão
             const hRect = hook.getBoundingClientRect();
-            activeItems.forEach(it => {
-                if(!currentCaught) {
+            items.forEach(it => {
+                if(!caught) {
                     const iRect = it.el.getBoundingClientRect();
                     if(hRect.left < iRect.right && hRect.right > iRect.left && hRect.top < iRect.bottom && hRect.bottom > iRect.top) {
-                        currentCaught = it;
+                        caught = it;
                         state = 'back';
                     }
                 }
             });
-
-            if(len > window.innerHeight - 220) state = 'back';
-        }
-        else if(state === 'back') {
-            let speedRetract = 10;
-            if(currentCaught) speedRetract = Math.max(1.5, 10 / currentCaught.t.w);
-            len -= speedRetract;
+            if(len > window.innerHeight - 200) state = 'back';
+        } else if(state === 'back') {
+            let s = 10;
+            if(caught) s = Math.max(1.5, 10 / caught.t.w);
+            len -= s;
             line.style.height = len + 'px';
 
-            if(currentCaught) {
-                currentCaught.el.style.top = '100%';
-                currentCaught.el.style.left = '50%';
-                currentCaught.el.style.transform = 'translate(-50%, -50%)';
-                hook.appendChild(currentCaught.el);
+            if(caught) {
+                caught.el.style.top = '100%';
+                caught.el.style.left = '50%';
+                caught.el.style.transform = 'translate(-50%, -50%)';
+                hook.appendChild(caught.el);
             }
 
             if(len <= 0) {
                 len = 0; state = 'swing';
-                if(currentCaught) {
-                    score += currentCaught.t.pts;
+                if(caught) {
+                    score += caught.t.pts;
                     if(score < 0) score = 0;
-                    document.getElementById('score').innerText = score;
-                    currentCaught.el.remove();
-                    activeItems = activeItems.filter(i => i !== currentCaught);
-                    currentCaught = null;
-                    checkLevel();
+                    document.getElementById('pts').innerText = score;
+                    caught.el.remove();
+                    items = items.filter(i => i !== caught);
+                    caught = null;
+                    if(score >= level * 200) {
+                        level++;
+                        document.getElementById('lvl').innerText = level;
+                        timeLeft += 10;
+                    }
                 }
             }
         }
-        requestAnimationFrame(loop);
+        requestAnimationFrame(update);
     }
 
-    function checkLevel() {
-        if(score >= goal) {
-            level++;
-            goal += 150 + (level * 50);
-            timeLeft += 20; // Recompensa de tempo
-            document.getElementById('level').innerText = level;
-            document.getElementById('goal').innerText = goal;
-            
-            // Efeito visual de mudança de profundidade
-            document.getElementById('sea-area').style.filter = `hue-rotate(${level * 15}deg) brightness(${1 - level*0.05})`;
-        }
-    }
-
-    const clock = setInterval(() => {
-        if(!gameActive) return;
+    const timer = setInterval(() => {
+        if(!active) return;
         timeLeft--;
-        document.getElementById('timer').innerText = timeLeft;
-        if(timeLeft <= 0) endGame();
+        document.getElementById('time').innerText = timeLeft;
+        if(timeLeft <= 0) {
+            active = false;
+            clearInterval(timer);
+            document.getElementById('game-over').style.display = 'flex';
+            document.getElementById('final-pts').innerText = score + " Pontos";
+        }
     }, 1000);
 
-    function endGame() {
-        gameActive = false;
-        clearInterval(clock);
-        document.getElementById('game-over').style.display = 'flex';
-        document.getElementById('result-msg').innerText = `Excelente! Você atingiu o Nível ${level} com uma pontuação de ${score}.`;
-    }
-
-    // Início
-    spawnItem();
-    loop();
+    spawn();
+    update();
 </script>
 </body>
 </html>
