@@ -22,7 +22,6 @@
 
         #game-container { position: relative; width: 100%; height: 100%; }
 
-        /* CÉU */
         #sky {
             position: absolute; top: 0; width: 100%; height: 200px;
             background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
@@ -34,7 +33,6 @@
             border-radius: 50%; box-shadow: 0 0 50px rgba(254, 180, 123, 0.6);
         }
 
-        /* MAR PROFUNDO */
         #sea {
             position: absolute; top: 200px; width: 100%; height: calc(100% - 200px);
             background: linear-gradient(to bottom, var(--sea-top), var(--sea-deep));
@@ -43,11 +41,10 @@
 
         #container { position: relative; width: 100%; height: 100%; }
 
-        /* BARCO */
         #boat-container {
             position: absolute; top: 140px; left: 50%;
             width: 120px; z-index: 100;
-            animation: boatRock 4s ease-in-out infinite;
+            animation: boatRock 5s ease-in-out infinite;
         }
 
         @keyframes boatRock {
@@ -57,25 +54,26 @@
 
         #hud {
             position: absolute; top: 20px; width: 100%;
-            display: flex; justify-content: center; gap: 10px; z-index: 200;
+            display: flex; justify-content: center; gap: 8px; z-index: 200;
         }
         .stat {
             background: rgba(0,0,0,0.6); border: 1px solid var(--gold);
-            padding: 8px 12px; border-radius: 12px; color: white;
-            font-weight: bold; font-size: 13px; min-width: 80px; text-align: center;
+            padding: 8px 10px; border-radius: 12px; color: white;
+            font-weight: bold; font-size: 12px; min-width: 75px; text-align: center;
         }
 
         #line {
             position: absolute; top: 185px; left: 50%;
-            width: 2px; height: 0; background: white;
+            width: 2px; height: 0; background: rgba(255,255,255,0.8);
             transform-origin: top center; z-index: 50;
         }
         #hook { position: absolute; bottom: -22px; left: -11px; font-size: 22px; }
 
         .item {
             position: absolute; z-index: 40;
-            left: 0; top: 0; /* Posicionamento base zero para o transform controlar tudo */
+            left: 0; top: 0;
             will-change: transform;
+            pointer-events: none;
         }
 
         .overlay {
@@ -88,9 +86,7 @@
 <body onclick="shoot()">
 
     <div id="game-container">
-        <div id="sky">
-            <div class="sun"></div>
-        </div>
+        <div id="sky"><div class="sun"></div></div>
 
         <div id="hud">
             <div class="stat">NÍVEL: <span id="lvl">1</span></div>
@@ -106,9 +102,7 @@
             </svg>
         </div>
 
-        <div id="sea">
-            <div id="container"></div>
-        </div>
+        <div id="sea"><div id="container"></div></div>
 
         <div id="line"><div id="hook">🪝</div></div>
     </div>
@@ -116,7 +110,7 @@
     <div id="game-over" class="overlay">
         <h1 style="color:var(--gold)">FIM DA PESCARIA</h1>
         <p id="final-pts" style="font-size: 24px"></p>
-        <button onclick="location.reload()" style="padding: 15px 40px; border-radius: 50px; background:var(--gold); border:none; font-weight:bold;">RECOMEÇAR</button>
+        <button onclick="location.reload()" style="padding: 15px 40px; border-radius: 50px; background:var(--gold); border:none; font-weight:bold; cursor:pointer;">JOGAR NOVAMENTE</button>
     </div>
 
 <script>
@@ -129,38 +123,44 @@
     let items = [];
 
     const types = [
-        { ico: '🐟', pts: 10, w: 1, s: 2 },
-        { ico: '🐠', pts: 20, w: 0.8, s: 3 },
-        { ico: '🐡', pts: 35, w: 1.5, s: 1.5 },
-        { ico: '🦈', pts: 100, w: 4, s: 1 },
-        { ico: '👞', pts: -15, w: 2, s: 2.5 },
-        { ico: '🥫', pts: -10, w: 1.2, s: 3 }
+        { ico: '🐟', pts: 10, w: 1, s: 1.2 },
+        { ico: '🐠', pts: 20, w: 0.8, s: 1.8 },
+        { ico: '🐡', pts: 35, w: 1.5, s: 1.0 },
+        { ico: '🦈', pts: 120, w: 4, s: 0.6 },
+        { ico: '👞', pts: -15, w: 2, s: 1.5 },
+        { ico: '🥫', pts: -10, w: 1.2, s: 1.8 },
+        { ico: '🦴', pts: -5, w: 1, s: 1.4 }
     ];
 
     function spawn() {
         if(!active) return;
 
         const seaRect = container.getBoundingClientRect();
-        const t = types[Math.floor(Math.random()*types.length)];
         
-        const it = {
-            el: document.createElement('div'),
-            x: window.innerWidth + 100, // Começa 100px fora da tela à direita
-            y: Math.random() * (seaRect.height - 60), 
-            t: t,
-            speed: (Math.random() * t.s + 1.5) + (level * 0.4),
-            sinOff: Math.random() * 10
-        };
+        // CORREÇÃO: Cria de 1 a 3 peixes de uma vez para abundância
+        const batch = Math.floor(Math.random() * 2) + 1;
+        
+        for(let i=0; i<batch; i++) {
+            const t = types[Math.floor(Math.random()*types.length)];
+            const it = {
+                el: document.createElement('div'),
+                x: window.innerWidth + (Math.random() * 200 + 50), 
+                y: Math.random() * (seaRect.height - 60), 
+                t: t,
+                speed: (Math.random() * t.s + 0.8) + (level * 0.3), // Mais lento no começo
+                sinOff: Math.random() * 10
+            };
 
-        it.el.className = 'item';
-        it.el.innerHTML = t.ico;
-        it.el.style.fontSize = (25 + t.w * 8) + 'px';
+            it.el.className = 'item';
+            it.el.innerHTML = t.ico;
+            it.el.style.fontSize = (22 + t.w * 8) + 'px';
+            
+            container.appendChild(it.el);
+            items.push(it);
+        }
         
-        container.appendChild(it.el);
-        items.push(it);
-        
-        // Tempo de spawn aleatório para não criar padrões retos
-        setTimeout(spawn, Math.max(300, (1500 + Math.random() * 1000) - (level * 150)));
+        // Spawn muito mais frequente (400ms a 900ms)
+        setTimeout(spawn, Math.max(250, 700 - (level * 80)));
     }
 
     function shoot() {
@@ -172,17 +172,10 @@
 
         items.forEach((it, i) => {
             if(it === caught) return;
-            
-            // Movimentação horizontal (da direita para esquerda)
             it.x -= it.speed;
-            
-            // Movimento suave de onda (Seno)
-            const yVar = Math.sin(it.x * 0.02 + it.sinOff) * 15;
-            
-            // Aplicando a posição final
+            const yVar = Math.sin(it.x * 0.02 + it.sinOff) * 12;
             it.el.style.transform = `translate(${it.x}px, ${it.y + yVar}px)`;
 
-            // Remove se atravessar toda a tela
             if(it.x < -150) {
                 it.el.remove();
                 items.splice(i, 1);
@@ -190,19 +183,18 @@
         });
 
         if(state === 'swing') {
-            angle += (1.6 + (level * 0.2)) * dir;
+            angle += (1.2 + (level * 0.15)) * dir; // Balanço mais calmo no Nv 1
             if(Math.abs(angle) > 75) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
         else if(state === 'launch') {
-            len += 15;
+            len += 16;
             line.style.height = len + 'px';
             
             const hRect = hook.getBoundingClientRect();
             items.forEach(it => {
                 if(!caught) {
                     const iRect = it.el.getBoundingClientRect();
-                    // Colisão simples por proximidade de retângulos
                     if(hRect.left < iRect.right && hRect.right > iRect.left && 
                        hRect.top < iRect.bottom && hRect.bottom > iRect.top) {
                         caught = it;
@@ -213,13 +205,12 @@
             if(len > window.innerHeight - 200) state = 'back';
         } 
         else if(state === 'back') {
-            let s = 14;
-            if(caught) s = Math.max(2.5, 14 / caught.t.w);
+            let s = 15;
+            if(caught) s = Math.max(2, 15 / caught.t.w);
             len -= s;
             line.style.height = len + 'px';
 
             if(caught) {
-                // Quando capturado, o peixe fica preso ao anzol
                 caught.el.style.transform = `translate(-50%, 0)`;
                 caught.el.style.left = "50%";
                 caught.el.style.top = "100%";
@@ -237,10 +228,11 @@
                     items = items.filter(i => i !== caught);
                     caught = null;
                     
-                    if(score >= level * 150) {
+                    // Progressão de nível por pontos
+                    if(score >= level * 250) {
                         level++;
                         document.getElementById('lvl').innerText = level;
-                        timeLeft += 10;
+                        timeLeft += 15;
                     }
                 }
             }
@@ -260,7 +252,6 @@
         }
     }, 1000);
 
-    // Inicialização
     setTimeout(() => {
         spawn();
         update();
