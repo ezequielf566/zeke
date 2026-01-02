@@ -241,13 +241,22 @@
         }
 
         if(state === 'swing') {
-            angle += ((1.1 + (level * 0.12)) * dir) * slowMoFactor;
-            if(Math.abs(angle) > 60) dir *= -1;
+            // CORREÇÃO: Velocidade de oscilação limitada para não bugar no nível 40+
+            let swingSpeed = Math.min(4.5, 1.1 + (level * 0.08)); 
+            angle += (swingSpeed * dir) * slowMoFactor;
+            
+            // CORREÇÃO: Lógica de borda mais robusta
+            if(angle > 60) { angle = 60; dir = -1; }
+            if(angle < -60) { angle = -60; dir = 1; }
+            
             line.style.transform = `rotate(${angle}deg)`;
         } 
         else if(state === 'launch') {
-            len += 13 + (level * 1.2);
+            // CORREÇÃO: Velocidade de lançamento limitada
+            let launchSpeed = Math.min(25, 13 + (level * 0.5));
+            len += launchSpeed;
             line.style.height = len + 'px';
+            
             const hRect = hook.getBoundingClientRect();
             for(let it of items) {
                 const iRect = it.el.getBoundingClientRect();
