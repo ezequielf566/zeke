@@ -19,7 +19,7 @@
             user-select: none; touch-action: manipulation;
         }
 
-        #game-container { position: relative; width: 100%; height: 100%; overflow: hidden; }
+        #game-container { position: relative; width: 100%; height: 100%; overflow: hidden; contain: layout style; }
 
         #sky {
             position: absolute; top: 0; width: 100%; height: 120px;
@@ -49,6 +49,7 @@
             position: absolute; top: 55px; left: 50%;
             width: 140px; z-index: 100; transform: translateX(-50%);
             animation: boatRock 4s ease-in-out infinite;
+            will-change: transform;
         }
         @keyframes boatRock {
             0%, 100% { transform: translateX(-50%) rotate(-2deg); }
@@ -60,6 +61,7 @@
             position: absolute; top: 90%; left: 50%; 
             width: 2px; height: 60px; background: #fff;
             transform-origin: top center; z-index: 90; 
+            will-change: transform, height;
         }
 
         #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; }
@@ -76,7 +78,11 @@
         }
         @keyframes missionPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        .item { position: absolute; z-index: 40; pointer-events: none; font-size: 52px; }
+        .item { 
+            position: absolute; z-index: 40; pointer-events: none; font-size: 52px;
+            will-change: transform; 
+            transform: translate3d(0,0,0);
+        }
         .shark-size { font-size: 85px !important; }
 
         .floating-text {
@@ -84,7 +90,7 @@
             pointer-events: none; z-index: 500; animation: floatUp 1s forwards;
             text-shadow: 2px 2px 0px #000;
         }
-        @keyframes floatUp { 0% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -100px); opacity: 0; } }
+        @keyframes floatUp { 0% { transform: translate3d(-50%, 0, 0); opacity: 1; } 100% { transform: translate3d(-50%, -100px, 0); opacity: 0; } }
 
         .overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.9);
@@ -92,7 +98,6 @@
             color: white; z-index: 2000; text-align: center;
         }
         
-        /* Efeito visual para o Slow Motion */
         .slow-mo-active #sea {
             filter: hue-rotate(45deg) saturate(1.5);
             transition: filter 0.5s;
@@ -134,13 +139,16 @@
     const container = document.getElementById('container');
     const line = document.getElementById('line');
     const hook = document.getElementById('hook');
+    const lvlDisplay = document.getElementById('lvl');
+    const ptsDisplay = document.getElementById('pts');
+    const timeDisplay = document.getElementById('time');
     
     let score = 0, maxScoreReached = 0, level = 1, timeLeft = 60, active = true, isPaused = false;
     let state = 'swing', angle = 0, dir = 1, len = 60, caught = null;
     let items = [];
     let currentMission = null, missionProgress = 0, inMissionMode = false;
     let missionTriggeredOnce = false;
-    let slowMoFactor = 1; // 1 = normal, < 1 = lento
+    let slowMoFactor = 1;
 
     const types = {
         'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 1.5, name: 'Peixinhos' },
@@ -174,18 +182,15 @@
         for(let i=0; i<qty; i++) {
             let chance = Math.random();
             let k = 'PEIXE';
-            
             let effectiveLevel = Math.min(level, 15);
             let trashChance = 0.05 + (effectiveLevel * 0.028); 
             let bonusThreshold = 0.05;
 
             if(chance < bonusThreshold) k = 'BONUS';
-            else if(level >= 10 && chance < 0.12) k = 'SLOW'; // Ampulheta do nível 10 em diante
+            else if(level >= 10 && chance < 0.12) k = 'SLOW';
             else if(chance < 0.2) k = 'RARO';
             else if(chance > (1 - trashChance)) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
-            else {
-                k = 'PEIXE';
-            }
+            else k = 'PEIXE';
             
             if(level > 2 && k === 'PEIXE' && Math.random() > 0.9) k = 'TUBARAO';
 
@@ -194,11 +199,15 @@
             el.className = 'item' + (k === 'BONUS' || k === 'SLOW' ? ' bonus-glow' : '');
             if(k === 'TUBARAO') el.classList.add('shark-size');
             el.innerHTML = t.ico;
+            
+            const startX = window.innerWidth + (Math.random() * 600);
+            const startY = 50 + Math.random() * (window.innerHeight - 380);
+            
             const item = {
-                el: el, type: k, x: window.innerWidth + (Math.random() * 600),
-                y: 50 + Math.random() * (window.innerHeight - 380),
+                el: el, type: k, x: startX, y: startY,
                 speed: t.s + (level * 0.12), pts: t.pts, w: t.w
             };
+            el.style.transform = `translate3d(${item.x}px, ${item.y}px, 0)`;
             container.appendChild(el);
             items.push(item);
         }
@@ -206,29 +215,33 @@
     }
 
     function activateSlowMo() {
-        slowMoFactor = 0.3; // 70% mais lento
+        slowMoFactor = 0.3;
         document.body.classList.add('slow-mo-active');
         createPopup("SLOW MOTION!", "#3498db");
         setTimeout(() => {
             slowMoFactor = 1;
             document.body.classList.remove('slow-mo-active');
-        }, 5000); // 5 segundos de duração
+        }, 5000);
     }
 
     function update() {
         if(!active || isPaused) { requestAnimationFrame(update); return; }
         if(!missionTriggeredOnce && timeLeft < 50) showMission();
 
-        items.forEach((it, i) => {
-            if(it === caught) return;
-            it.x -= (it.speed * slowMoFactor); // Aplica slow motion no movimento
-            it.el.style.left = it.x + 'px';
-            it.el.style.top = it.y + (Math.sin(it.x * 0.02) * 8) + 'px';
-            if(it.x < -150) { it.el.remove(); items.splice(i, 1); }
-        });
+        for (let i = items.length - 1; i >= 0; i--) {
+            let it = items[i];
+            if(it === caught) continue;
+            it.x -= (it.speed * slowMoFactor);
+            const waveY = it.y + (Math.sin(it.x * 0.02) * 8);
+            it.el.style.transform = `translate3d(${it.x}px, ${waveY}px, 0)`;
+            if(it.x < -150) { 
+                it.el.remove(); 
+                items.splice(i, 1); 
+            }
+        }
 
         if(state === 'swing') {
-            angle += ((1.1 + (level * 0.12)) * dir) * slowMoFactor; // Aplica slow motion no balanço
+            angle += ((1.1 + (level * 0.12)) * dir) * slowMoFactor;
             if(Math.abs(angle) > 60) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
@@ -248,19 +261,19 @@
             let sb = 22; if(caught) sb /= caught.w;
             len -= sb; line.style.height = len + 'px';
             if(caught) {
-                caught.el.style.left = '50%'; caught.el.style.top = '100%';
-                caught.el.style.transform = 'translate(-50%, -15px)';
+                caught.el.style.transform = `translate3d(-50%, -15px, 0)`;
+                caught.el.style.left = '50%';
+                caught.el.style.top = '100%';
                 hook.appendChild(caught.el);
             }
             if(len <= 60) {
                 if(caught) {
                     if(caught.type === 'BONUS') { timeLeft += 10; createPopup("+10s", "#f1c40f"); }
-                    else if(caught.type === 'SLOW') { activateSlowMo(); } // Ativa efeito
+                    else if(caught.type === 'SLOW') { activateSlowMo(); }
                     else {
                         score += caught.pts;
                         createPopup(caught.pts > 0 ? "+"+caught.pts : caught.pts, caught.pts > 0 ? "#fff" : "#e74c3c");
                     }
-                    
                     if(inMissionMode && caught.type === currentMission.target) {
                         missionProgress++;
                         if(missionProgress >= currentMission.qty) {
@@ -268,22 +281,20 @@
                             createPopup("MISSÃO OK! +"+currentMission.bonus+"s", "#2ecc71");
                         }
                     }
-                    
                     if(score > maxScoreReached) maxScoreReached = score;
                     let targetLevel = Math.floor(maxScoreReached / 100) + 1;
                     if(targetLevel > level) {
                         level = targetLevel;
-                        document.getElementById('lvl').innerText = level;
+                        lvlDisplay.innerText = level;
                         createPopup("NÍVEL " + level, "#f1c40f");
                     }
-
-                    document.getElementById('pts').innerText = score;
+                    ptsDisplay.innerText = score;
                     caught.el.remove();
                     items = items.filter(i => i !== caught);
                     caught = null;
                 } else {
                     score = Math.max(0, score - 10);
-                    document.getElementById('pts').innerText = score;
+                    ptsDisplay.innerText = score;
                     createPopup("-10", "#e74c3c");
                 }
                 len = 60; state = 'swing';
@@ -306,7 +317,7 @@
     setInterval(() => {
         if(!active || isPaused) return;
         timeLeft--;
-        document.getElementById('time').innerText = timeLeft;
+        timeDisplay.innerText = timeLeft;
         if(timeLeft <= 0) {
             active = false;
             document.getElementById('final-score').innerText = score;
