@@ -31,15 +31,16 @@
             overflow: hidden;
         }
 
-        /* BARCO: Subi para 145px para ficar rente ao mar */
+        /* BARCO: Subi mais (135px) e adicionei entrada suave (fadeIn) */
         #boat-container {
             position: absolute; 
-            top: 145px; 
+            top: 135px; 
             left: 50%;
-            width: 150px; 
+            width: 160px; 
             z-index: 100;
-            animation: boatRock 4s ease-in-out infinite;
+            animation: boatRock 4s ease-in-out infinite, fadeIn 1.5s ease-out forwards;
             transform-origin: center;
+            opacity: 0; /* Começa invisível para o fadeIn */
         }
 
         #boat-img {
@@ -48,26 +49,31 @@
             display: block;
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
         @keyframes boatRock {
             0%, 100% { transform: translateX(-50%) rotate(-2deg); }
             50% { transform: translateX(-48%) rotate(2deg); }
         }
 
-        /* LINHA: Agora sai do rodapé (85%) do PNG do barco */
+        /* LINHA: Sai do rodapé exato do barco */
         #line {
             position: absolute; 
-            top: 85%; 
+            top: 95%; 
             left: 50%; 
-            width: 2px; height: 50px; 
-            background: #eee;
+            width: 2px; height: 40px; 
+            background: #fff;
             transform-origin: top center; 
             z-index: 110; 
             box-shadow: 0 0 5px rgba(255,255,255,0.5);
         }
 
         #hook { 
-            position: absolute; bottom: -25px; left: -12px; 
-            font-size: 28px; 
+            position: absolute; bottom: -28px; left: -14px; 
+            font-size: 32px; 
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
         }
 
@@ -124,7 +130,7 @@
     const hook = document.getElementById('hook');
     
     let score = 0, level = 1, timeLeft = 60, active = true;
-    let state = 'swing', angle = 0, dir = 1, len = 50, caught = null;
+    let state = 'swing', angle = 0, dir = 1, len = 40, caught = null;
     let items = [];
 
     const types = [
@@ -138,13 +144,14 @@
 
     function spawn() {
         if(!active) return;
-        const batch = Math.floor(Math.random() * 3) + 2;
+        const batch = Math.floor(Math.random() * 2) + 2;
         for(let i=0; i<batch; i++) {
             const t = types[Math.floor(Math.random()*types.length)];
             const it = {
                 el: document.createElement('div'),
                 x: window.innerWidth + (Math.random() * 400), 
-                y: Math.random() * (window.innerHeight - 350), 
+                // Ajustado para os peixes não ficarem "colados" no barco
+                y: 50 + Math.random() * (window.innerHeight - 380), 
                 t: t,
                 speed: (Math.random() * t.s + 0.7) + (level * 0.2), 
                 sinOff: Math.random() * 10
@@ -155,7 +162,7 @@
             container.appendChild(it.el);
             items.push(it);
         }
-        setTimeout(spawn, Math.max(300, 1100 - (level * 80)));
+        setTimeout(spawn, Math.max(400, 1200 - (level * 80)));
     }
 
     function shoot() {
@@ -211,8 +218,8 @@
                 hook.appendChild(caught.el);
             }
 
-            if(len <= 50) {
-                len = 50; 
+            if(len <= 40) {
+                len = 40; 
                 state = 'swing';
                 if(caught) {
                     score += caught.t.pts;
