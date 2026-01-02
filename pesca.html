@@ -19,17 +19,19 @@
             user-select: none; touch-action: manipulation;
         }
 
-        #game-container { position: relative; width: 100%; height: 100%; transition: filter 0.5s; }
+        #game-container { position: relative; width: 100%; height: 100%; }
 
         #sky {
             position: absolute; top: 0; width: 100%; height: 120px;
-            background: #87CEEB;
+            background: url('ceu.jpg') no-repeat center bottom;
+            background-size: cover;
             border-bottom: 2px solid rgba(255,255,255,0.3);
         }
 
         #sea {
             position: absolute; top: 120px; width: 100%; height: calc(100% - 120px);
-            background: #2980b9;
+            background: url('mar.jpg') no-repeat center top;
+            background-size: cover;
             overflow: hidden;
         }
 
@@ -43,11 +45,10 @@
             font-weight: bold; font-size: 14px; min-width: 95px; text-align: center;
         }
 
-        /* ANÚNCIO DE MISSÃO - AJUSTADO PARA LEITURA MÁXIMA */
         #mission-alert {
             position: fixed; inset: 0; z-index: 1500;
             display: none; flex-direction: column; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
             animation: fadeIn 0.3s forwards;
         }
 
@@ -59,8 +60,8 @@
         }
 
         #mission-title { 
-            margin: 15px 0; font-size: 38px; color: #fff; 
-            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            margin: 15px 0; font-size: 32px; color: #fff; 
+            text-shadow: 0 0 15px rgba(255,255,255,0.4);
             font-weight: 900;
         }
 
@@ -69,6 +70,11 @@
         #boat-container {
             position: absolute; top: 55px; left: 50%;
             width: 140px; z-index: 100; transform: translateX(-50%);
+            animation: boatRock 4s ease-in-out infinite;
+        }
+        @keyframes boatRock {
+            0%, 100% { transform: translateX(-50%) rotate(-2deg); }
+            50% { transform: translateX(-48%) rotate(2deg); }
         }
         #boat-img { width: 100%; height: auto; display: block; }
 
@@ -122,8 +128,8 @@
     <div id="mission-alert">
         <div id="mission-box">
             <h2 style="color:var(--gold); margin:0; font-size: 20px; letter-spacing: 3px; font-weight: 900;">NOVA MISSÃO</h2>
-            <h1 id="mission-title">Pesque 2 Tubarões</h1>
-            <p id="mission-reward" style="color:var(--success); font-size: 22px; font-weight: bold; margin: 0;">RECOMPENSA: +15s</p>
+            <h1 id="mission-title">Aguardando...</h1>
+            <p id="mission-reward" style="color:var(--success); font-size: 22px; font-weight: bold; margin: 0;"></p>
         </div>
     </div>
 
@@ -142,6 +148,8 @@
     let score = 0, level = 1, timeLeft = 30, active = true;
     let state = 'swing', angle = 0, dir = 1, len = 60, caught = null;
     let items = [];
+    let missionActive = false; // Quando o painel está aberto
+    let inMissionMode = false; // Se existe uma missão em curso
 
     const types = {
         'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 0.9, name: 'Peixinhos' },
@@ -154,13 +162,29 @@
     let currentMission = null;
     let missionProgress = 0;
 
-    function startNewMission() {
+    // Função que dispara a missão com um tempo de respiro
+    function scheduleNextMission() {
+        // Respiro entre 6 a 12 segundos (diminui um pouco conforme o nível para ajudar)
+        const waitTime = Math.max(4000, (Math.random() * 8000 + 4000) - (level * 500));
+        
+        setTimeout(() => {
+            if(active && !inMissionMode) {
+                showMissionPanel();
+            }
+        }, waitTime);
+    }
+
+    function showMissionPanel() {
+        missionActive = true; 
+        inMissionMode = true;
+
         const missions = [
-            { target: 'PEIXE', qty: 3 + level, bonus: 10 },
+            { target: 'PEIXE', qty: 2 + level, bonus: 8 + level },
             { target: 'RARO', qty: 2, bonus: 12 },
             { target: 'TUBARAO', qty: 1, bonus: 15 },
             { target: 'SAPATO', qty: 2, bonus: 10 }
         ];
+        
         currentMission = missions[Math.floor(Math.random() * missions.length)];
         missionProgress = 0;
 
@@ -173,8 +197,11 @@
 
         setTimeout(() => {
             alert.style.opacity = '0';
-            setTimeout(() => { alert.style.display = 'none'; }, 500);
-        }, 3500);
+            setTimeout(() => { 
+                alert.style.display = 'none'; 
+                missionActive = false; 
+            }, 500);
+        }, 3000);
     }
 
     function createPopup(txt, color, x, y) {
@@ -182,7 +209,7 @@
         p.className = 'floating-text';
         p.innerText = txt;
         p.style.color = color;
-        p.style.left = (x || window.innerWidth/2 - 50) + 'px';
+        p.style.left = (x || window.innerWidth/2 - 80) + 'px';
         p.style.top = (y || window.innerHeight/2) + 'px';
         document.body.appendChild(p);
         setTimeout(() => p.remove(), 1200);
@@ -190,7 +217,7 @@
 
     function spawn() {
         if(!active) return;
-        const batch = Math.min(8, 2 + level);
+        const batch = Math.min(6, 2 + Math.floor(level/2));
         const keys = Object.keys(types);
         for(let i=0; i<batch; i++) {
             const k = keys[Math.floor(Math.random() * keys.length)];
@@ -201,7 +228,7 @@
                 x: window.innerWidth + 100, 
                 y: 50 + Math.random() * (window.innerHeight - 300), 
                 t: t,
-                speed: (Math.random() * t.s + 1.2) + (level * 0.25), 
+                speed: (Math.random() * t.s + 1.2) + (level * 0.2), 
                 sinOff: Math.random() * 10
             };
             it.el.className = 'item';
@@ -210,10 +237,12 @@
             container.appendChild(it.el);
             items.push(it);
         }
-        setTimeout(spawn, Math.max(600, 2000 - (level * 200)));
+        setTimeout(spawn, Math.max(800, 2500 - (level * 150)));
     }
 
-    function shoot() { if(state === 'swing' && active) state = 'launch'; }
+    function shoot() { 
+        if(state === 'swing' && active && !missionActive) state = 'launch'; 
+    }
 
     function update() {
         if(!active) return;
@@ -226,7 +255,7 @@
         });
 
         if(state === 'swing') {
-            angle += (1.6 + (level * 0.2)) * dir;
+            angle += (1.6 + (level * 0.15)) * dir;
             if(Math.abs(angle) > 65) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
@@ -259,19 +288,25 @@
                     score += caught.t.pts;
                     document.getElementById('pts').innerText = score;
 
-                    if(caught.type === currentMission.target) {
+                    // Lógica de Missão com Respiro
+                    if(inMissionMode && caught.type === currentMission.target) {
                         missionProgress++;
                         if(missionProgress >= currentMission.qty) {
                             timeLeft += currentMission.bonus;
                             level++;
                             document.getElementById('lvl').innerText = level;
-                            createPopup("MISSÃO COMPLETA! +" + currentMission.bonus + "s", "#2ecc71");
-                            startNewMission();
+                            createPopup("CONCLUÍDO! +" + currentMission.bonus + "s", "#2ecc71");
+                            
+                            // Finaliza missão atual e agenda a próxima
+                            inMissionMode = false;
+                            currentMission = null;
+                            scheduleNextMission(); 
                         } else {
-                            createPopup("Progresso: " + missionProgress + "/" + currentMission.qty, "#f1c40f");
+                            createPopup("MISSAO: " + missionProgress + "/" + currentMission.qty, "#f1c40f");
                         }
                     } else {
-                        createPopup(caught.t.pts > 0 ? "Peixe Errado!" : "Lixo!", "#e74c3c");
+                        // Se não estiver em missão ou pegou algo diferente, mostra o ponto normal
+                        createPopup(caught.t.pts > 0 ? "+" + caught.t.pts : caught.t.pts, caught.t.pts > 0 ? "#fff" : "#e74c3c");
                     }
 
                     caught.el.remove();
@@ -295,7 +330,8 @@
         }
     }, 1000);
 
-    startNewMission();
+    // Começa com um pequeno delay antes da primeira missão
+    setTimeout(scheduleNextMission, 2000);
     spawn();
     update();
 </script>
