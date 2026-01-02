@@ -23,15 +23,13 @@
 
         #sky {
             position: absolute; top: 0; width: 100%; height: 120px;
-            background: url('ceu.jpg') no-repeat center bottom;
-            background-size: cover;
+            background: #87CEEB;
             border-bottom: 2px solid rgba(255,255,255,0.3);
         }
 
         #sea {
             position: absolute; top: 120px; width: 100%; height: calc(100% - 120px);
-            background: url('mar.jpg') no-repeat center top;
-            background-size: cover;
+            background: #2980b9;
             overflow: hidden;
         }
 
@@ -45,22 +43,27 @@
             font-weight: bold; font-size: 14px; min-width: 95px; text-align: center;
         }
 
-        /* ANÚNCIO DE MISSÃO CENTRAL */
+        /* ANÚNCIO DE MISSÃO - AJUSTADO PARA LEITURA MÁXIMA */
         #mission-alert {
             position: fixed; inset: 0; z-index: 1500;
             display: none; flex-direction: column; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.4); backdrop-filter: blur(5px);
-            animation: fadeIn 0.5s forwards;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            animation: fadeIn 0.3s forwards;
         }
 
         #mission-box {
-            background: rgba(0,0,0,0.9); border: 3px solid var(--gold);
-            padding: 30px 50px; border-radius: 20px; text-align: center;
-            box-shadow: 0 0 30px rgba(241, 196, 15, 0.4);
-            transform: scale(0.8); animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            background: #000; border: 4px solid var(--gold);
+            padding: 40px; border-radius: 25px; text-align: center;
+            box-shadow: 0 0 50px rgba(0,0,0,1);
+            max-width: 80%;
         }
 
-        @keyframes popIn { to { transform: scale(1); } }
+        #mission-title { 
+            margin: 15px 0; font-size: 38px; color: #fff; 
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            font-weight: 900;
+        }
+
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         #boat-container {
@@ -73,17 +76,16 @@
             position: absolute; top: 90%; left: 50%; 
             width: 2px; height: 60px; background: #fff;
             transform-origin: top center; z-index: 110; 
-            box-shadow: 0 0 5px rgba(255,255,255,0.5);
         }
 
         #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; }
 
         .floating-text {
-            position: absolute; font-weight: 900; font-size: 26px;
+            position: absolute; font-weight: 900; font-size: 28px;
             pointer-events: none; z-index: 500; animation: floatUp 1.2s ease-out forwards;
             text-shadow: 2px 2px 4px #000;
         }
-        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-120px); opacity: 0; } }
 
         .item { position: absolute; z-index: 40; pointer-events: none; }
 
@@ -97,7 +99,7 @@
         .btn-restart {
             padding: 20px 60px; border-radius: 50px; background: var(--gold);
             border: none; font-weight: 900; font-size: 20px; color: #000;
-            cursor: pointer; box-shadow: 0 10px 0 #b7950b;
+            cursor: pointer; box-shadow: 0 8px 0 #b7950b;
         }
     </style>
 </head>
@@ -119,9 +121,9 @@
 
     <div id="mission-alert">
         <div id="mission-box">
-            <h2 style="color:var(--gold); margin:0; font-size: 18px; letter-spacing: 2px;">NOVO OBJETIVO</h2>
-            <h1 id="mission-title" style="margin: 15px 0; font-size: 32px;">Pesque 2 Tubarões</h1>
-            <p id="mission-reward" style="color:var(--success); font-weight: bold;">RECOMPENSA: +15 SEGUNDOS</p>
+            <h2 style="color:var(--gold); margin:0; font-size: 20px; letter-spacing: 3px; font-weight: 900;">NOVA MISSÃO</h2>
+            <h1 id="mission-title">Pesque 2 Tubarões</h1>
+            <p id="mission-reward" style="color:var(--success); font-size: 22px; font-weight: bold; margin: 0;">RECOMPENSA: +15s</p>
         </div>
     </div>
 
@@ -145,8 +147,8 @@
         'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 0.9, name: 'Peixinhos' },
         'RARO': { ico: '🐠', pts: 30, w: 0.8, s: 1.3, name: 'Peixes Raros' },
         'TUBARAO': { ico: '🦈', pts: 150, w: 5, s: 0.5, name: 'Tubarões' },
-        'SAPATO': { ico: '👞', pts: -5, w: 2, s: 1.2, name: 'Sapatos Velhos' },
-        'LATA': { ico: '🥫', pts: -10, w: 1.2, s: 1.5, name: 'Latas de Lixo' }
+        'SAPATO': { ico: '👞', pts: -5, w: 2, s: 1.2, name: 'Sapatos' },
+        'LATA': { ico: '🥫', pts: -10, w: 1.2, s: 1.5, name: 'Latas' }
     };
 
     let currentMission = null;
@@ -157,21 +159,22 @@
             { target: 'PEIXE', qty: 3 + level, bonus: 10 },
             { target: 'RARO', qty: 2, bonus: 12 },
             { target: 'TUBARAO', qty: 1, bonus: 15 },
-            { target: 'SAPATO', qty: 1, bonus: 8 }
+            { target: 'SAPATO', qty: 2, bonus: 10 }
         ];
         currentMission = missions[Math.floor(Math.random() * missions.length)];
         missionProgress = 0;
 
-        // Mostrar Alerta Visual Bonito
         const alert = document.getElementById('mission-alert');
-        document.getElementById('mission-title').innerText = `Pesque ${currentMission.qty} ${types[currentMission.target].name}`;
+        document.getElementById('mission-title').innerText = `Capture ${currentMission.qty} ${types[currentMission.target].name}`;
         document.getElementById('mission-reward').innerText = `RECOMPENSA: +${currentMission.bonus} SEGUNDOS`;
         
         alert.style.display = 'flex';
+        alert.style.opacity = '1';
+
         setTimeout(() => {
             alert.style.opacity = '0';
-            setTimeout(() => { alert.style.display = 'none'; alert.style.opacity = '1'; }, 500);
-        }, 3000);
+            setTimeout(() => { alert.style.display = 'none'; }, 500);
+        }, 3500);
     }
 
     function createPopup(txt, color, x, y) {
@@ -179,8 +182,8 @@
         p.className = 'floating-text';
         p.innerText = txt;
         p.style.color = color;
-        p.style.left = (x || window.innerWidth/2 - 20) + 'px';
-        p.style.top = (y || 200) + 'px';
+        p.style.left = (x || window.innerWidth/2 - 50) + 'px';
+        p.style.top = (y || window.innerHeight/2) + 'px';
         document.body.appendChild(p);
         setTimeout(() => p.remove(), 1200);
     }
@@ -198,7 +201,7 @@
                 x: window.innerWidth + 100, 
                 y: 50 + Math.random() * (window.innerHeight - 300), 
                 t: t,
-                speed: (Math.random() * t.s + 1.2) + (level * 0.2), 
+                speed: (Math.random() * t.s + 1.2) + (level * 0.25), 
                 sinOff: Math.random() * 10
             };
             it.el.className = 'item';
@@ -207,7 +210,7 @@
             container.appendChild(it.el);
             items.push(it);
         }
-        setTimeout(spawn, Math.max(500, 2000 - (level * 150)));
+        setTimeout(spawn, Math.max(600, 2000 - (level * 200)));
     }
 
     function shoot() { if(state === 'swing' && active) state = 'launch'; }
@@ -223,12 +226,12 @@
         });
 
         if(state === 'swing') {
-            angle += (1.4 + (level * 0.2)) * dir;
+            angle += (1.6 + (level * 0.2)) * dir;
             if(Math.abs(angle) > 65) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
         else if(state === 'launch') {
-            len += 16; 
+            len += 18; 
             line.style.height = len + 'px';
             const hRect = hook.getBoundingClientRect();
             items.forEach(it => {
@@ -242,7 +245,7 @@
             if(len > window.innerHeight - 150) state = 'back';
         } 
         else if(state === 'back') {
-            let s = 22; if(caught) s = Math.max(4, s / caught.t.w);
+            let s = 25; if(caught) s = Math.max(5, s / caught.t.w);
             len -= s; line.style.height = len + 'px';
             if(caught) {
                 caught.el.style.transform = `translate(-50%, 0)`;
@@ -256,20 +259,19 @@
                     score += caught.t.pts;
                     document.getElementById('pts').innerText = score;
 
-                    // Lógica de Missão
                     if(caught.type === currentMission.target) {
                         missionProgress++;
                         if(missionProgress >= currentMission.qty) {
                             timeLeft += currentMission.bonus;
                             level++;
                             document.getElementById('lvl').innerText = level;
-                            createPopup(`MISSÃO COMPLETA! +${currentMission.bonus}s`, "var(--success)");
+                            createPopup("MISSÃO COMPLETA! +" + currentMission.bonus + "s", "#2ecc71");
                             startNewMission();
                         } else {
-                            createPopup(`Progresso: ${missionProgress}/${currentMission.qty}`, "var(--gold)");
+                            createPopup("Progresso: " + missionProgress + "/" + currentMission.qty, "#f1c40f");
                         }
                     } else {
-                        createPopup(caught.t.pts > 0 ? "Peixe Errado!" : "Lixo!", "var(--danger)");
+                        createPopup(caught.t.pts > 0 ? "Peixe Errado!" : "Lixo!", "#e74c3c");
                     }
 
                     caught.el.remove();
