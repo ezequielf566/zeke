@@ -62,7 +62,7 @@
             transform-origin: top center; z-index: 90; 
         }
 
-        #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; transition: transform 0.1s; }
+        #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; }
 
         #mission-alert {
             position: fixed; inset: 0; z-index: 1500;
@@ -116,17 +116,17 @@
 
     <div id="mission-alert">
         <div id="mission-box">
-            <h2 style="color:var(--gold); margin:0; letter-spacing: 2px;">DESAFIO ATIVADO</h2>
+            <h2 style="color:var(--gold); margin:0;">NOVA MISSÃO</h2>
             <h1 id="mission-title">---</h1>
             <p id="mission-reward" style="color:var(--success); font-size: 20px;"></p>
-            <small style="color: #888;">Relógio pausado...</small>
+            <small style="color: #888;">Tempo pausado!</small>
         </div>
     </div>
 
     <div id="game-over" class="overlay">
         <h1 style="color:var(--gold); font-size: 45px;">PESCARIA ENCERRADA!</h1>
         <h2 id="final-score" style="font-size: 60px; margin: 10px 0;">0</h2>
-        <button style="padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer; background: var(--gold); border: none; border-radius: 50px; box-shadow: 0 5px 0 #b7950b;" onclick="location.reload()">JOGAR NOVAMENTE</button>
+        <button style="padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer; background: var(--gold); border: none; border-radius: 50px;" onclick="location.reload()">RECOMEÇAR</button>
     </div>
 
 <script>
@@ -145,42 +145,45 @@
         'TUBARAO': { ico: '🦈', pts: 150, w: 5, s: 0.8, name: 'Tubarões' },
         'SAPATO': { ico: '👞', pts: -5, w: 2, s: 1.2, name: 'Sapatos' },
         'LATA': { ico: '🥫', pts: -10, w: 1.5, s: 1.5, name: 'Latas' },
-        'BONUS': { ico: '✨', pts: 20, w: 0.5, s: 3.5, name: 'Estrelas' }
+        'BONUS': { ico: '✨', pts: 20, w: 0.5, s: 2.2, name: 'Estrelas' }
     };
 
     function showMission() {
-        if(!active || inMissionMode || state !== 'swing') return;
+        // Agora só aparece se o tempo for menor que 50s
+        if(!active || inMissionMode || state !== 'swing' || timeLeft >= 50) return;
         
         isPaused = true; 
         inMissionMode = true;
         const missionList = [
-            { target: 'PEIXE', qty: 3 + level, bonus: 15 },
-            { target: 'RARO', qty: 2, bonus: 20 },
-            { target: 'BONUS', qty: 1, bonus: 15 }
+            { target: 'PEIXE', qty: 2 + level, bonus: 15 },
+            { target: 'RARO', qty: 2, bonus: 20 }
         ];
         currentMission = missionList[Math.floor(Math.random() * missionList.length)];
         missionProgress = 0;
 
         const alert = document.getElementById('mission-alert');
         document.getElementById('mission-title').innerText = `Capture ${currentMission.qty} ${types[currentMission.target].name}`;
-        document.getElementById('mission-reward').innerText = `BÔNUS: +${currentMission.bonus}s`;
+        document.getElementById('mission-reward').innerText = `RECOMPENSA: +${currentMission.bonus}s`;
         alert.style.display = 'flex';
         
-        setTimeout(() => { 
-            alert.style.display = 'none'; 
-            isPaused = false; 
-        }, 3000);
+        setTimeout(() => { alert.style.display = 'none'; isPaused = false; }, 3000);
     }
 
     function spawn() {
         if(!active || isPaused) { setTimeout(spawn, 1000); return; }
 
-        const qty = 3 + Math.min(level, 5); 
+        const qty = 3 + Math.min(level, 4); 
         for(let i=0; i<qty; i++) {
             let chance = Math.random();
-            let k = (chance < 0.1) ? 'BONUS' : (chance < 0.3) ? 'RARO' : 'PEIXE';
-            if(level > 1 && chance > 0.8) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
-            if(level > 2 && chance > 0.9) k = 'TUBARAO';
+            let k = 'PEIXE';
+            
+            // Lógica da Estrela: Fica mais rara conforme o nível sobe
+            let bonusThreshold = Math.max(0.02, 0.15 - (level * 0.03));
+            
+            if(chance < bonusThreshold) k = 'BONUS';
+            else if(chance < 0.3) k = 'RARO';
+            else if(level > 1 && chance > 0.85) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+            else if(level > 2 && chance > 0.92) k = 'TUBARAO';
 
             const t = types[k];
             const el = document.createElement('div');
@@ -197,7 +200,7 @@
             container.appendChild(el);
             items.push(item);
         }
-        setTimeout(spawn, 2500 - (level * 100));
+        setTimeout(spawn, 2800 - (level * 100));
     }
 
     function update() {
@@ -212,7 +215,7 @@
         });
 
         if(state === 'swing') {
-            angle += (1.1 + (level * 0.15)) * dir; // Movimento inicial mais suave
+            angle += (1.1 + (level * 0.15)) * dir;
             if(Math.abs(angle) > 60) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
@@ -247,14 +250,15 @@
                         missionProgress++;
                         if(missionProgress >= currentMission.qty) {
                             timeLeft += currentMission.bonus; inMissionMode = false;
-                            createPopup("MISSÃO COMPLETA! +"+currentMission.bonus+"s", "#2ecc71");
+                            createPopup("MISSÃO OK! +"+currentMission.bonus+"s", "#2ecc71");
                         }
                     }
                     document.getElementById('pts').innerText = score;
                     caught.el.remove();
                     items = items.filter(i => i !== caught);
                     caught = null;
-                    if(score >= level * 400) { level++; document.getElementById('lvl').innerText = level; }
+                    // Subida de nível mais rápida (a cada 200 pontos)
+                    if(score >= level * 200) { level++; document.getElementById('lvl').innerText = level; }
                 }
                 len = 60; state = 'swing';
             }
@@ -286,7 +290,7 @@
 
     spawn();
     update();
-    setInterval(showMission, 20000); // Nova missão a cada 20 segundos
+    setInterval(showMission, 12000); // Checa missão a cada 12 segundos
 </script>
 </body>
 </html>
