@@ -41,10 +41,7 @@
             overflow: hidden;
         }
 
-        /* CONTAINER DOS PEIXES - Garante que ocupe o mar todo */
-        #container {
-            position: relative; width: 100%; height: 100%;
-        }
+        #container { position: relative; width: 100%; height: 100%; }
 
         /* BARCO */
         #boat-container {
@@ -73,10 +70,11 @@
             width: 2px; height: 0; background: white;
             transform-origin: top center; z-index: 50;
         }
-        #hook { position: absolute; bottom: -20px; left: -10px; font-size: 22px; }
+        #hook { position: absolute; bottom: -22px; left: -11px; font-size: 22px; }
 
         .item {
             position: absolute; z-index: 40;
+            left: 0; top: 0; /* Posicionamento base zero para o transform controlar tudo */
             will-change: transform;
         }
 
@@ -142,29 +140,27 @@
     function spawn() {
         if(!active) return;
 
-        // CORREÇÃO: Pega a altura atual do container no momento do spawn
-        const seaHeight = container.getBoundingClientRect().height;
-        
+        const seaRect = container.getBoundingClientRect();
         const t = types[Math.floor(Math.random()*types.length)];
+        
         const it = {
             el: document.createElement('div'),
-            x: window.innerWidth + 50,
-            // CORREÇÃO: Espalha por toda a altura do mar (seaHeight)
-            y: Math.random() * (seaHeight - 50), 
+            x: window.innerWidth + 100, // Começa 100px fora da tela à direita
+            y: Math.random() * (seaRect.height - 60), 
             t: t,
-            speed: (Math.random() * t.s + (level * 0.4)),
+            speed: (Math.random() * t.s + 1.5) + (level * 0.4),
             sinOff: Math.random() * 10
         };
 
         it.el.className = 'item';
         it.el.innerHTML = t.ico;
         it.el.style.fontSize = (25 + t.w * 8) + 'px';
-        it.el.style.top = it.y + 'px'; // Aplica a altura aleatória corrigida
         
         container.appendChild(it.el);
         items.push(it);
         
-        setTimeout(spawn, Math.max(400, 1500 - (level * 150)));
+        // Tempo de spawn aleatório para não criar padrões retos
+        setTimeout(spawn, Math.max(300, (1500 + Math.random() * 1000) - (level * 150)));
     }
 
     function shoot() {
@@ -176,53 +172,63 @@
 
         items.forEach((it, i) => {
             if(it === caught) return;
+            
+            // Movimentação horizontal (da direita para esquerda)
             it.x -= it.speed;
             
-            // Movimento leve de onda
-            const yVar = Math.sin(it.x * 0.03 + it.sinOff) * 2;
+            // Movimento suave de onda (Seno)
+            const yVar = Math.sin(it.x * 0.02 + it.sinOff) * 15;
             
-            it.el.style.transform = `translate(${it.x - (window.innerWidth + 50)}px, ${yVar}px)`;
+            // Aplicando a posição final
+            it.el.style.transform = `translate(${it.x}px, ${it.y + yVar}px)`;
 
-            if(it.x < -100) {
+            // Remove se atravessar toda a tela
+            if(it.x < -150) {
                 it.el.remove();
                 items.splice(i, 1);
             }
         });
 
         if(state === 'swing') {
-            angle += (1.5 + (level * 0.2)) * dir;
+            angle += (1.6 + (level * 0.2)) * dir;
             if(Math.abs(angle) > 75) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
-        } else if(state === 'launch') {
-            len += 14;
+        } 
+        else if(state === 'launch') {
+            len += 15;
             line.style.height = len + 'px';
             
             const hRect = hook.getBoundingClientRect();
             items.forEach(it => {
                 if(!caught) {
                     const iRect = it.el.getBoundingClientRect();
-                    if(hRect.left < iRect.right && hRect.right > iRect.left && hRect.top < iRect.bottom && hRect.bottom > iRect.top) {
+                    // Colisão simples por proximidade de retângulos
+                    if(hRect.left < iRect.right && hRect.right > iRect.left && 
+                       hRect.top < iRect.bottom && hRect.bottom > iRect.top) {
                         caught = it;
                         state = 'back';
                     }
                 }
             });
             if(len > window.innerHeight - 200) state = 'back';
-        } else if(state === 'back') {
-            let s = 12;
-            if(caught) s = Math.max(2, 12 / caught.t.w);
+        } 
+        else if(state === 'back') {
+            let s = 14;
+            if(caught) s = Math.max(2.5, 14 / caught.t.w);
             len -= s;
             line.style.height = len + 'px';
 
             if(caught) {
-                caught.el.style.top = '100%';
-                caught.el.style.left = '50%';
-                caught.el.style.transform = 'translate(-50%, -50%)';
+                // Quando capturado, o peixe fica preso ao anzol
+                caught.el.style.transform = `translate(-50%, 0)`;
+                caught.el.style.left = "50%";
+                caught.el.style.top = "100%";
                 hook.appendChild(caught.el);
             }
 
             if(len <= 0) {
-                len = 0; state = 'swing';
+                len = 0; 
+                state = 'swing';
                 if(caught) {
                     score += caught.t.pts;
                     if(score < 0) score = 0;
@@ -234,7 +240,7 @@
                     if(score >= level * 150) {
                         level++;
                         document.getElementById('lvl').innerText = level;
-                        timeLeft += 15;
+                        timeLeft += 10;
                     }
                 }
             }
@@ -254,11 +260,11 @@
         }
     }, 1000);
 
-    // Espera 100ms para o navegador processar o layout antes de começar o spawn
+    // Inicialização
     setTimeout(() => {
         spawn();
         update();
-    }, 100);
+    }, 200);
 </script>
 </body>
 </html>
