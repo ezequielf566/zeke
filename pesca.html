@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pescador de Milagres - Premium</title>
+    <style>
+        :root {
+            --sky-top: #1a2a3a;
+            --sky-bottom: #f39c12; 
+            --gold: #f1c40f;
+            --sea-top: #4fc3f7;
+            --sea-mid: #0288d1;
+            --sea-deep: #012b4d;
+            --sun-ray: rgba(255, 255, 255, 0.1);
+        }
+
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; font-family: 'Georgia', serif;
+            background: var(--sky-top);
+            user-select: none; -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* AMBIENTE: CÉU */
+        #sky {
+            position: absolute; top: 0; width: 100%; height: 180px;
+            background: linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-bottom) 100%);
+        }
+
+        .cloud {
+            position: absolute; background: white; opacity: 0.4;
+            border-radius: 50px; filter: blur(8px);
+            animation: moveClouds linear infinite;
+        }
+
+        @keyframes moveClouds {
+            from { transform: translateX(-200px); }
+            to { transform: translateX(110vw); }
+        }
+
+        /* AMBIENTE: MAR */
+        #sea {
+            position: absolute; top: 180px; width: 100%; height: calc(100% - 180px);
+            background: linear-gradient(to bottom, var(--sea-top) 0%, var(--sea-mid) 40%, var(--sea-deep) 100%);
+            overflow: hidden;
+        }
+
+        .sun-rays {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-conic-gradient(from 0deg at 50% -10%, 
+                transparent 0deg 15deg, var(--sun-ray) 20deg 25deg);
+            filter: blur(25px); opacity: 0.6; pointer-events: none;
+        }
+
+        .waves-container { position: absolute; top: -25px; width: 100%; height: 50px; z-index: 5; }
+        .wave {
+            position: absolute; width: 200%; height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5,73.84-4.36,147.54,16.88,218.2,35.26,69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" fill="white" opacity="0.3"/></svg>');
+            background-size: 50% 100%; animation: waveFlow 12s linear infinite;
+        }
+        .wave2 { top: 8px; opacity: 0.2; animation-duration: 8s; animation-direction: reverse; }
+
+        @keyframes waveFlow { from { background-position-x: 0; } to { background-position-x: 1200px; } }
+
+        /* PERSONAGEM */
+        #boat-container {
+            position: absolute; top: 120px; left: 50%;
+            width: 120px; height: 80px; transform: translateX(-50%);
+            z-index: 20; animation: boatRock 4s ease-in-out infinite;
+        }
+
+        @keyframes boatRock {
+            0%, 100% { transform: translateX(-50%) rotate(-3deg); }
+            50% { transform: translateX(-50%) rotate(3deg); }
+        }
+
+        /* SISTEMA DE PESCA */
+        #line {
+            position: absolute; top: 168px; left: 50%;
+            width: 2px; height: 0px; background: rgba(255,255,255,0.7);
+            transform-origin: top center; z-index: 10;
+            box-shadow: 0 0 5px rgba(255,255,255,0.5);
+        }
+
+        #hook {
+            position: absolute; bottom: -18px; left: -12px;
+            width: 24px; height: 24px; font-size: 24px;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
+        }
+
+        /* ELEMENTOS DE JOGO */
+        .item { 
+            position: absolute; z-index: 15; cursor: pointer;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3));
+        }
+
+        .ui-card {
+            background: rgba(0,0,0,0.6); border: 1px solid var(--gold);
+            padding: 12px 25px; border-radius: 20px; color: white;
+            backdrop-filter: blur(8px); box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            font-size: 18px; font-weight: bold;
+        }
+
+        #hud {
+            position: absolute; top: 25px; width: 100%;
+            display: flex; justify-content: center; gap: 30px; z-index: 100;
+        }
+
+        .overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; color: white; z-index: 1000; text-align: center;
+        }
+
+        .btn-restart {
+            margin-top: 20px; padding: 15px 40px; border-radius: 50px;
+            border: none; background: var(--gold); color: black;
+            font-weight: bold; font-size: 18px; cursor: pointer;
+        }
+    </style>
+</head>
+<body onclick="handleAction()">
+
+    <div id="sky">
+        <div class="cloud" style="width:120px; height:45px; top:40px; left:-10%; animation-duration: 25s;"></div>
+        <div class="cloud" style="width:180px; height:60px; top:70px; left:30%; animation-duration: 40s;"></div>
+    </div>
+
+    <div id="hud">
+        <div class="ui-card">PONTOS: <span id="score" style="color:var(--gold)">0</span></div>
+        <div class="ui-card">TEMPO: <span id="timer">60</span>s</div>
+    </div>
+
+    <div id="boat-container">
+        <svg viewBox="0 0 100 60">
+            <path d="M5,35 L95,35 L85,55 L15,55 Z" fill="#5d4037" /> <path d="M15,35 L85,35 L75,42 L25,42 Z" fill="#795548" /> <circle cx="45" cy="22" r="7" fill="#ffdbac" /> <path d="M40,29 Q45,36 50,29 L53,42 L37,42 Z" fill="#2980b9" /> <line x1="52" y1="32" x2="90" y2="5" stroke="#222" stroke-width="3" /> </svg>
+    </div>
+
+    <div id="line">
+        <div id="hook">🪝</div>
+    </div>
+
+    <div id="sea">
+        <div class="sun-rays"></div>
+        <div class="waves-container">
+            <div class="wave"></div>
+            <div class="wave wave2"></div>
+        </div>
+        <div id="items-container"></div>
+    </div>
+
+    <div id="game-over" class="overlay">
+        <h1 style="color: var(--gold); font-size: 40px; margin: 0;">PESCARIA CONCLUÍDA!</h1>
+        <p id="final-score" style="font-size: 28px; margin: 20px;"></p>
+        <button class="btn-restart" onclick="location.reload()">NOVA PESCARIA</button>
+    </div>
+
+    <script>
+        const itemsContainer = document.getElementById('items-container');
+        const line = document.getElementById('line');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const gameOverScreen = document.getElementById('game-over');
+
+        let score = 0;
+        let timeLeft = 60;
+        let gameActive = true;
+        let hookState = 'swinging'; // swinging, launching, retracting
+        let angle = 0;
+        let angleDir = 1;
+        let lineLength = 0;
+        let maxLineLength = window.innerHeight - 250;
+        let currentItem = null;
+
+        const fishTypes = [
+            { icon: '🐟', points: 10, weight: 1 },
+            { icon: '🐠', points: 20, weight: 0.8 },
+            { icon: '🐡', points: 30, weight: 1.5 },
+            { icon: '🦈', points: 100, weight: 3.5 },
+            { icon: '🍱', points: 50, weight: 1.2 },
+            { icon: '👞', points: 0, weight: 2 } // Obstáculo: Bota velha
+        ];
+
+        function spawnItems() {
+            itemsContainer.innerHTML = '';
+            for (let i = 0; i < 15; i++) {
+                const item = document.createElement('div');
+                const type = fishTypes[Math.floor(Math.random() * fishTypes.length)];
+                item.className = 'item';
+                item.innerHTML = type.icon;
+                item.dataset.points = type.points;
+                item.dataset.weight = type.weight;
+                
+                // Distribuição aleatória no mar
+                item.style.left = (Math.random() * 85 + 5) + '%';
+                item.style.top = (Math.random() * 75 + 10) + '%';
+                item.style.fontSize = (25 + (type.weight * 15)) + 'px';
+                
+                itemsContainer.appendChild(item);
+            }
+        }
+
+        function handleAction() {
+            if (hookState === 'swinging' && gameActive) {
+                hookState = 'launching';
+            }
+        }
+
+        function update() {
+            if (!gameActive) return;
+
+            if (hookState === 'swinging') {
+                angle += 1.8 * angleDir;
+                if (Math.abs(angle) > 75) angleDir *= -1;
+                line.style.transform = `rotate(${angle}deg)`;
+            } 
+            else if (hookState === 'launching') {
+                lineLength += 8;
+                line.style.height = lineLength + 'px';
+                checkCollision();
+                if (lineLength > maxLineLength) hookState = 'retracting';
+            } 
+            else if (hookState === 'retracting') {
+                let speed = 6;
+                if (currentItem) speed = Math.max(1.5, 6 / currentItem.dataset.weight);
+                
+                lineLength -= speed;
+                line.style.height = lineLength + 'px';
+
+                if (currentItem) {
+                    const hookElem = document.getElementById('hook');
+                    currentItem.style.position = 'absolute';
+                    currentItem.style.top = '10px';
+                    currentItem.style.left = '-5px';
+                    hookElem.appendChild(currentItem);
+                }
+
+                if (lineLength <= 0) {
+                    lineLength = 0;
+                    hookState = 'swinging';
+                    if (currentItem) {
+                        score += parseInt(currentItem.dataset.points);
+                        scoreDisplay.innerText = score;
+                        currentItem.remove();
+                        currentItem = null;
+                        // Repovoar se estiver vazio
+                        if (itemsContainer.children.length < 5) spawnItems();
+                    }
+                }
+            }
+            requestAnimationFrame(update);
+        }
+
+        function checkCollision() {
+            const hookRect = document.getElementById('hook').getBoundingClientRect();
+            const items = document.querySelectorAll('.item');
+
+            for (let item of items) {
+                if (currentItem) break;
+                const itemRect = item.getBoundingClientRect();
+                
+                // Colisão simples por proximidade
+                if (hookRect.left < itemRect.right && hookRect.right > itemRect.left &&
+                    hookRect.top < itemRect.bottom && hookRect.bottom > itemRect.top) {
+                    currentItem = item;
+                    hookState = 'retracting';
+                }
+            }
+        }
+
+        // Cronômetro do Jogo
+        const gameTimer = setInterval(() => {
+            if (!gameActive) return;
+            timeLeft--;
+            timerDisplay.innerText = timeLeft;
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }, 1000);
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameTimer);
+            document.getElementById('final-score').innerText = `Você coletou ${score} pontos de milagres!`;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        // Inicialização
+        spawnItems();
+        update();
+
+    </script>
+</body>
+</html>
