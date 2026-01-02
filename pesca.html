@@ -15,49 +15,38 @@
 
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden; font-family: 'Segoe UI', sans-serif;
             background: var(--sky-top);
             user-select: none; touch-action: manipulation;
         }
 
-        /* CÉU ESTILIZADO */
+        #game-container { position: relative; width: 100%; height: 100%; }
+
+        /* CÉU */
         #sky {
             position: absolute; top: 0; width: 100%; height: 200px;
             background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
-            overflow: hidden;
         }
 
         .sun {
-            position: absolute; bottom: -30px; left: 70%;
+            position: absolute; bottom: -20px; left: 70%;
             width: 80px; height: 80px; background: #feb47b;
-            border-radius: 50%; box-shadow: 0 0 40px rgba(254, 180, 123, 0.5);
+            border-radius: 50%; box-shadow: 0 0 50px rgba(254, 180, 123, 0.6);
         }
 
-        .cloud {
-            position: absolute; background: white; opacity: 0.3;
-            border-radius: 50px; filter: blur(5px);
-            animation: moveClouds linear infinite;
-        }
-
-        @keyframes moveClouds {
-            from { transform: translateX(-150px); }
-            to { transform: translateX(110vw); }
-        }
-
-        /* MAR PROFISSIONAL */
+        /* MAR PROFUNDO */
         #sea {
             position: absolute; top: 200px; width: 100%; height: calc(100% - 200px);
             background: linear-gradient(to bottom, var(--sea-top), var(--sea-deep));
             overflow: hidden;
         }
 
-        .sun-rays {
-            position: absolute; inset: 0;
-            background: repeating-conic-gradient(from 0deg at 50% -10%, transparent 0deg 15deg, rgba(255,255,255,0.05) 20deg 25deg);
-            filter: blur(15px); pointer-events: none;
+        /* CONTAINER DOS PEIXES - Garante que ocupe o mar todo */
+        #container {
+            position: relative; width: 100%; height: 100%;
         }
 
-        /* BARCO E PESCADOR */
+        /* BARCO */
         #boat-container {
             position: absolute; top: 140px; left: 50%;
             width: 120px; z-index: 100;
@@ -69,33 +58,30 @@
             50% { transform: translateX(-45%) translateY(-5px) rotate(2deg); }
         }
 
-        /* HUD */
         #hud {
             position: absolute; top: 20px; width: 100%;
-            display: flex; justify-content: center; gap: 15px; z-index: 200;
+            display: flex; justify-content: center; gap: 10px; z-index: 200;
         }
         .stat {
-            background: rgba(0,0,0,0.5); border: 1px solid var(--gold);
-            padding: 8px 15px; border-radius: 15px; color: white;
-            backdrop-filter: blur(5px); font-weight: bold; font-size: 14px;
+            background: rgba(0,0,0,0.6); border: 1px solid var(--gold);
+            padding: 8px 12px; border-radius: 12px; color: white;
+            font-weight: bold; font-size: 13px; min-width: 80px; text-align: center;
         }
 
-        /* MECÂNICA DE PESCA */
         #line {
             position: absolute; top: 185px; left: 50%;
-            width: 2px; height: 0; background: rgba(255,255,255,0.7);
+            width: 2px; height: 0; background: white;
             transform-origin: top center; z-index: 50;
         }
         #hook { position: absolute; bottom: -20px; left: -10px; font-size: 22px; }
 
-        /* ITENS DO MAR */
         .item {
-            position: absolute; z-index: 40; transition: transform 0.1s;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+            position: absolute; z-index: 40;
+            will-change: transform;
         }
 
         .overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
             display: none; flex-direction: column; align-items: center;
             justify-content: center; color: white; z-index: 1000;
         }
@@ -103,38 +89,36 @@
 </head>
 <body onclick="shoot()">
 
-    <div id="sky">
-        <div class="sun"></div>
-        <div class="cloud" style="width:100px; height:30px; top:40px; left:10%; animation-duration: 25s;"></div>
-        <div class="cloud" style="width:140px; height:40px; top:80px; left:40%; animation-duration: 40s;"></div>
-    </div>
+    <div id="game-container">
+        <div id="sky">
+            <div class="sun"></div>
+        </div>
 
-    <div id="hud">
-        <div class="stat">NÍVEL: <span id="lvl">1</span></div>
-        <div class="stat">PONTOS: <span id="pts">0</span></div>
-        <div class="stat">TEMPO: <span id="time">60</span>s</div>
-    </div>
+        <div id="hud">
+            <div class="stat">NÍVEL: <span id="lvl">1</span></div>
+            <div class="stat">PONTOS: <span id="pts">0</span></div>
+            <div class="stat">TEMPO: <span id="time">60</span>s</div>
+        </div>
 
-    <div id="boat-container">
-        <svg viewBox="0 0 100 60">
-            <path d="M5,35 L95,35 L85,55 L15,55 Z" fill="#5d4037" />
-            <path d="M15,35 L85,35 L75,42 L25,42 Z" fill="#795548" />
-            <circle cx="45" cy="22" r="7" fill="#ffdbac" />
-            <line x1="52" y1="32" x2="90" y2="5" stroke="#222" stroke-width="2.5" />
-        </svg>
-    </div>
+        <div id="boat-container">
+            <svg viewBox="0 0 100 60">
+                <path d="M5,35 L95,35 L85,55 L15,55 Z" fill="#5d4037" />
+                <circle cx="45" cy="22" r="7" fill="#ffdbac" />
+                <line x1="52" y1="32" x2="90" y2="5" stroke="#222" stroke-width="3" />
+            </svg>
+        </div>
 
-    <div id="sea">
-        <div class="sun-rays"></div>
-        <div id="container"></div>
-    </div>
+        <div id="sea">
+            <div id="container"></div>
+        </div>
 
-    <div id="line"><div id="hook">🪝</div></div>
+        <div id="line"><div id="hook">🪝</div></div>
+    </div>
 
     <div id="game-over" class="overlay">
         <h1 style="color:var(--gold)">FIM DA PESCARIA</h1>
         <p id="final-pts" style="font-size: 24px"></p>
-        <button onclick="location.reload()" style="padding: 15px 40px; border-radius: 50px; background:var(--gold); border:none; font-weight:bold; cursor:pointer">RECOMEÇAR</button>
+        <button onclick="location.reload()" style="padding: 15px 40px; border-radius: 50px; background:var(--gold); border:none; font-weight:bold;">RECOMEÇAR</button>
     </div>
 
 <script>
@@ -157,22 +141,30 @@
 
     function spawn() {
         if(!active) return;
+
+        // CORREÇÃO: Pega a altura atual do container no momento do spawn
+        const seaHeight = container.getBoundingClientRect().height;
+        
         const t = types[Math.floor(Math.random()*types.length)];
         const it = {
             el: document.createElement('div'),
             x: window.innerWidth + 50,
-            y: Math.random() * (container.offsetHeight - 60),
+            // CORREÇÃO: Espalha por toda a altura do mar (seaHeight)
+            y: Math.random() * (seaHeight - 50), 
             t: t,
-            speed: (Math.random() * t.s + (level * 0.5)),
+            speed: (Math.random() * t.s + (level * 0.4)),
             sinOff: Math.random() * 10
         };
+
         it.el.className = 'item';
         it.el.innerHTML = t.ico;
         it.el.style.fontSize = (25 + t.w * 8) + 'px';
+        it.el.style.top = it.y + 'px'; // Aplica a altura aleatória corrigida
+        
         container.appendChild(it.el);
         items.push(it);
         
-        setTimeout(spawn, Math.max(300, 1500 - (level * 200)));
+        setTimeout(spawn, Math.max(400, 1500 - (level * 150)));
     }
 
     function shoot() {
@@ -182,14 +174,14 @@
     function update() {
         if(!active) return;
 
-        // Movimento Senoidal e Correnteza Total
         items.forEach((it, i) => {
             if(it === caught) return;
             it.x -= it.speed;
-            // Efeito de ondulação suave na vertical
-            const yVar = Math.sin(it.x * 0.02 + it.sinOff) * 2;
-            it.el.style.left = it.x + 'px';
-            it.el.style.top = (it.y + yVar) + 'px';
+            
+            // Movimento leve de onda
+            const yVar = Math.sin(it.x * 0.03 + it.sinOff) * 2;
+            
+            it.el.style.transform = `translate(${it.x - (window.innerWidth + 50)}px, ${yVar}px)`;
 
             if(it.x < -100) {
                 it.el.remove();
@@ -197,13 +189,12 @@
             }
         });
 
-        // Pêndulo e Pesca
         if(state === 'swing') {
             angle += (1.5 + (level * 0.2)) * dir;
             if(Math.abs(angle) > 75) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } else if(state === 'launch') {
-            len += 12;
+            len += 14;
             line.style.height = len + 'px';
             
             const hRect = hook.getBoundingClientRect();
@@ -218,8 +209,8 @@
             });
             if(len > window.innerHeight - 200) state = 'back';
         } else if(state === 'back') {
-            let s = 10;
-            if(caught) s = Math.max(1.5, 10 / caught.t.w);
+            let s = 12;
+            if(caught) s = Math.max(2, 12 / caught.t.w);
             len -= s;
             line.style.height = len + 'px';
 
@@ -239,10 +230,11 @@
                     caught.el.remove();
                     items = items.filter(i => i !== caught);
                     caught = null;
-                    if(score >= level * 200) {
+                    
+                    if(score >= level * 150) {
                         level++;
                         document.getElementById('lvl').innerText = level;
-                        timeLeft += 10;
+                        timeLeft += 15;
                     }
                 }
             }
@@ -253,7 +245,7 @@
     const timer = setInterval(() => {
         if(!active) return;
         timeLeft--;
-        document.getElementById('time').innerText = timeLeft;
+        document.getElementById('time').innerText = timeLeft + "s";
         if(timeLeft <= 0) {
             active = false;
             clearInterval(timer);
@@ -262,8 +254,11 @@
         }
     }, 1000);
 
-    spawn();
-    update();
+    // Espera 100ms para o navegador processar o layout antes de começar o spawn
+    setTimeout(() => {
+        spawn();
+        update();
+    }, 100);
 </script>
 </body>
 </html>
