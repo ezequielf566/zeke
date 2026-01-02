@@ -82,7 +82,6 @@
         }
         @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
 
-        /* Aumentei o tamanho geral dos itens */
         .item { position: absolute; z-index: 40; pointer-events: none; font-size: 52px; }
         .shark-size { font-size: 85px !important; }
 
@@ -118,15 +117,15 @@
 
     <div id="mission-alert">
         <div id="mission-box">
-            <h2 style="color:var(--gold); margin:0;">NOVA MISSÃO</h2>
+            <h2 style="color:var(--gold); margin:0;">DESAFIO DE MISSÃO</h2>
             <h1 id="mission-title">---</h1>
             <p id="mission-reward" style="color:var(--success); font-size: 20px;"></p>
-            <small style="color: #888;">Tempo pausado!</small>
+            <small style="color: #888;">Jogo Pausado!</small>
         </div>
     </div>
 
     <div id="game-over" class="overlay">
-        <h1 style="color:var(--gold); font-size: 45px;">PESCARIA ENCERRADA!</h1>
+        <h1 style="color:var(--gold); font-size: 45px;">FIM DA PESCARIA!</h1>
         <h2 id="final-score" style="font-size: 60px; margin: 10px 0;">0</h2>
         <button style="padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer; background: var(--gold); border: none; border-radius: 50px;" onclick="location.reload()">RECOMEÇAR</button>
     </div>
@@ -145,18 +144,19 @@
         'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 1.5, name: 'Peixinhos' },
         'RARO': { ico: '🐠', pts: 50, w: 0.8, s: 2.2, name: 'Peixes Raros' },
         'TUBARAO': { ico: '🦈', pts: 150, w: 5, s: 0.8, name: 'Tubarões' },
-        'SAPATO': { ico: '👞', pts: -5, w: 2, s: 1.2, name: 'Sapatos' },
-        'LATA': { ico: '🥫', pts: -10, w: 1.5, s: 1.5, name: 'Latas' },
+        'SAPATO': { ico: '👞', pts: -10, w: 2, s: 1.2, name: 'Sapatos' },
+        'LATA': { ico: '🥫', pts: -15, w: 1.5, s: 1.5, name: 'Latas' },
         'BONUS': { ico: '✨', pts: 20, w: 0.5, s: 2.2, name: 'Estrelas' }
     };
 
     function showMission() {
+        // Agora aparece abaixo de 50 segundos e se não estiver em missão
         if(!active || inMissionMode || state !== 'swing' || timeLeft >= 50) return;
         
         isPaused = true; 
         inMissionMode = true;
         const missionList = [
-            { target: 'PEIXE', qty: 2 + level, bonus: 15 },
+            { target: 'PEIXE', qty: 3 + Math.floor(level/2), bonus: 15 },
             { target: 'RARO', qty: 2, bonus: 20 }
         ];
         currentMission = missionList[Math.floor(Math.random() * missionList.length)];
@@ -164,7 +164,7 @@
 
         const alert = document.getElementById('mission-alert');
         document.getElementById('mission-title').innerText = `Capture ${currentMission.qty} ${types[currentMission.target].name}`;
-        document.getElementById('mission-reward').innerText = `RECOMPENSA: +${currentMission.bonus}s`;
+        document.getElementById('mission-reward').innerText = `PRÊMIO: +${currentMission.bonus}s`;
         alert.style.display = 'flex';
         
         setTimeout(() => { alert.style.display = 'none'; isPaused = false; }, 3000);
@@ -173,17 +173,19 @@
     function spawn() {
         if(!active || isPaused) { setTimeout(spawn, 1000); return; }
 
-        const qty = 3 + Math.min(level, 4); 
+        const qty = 4 + Math.min(level, 6); // Aumenta o número de itens conforme o nível
         for(let i=0; i<qty; i++) {
             let chance = Math.random();
             let k = 'PEIXE';
             
-            let bonusThreshold = Math.max(0.02, 0.15 - (level * 0.03));
-            
+            // Lógica de lixo aumentada conforme o nível
+            let trashChance = 0.75 - (level * 0.04); // Diminui a chance de peixe comum
+            let bonusThreshold = Math.max(0.01, 0.12 - (level * 0.015));
+
             if(chance < bonusThreshold) k = 'BONUS';
-            else if(chance < 0.3) k = 'RARO';
-            else if(level > 1 && chance > 0.85) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
-            else if(level > 2 && chance > 0.92) k = 'TUBARAO';
+            else if(chance < 0.25) k = 'RARO';
+            else if(chance > Math.max(0.4, trashChance)) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+            else if(level > 2 && chance > 0.90) k = 'TUBARAO';
 
             const t = types[k];
             const el = document.createElement('div');
@@ -193,15 +195,16 @@
             
             const item = {
                 el: el, type: k,
-                x: window.innerWidth + (Math.random() * 500),
-                y: 50 + Math.random() * (window.innerHeight - 350),
-                speed: t.s + (level * 0.12),
+                x: window.innerWidth + (Math.random() * 600),
+                y: 50 + Math.random() * (window.innerHeight - 380),
+                speed: t.s + (level * 0.15),
                 pts: t.pts, w: t.w
             };
             container.appendChild(el);
             items.push(item);
         }
-        setTimeout(spawn, 2800 - (level * 100));
+        // Spawn mais frequente em níveis altos
+        setTimeout(spawn, Math.max(1200, 2800 - (level * 150)));
     }
 
     function update() {
@@ -290,7 +293,7 @@
 
     spawn();
     update();
-    setInterval(showMission, 12000);
+    setInterval(showMission, 10000); // Tenta mostrar missão a cada 10 segundos
 </script>
 </body>
 </html>
