@@ -27,6 +27,12 @@
             background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
         }
 
+        .sun {
+            position: absolute; bottom: -20px; left: 70%;
+            width: 80px; height: 80px; background: #feb47b;
+            border-radius: 50%; box-shadow: 0 0 50px rgba(254, 180, 123, 0.6);
+        }
+
         #sea {
             position: absolute; top: 200px; width: 100%; height: calc(100% - 200px);
             background: linear-gradient(to bottom, var(--sea-top), var(--sea-deep));
@@ -34,8 +40,11 @@
         }
 
         #boat-container {
-            position: absolute; top: 140px; left: 50%;
-            width: 120px; height: 60px; z-index: 100;
+            position: absolute; 
+            top: 170px; /* REBAIXADO: Agora o barco toca a água */
+            left: 50%;
+            width: 120px; height: 60px;
+            z-index: 100;
             animation: boatRock 5s ease-in-out infinite;
             transform-origin: center;
         }
@@ -45,21 +54,17 @@
             50% { transform: translateX(-40%) rotate(2deg); }
         }
 
-        /* LINHA: Agora dentro do barco, saindo da ponta da vara */
+        /* LINHA: Agora dentro do barco, fixa na ponta da vara */
         #line {
             position: absolute; 
-            top: 5px; /* Alinhado com a ponta da vara no SVG */
-            right: 5px; /* Ponta direita da vara */
+            top: 5px; /* Ponta da vara */
+            right: 0px; 
             width: 2px; height: 60px; 
-            background: rgba(255,255,255,0.9);
+            background: white;
             transform-origin: top center; 
-            z-index: 110; /* À frente do barco */
+            z-index: 110;
         }
-        #hook { 
-            position: absolute; bottom: -25px; left: -12px; 
-            font-size: 26px; z-index: 120;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
-        }
+        #hook { position: absolute; bottom: -25px; left: -12px; font-size: 26px; }
 
         #hud {
             position: absolute; top: 20px; width: 100%;
@@ -86,7 +91,7 @@
 <body onclick="shoot()">
 
     <div id="game-container">
-        <div id="sky"></div>
+        <div id="sky"><div class="sun"></div></div>
 
         <div id="hud">
             <div class="stat">NÍVEL: <span id="lvl">1</span></div>
@@ -109,7 +114,7 @@
     <div id="game-over" class="overlay">
         <h1 style="color:var(--gold)">FIM DA PESCARIA</h1>
         <p id="final-pts" style="font-size: 24px"></p>
-        <button onclick="location.reload()" style="padding: 15px 40px; border-radius: 50px; background:var(--gold); border:none; font-weight:bold; cursor:pointer;">JOGAR NOVAMENTE</button>
+        <button onclick="location.reload()" style="padding: 15px 40px; border-radius: 50px; background:var(--gold); border:none; font-weight:bold; cursor:pointer;">RECOMEÇAR</button>
     </div>
 
 <script>
@@ -132,24 +137,26 @@
 
     function spawn() {
         if(!active) return;
-        const batch = 3;
+        const seaRect = container.getBoundingClientRect();
+        const batch = Math.floor(Math.random() * 3) + 2; // GERA MUITOS PEIXES
+        
         for(let i=0; i<batch; i++) {
             const t = types[Math.floor(Math.random()*types.length)];
             const it = {
                 el: document.createElement('div'),
-                x: window.innerWidth + (Math.random() * 400 + 50), 
-                y: Math.random() * (window.innerHeight - 300), 
+                x: window.innerWidth + (Math.random() * 300), 
+                y: Math.random() * (seaRect.height - 80), 
                 t: t,
-                speed: (Math.random() * t.s + 0.6) + (level * 0.2), 
+                speed: (Math.random() * t.s + 0.5) + (level * 0.2), 
                 sinOff: Math.random() * 10
             };
             it.el.className = 'item';
             it.el.innerHTML = t.ico;
-            it.el.style.fontSize = (24 + t.w * 8) + 'px';
+            it.el.style.fontSize = (25 + t.w * 8) + 'px';
             container.appendChild(it.el);
             items.push(it);
         }
-        setTimeout(spawn, Math.max(300, 1000 - (level * 60)));
+        setTimeout(spawn, Math.max(200, 800 - (level * 100)));
     }
 
     function shoot() {
@@ -162,7 +169,7 @@
         items.forEach((it, i) => {
             if(it === caught) return;
             it.x -= it.speed;
-            const yVar = Math.sin(it.x * 0.02 + it.sinOff) * 12;
+            const yVar = Math.sin(it.x * 0.02 + it.sinOff) * 15;
             it.el.style.transform = `translate(${it.x}px, ${it.y + yVar}px)`;
             if(it.x < -150) {
                 it.el.remove();
@@ -171,12 +178,12 @@
         });
 
         if(state === 'swing') {
-            angle += (1.0 + (level * 0.1)) * dir;
+            angle += (0.8 + (level * 0.15)) * dir; // Lento no nv 1
             if(Math.abs(angle) > 70) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
         else if(state === 'launch') {
-            len += (8 + (level * 2)); 
+            len += (6 + (level * 2)); // Velocidade de descida corrigida
             line.style.height = len + 'px';
             
             const hRect = hook.getBoundingClientRect();
@@ -193,8 +200,8 @@
             if(len > window.innerHeight) state = 'back';
         } 
         else if(state === 'back') {
-            let s = (12 + (level * 2));
-            if(caught) s = Math.max(2, s / caught.t.w);
+            let s = (10 + (level * 2));
+            if(caught) s = Math.max(1.5, s / caught.t.w);
             len -= s;
             line.style.height = len + 'px';
 
@@ -218,7 +225,7 @@
                     if(score >= level * 300) {
                         level++;
                         document.getElementById('lvl').innerText = level;
-                        timeLeft += 10;
+                        timeLeft += 15;
                     }
                 }
             }
