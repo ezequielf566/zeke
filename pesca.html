@@ -167,7 +167,7 @@
         'TUBARAO': { ico: '🦈', pts: 150, w: 5, s: 0.5, name: 'Tubarões' },
         'SAPATO': { ico: '👞', pts: -5, w: 2, s: 1.2, name: 'Sapatos' },
         'LATA': { ico: '🥫', pts: -10, w: 1.2, s: 1.5, name: 'Latas' },
-        'BONUS': { ico: '✨', pts: 50, w: 0.7, s: 1.8, name: 'Bônus Estelar' } // NOVO PEIXE
+        'BONUS': { ico: '✨', pts: 50, w: 0.7, s: 1.8, name: 'Bônus Estelar' }
     };
 
     let currentMission = null;
@@ -218,10 +218,12 @@
         const keys = Object.keys(types);
         
         for(let i=0; i<batch; i++) {
-            let k = keys[Math.floor(Math.random() * (keys.length - 1))]; // Pega tipos normais
+            // Sorteia entre os peixes normais (excluindo o bônus do sorteio padrão)
+            const normalKeys = keys.filter(k => k !== 'BONUS');
+            let k = normalKeys[Math.floor(Math.random() * normalKeys.length)];
             
-            // LÓGICA DO PEIXE BÔNUS: Mais frequente no início ou se o tempo estiver baixo
-            const bonusChance = (level === 1 || timeLeft < 20) ? 0.25 : 0.05;
+            // LÓGICA ALEATÓRIA DO PEIXE BÔNUS: Ele nasce na direita como os outros
+            const bonusChance = (level === 1 || timeLeft < 20) ? 0.20 : 0.05;
             if(Math.random() < bonusChance) k = 'BONUS';
 
             const t = types[k];
@@ -258,7 +260,6 @@
         });
 
         if(state === 'swing') {
-            // VELOCIDADE ESCALÁVEL: Começa em 1.2 no Nível 1 e sobe devagar
             const swingSpeed = 1.2 + (level * 0.2); 
             angle += swingSpeed * dir;
             if(Math.abs(angle) > 65) dir *= -1;
@@ -293,7 +294,6 @@
                     score += caught.t.pts;
                     document.getElementById('pts').innerText = score;
 
-                    // AÇÃO DO PEIXE BÔNUS
                     if(caught.type === 'BONUS') {
                         timeLeft += 5;
                         createPopup("BÔNUS! +5s", "#f1c40f");
