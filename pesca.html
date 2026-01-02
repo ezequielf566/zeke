@@ -15,31 +15,25 @@
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #87CEEB; user-select: none; touch-action: manipulation;
+            background: #87CEEB; 
+            user-select: none; touch-action: manipulation;
         }
 
-        #game-container { position: relative; width: 100%; height: 100%; }
+        #game-container { position: relative; width: 100%; height: 100%; transition: filter 0.5s; }
 
         #sky {
             position: absolute; top: 0; width: 100%; height: 120px;
-            background: #87CEEB; border-bottom: 2px solid rgba(255,255,255,0.3);
+            background: url('ceu.jpg') no-repeat center bottom;
+            background-size: cover;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
         }
 
         #sea {
             position: absolute; top: 120px; width: 100%; height: calc(100% - 120px);
-            background: #2980b9; overflow: hidden;
+            background: url('mar.jpg') no-repeat center top;
+            background-size: cover;
+            overflow: hidden;
         }
-
-        /* PAINEL DE OBJETIVO - O CORAÇÃO DO JOGO AGORA */
-        #mission-panel {
-            position: absolute; top: 75px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.85); border: 2px solid var(--success);
-            padding: 10px 20px; border-radius: 10px; color: white;
-            z-index: 300; min-width: 250px; text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        #mission-text { font-size: 16px; font-weight: bold; display: block; }
-        #mission-progress { font-size: 20px; color: var(--gold); font-weight: 900; }
 
         #hud {
             position: absolute; top: 15px; width: 100%;
@@ -51,37 +45,59 @@
             font-weight: bold; font-size: 14px; min-width: 95px; text-align: center;
         }
 
+        /* ANÚNCIO DE MISSÃO CENTRAL */
+        #mission-alert {
+            position: fixed; inset: 0; z-index: 1500;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(5px);
+            animation: fadeIn 0.5s forwards;
+        }
+
+        #mission-box {
+            background: rgba(0,0,0,0.9); border: 3px solid var(--gold);
+            padding: 30px 50px; border-radius: 20px; text-align: center;
+            box-shadow: 0 0 30px rgba(241, 196, 15, 0.4);
+            transform: scale(0.8); animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn { to { transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
         #boat-container {
             position: absolute; top: 55px; left: 50%;
             width: 140px; z-index: 100; transform: translateX(-50%);
         }
-        #boat-img { width: 100%; height: auto; }
+        #boat-img { width: 100%; height: auto; display: block; }
 
         #line {
             position: absolute; top: 90%; left: 50%; 
             width: 2px; height: 60px; background: #fff;
-            transform-origin: top center; z-index: 110;
+            transform-origin: top center; z-index: 110; 
+            box-shadow: 0 0 5px rgba(255,255,255,0.5);
         }
+
         #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; }
 
-        .item { position: absolute; z-index: 40; pointer-events: none; }
-        
         .floating-text {
             position: absolute; font-weight: 900; font-size: 26px;
-            pointer-events: none; z-index: 500; animation: floatUp 1s ease-out forwards;
+            pointer-events: none; z-index: 500; animation: floatUp 1.2s ease-out forwards;
             text-shadow: 2px 2px 4px #000;
         }
-        @keyframes floatUp { 0% { opacity:1; transform:translateY(0); } 100% { opacity:0; transform:translateY(-100px); } }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
+
+        .item { position: absolute; z-index: 40; pointer-events: none; }
 
         .overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            color: white; z-index: 2000; text-align: center;
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; color: white; z-index: 2000; text-align: center;
         }
-        #final-score-val { font-size: 80px; font-weight: 900; margin: 0; }
+
+        #final-score-val { font-size: 80px; font-weight: 900; color: #fff; margin: 0; }
         .btn-restart {
             padding: 20px 60px; border-radius: 50px; background: var(--gold);
-            border: none; font-weight: 900; font-size: 20px; cursor: pointer;
+            border: none; font-weight: 900; font-size: 20px; color: #000;
+            cursor: pointer; box-shadow: 0 10px 0 #b7950b;
         }
     </style>
 </head>
@@ -89,30 +105,30 @@
 
     <div id="game-container">
         <div id="sky"></div>
-
         <div id="hud">
             <div class="stat" style="border-color: var(--blue);">NÍVEL: <span id="lvl">1</span></div>
             <div class="stat">PONTOS: <span id="pts">0</span></div>
             <div class="stat" id="time-box" style="border-color: #e67e22;">TEMPO: <span id="time">30</span>s</div>
         </div>
-
-        <div id="mission-panel">
-            <span id="mission-text">MISSÃO: CARREGANDO...</span>
-            <span id="mission-progress">0 / 0</span>
-        </div>
-
         <div id="boat-container">
             <img src="barco.png" id="boat-img" alt="Barco">
             <div id="line"><div id="hook">🪝</div></div>
         </div>
-
         <div id="sea"><div id="container"></div></div>
+    </div>
+
+    <div id="mission-alert">
+        <div id="mission-box">
+            <h2 style="color:var(--gold); margin:0; font-size: 18px; letter-spacing: 2px;">NOVO OBJETIVO</h2>
+            <h1 id="mission-title" style="margin: 15px 0; font-size: 32px;">Pesque 2 Tubarões</h1>
+            <p id="mission-reward" style="color:var(--success); font-weight: bold;">RECOMPENSA: +15 SEGUNDOS</p>
+        </div>
     </div>
 
     <div id="game-over" class="overlay">
         <h1 style="color:var(--gold); font-size: 45px; margin-bottom: 10px;">PESCARIA ENCERRADA!</h1>
         <div id="final-score-val">0</div>
-        <div id="final-pts-label" style="font-size:24px; color:var(--gold); margin-bottom:40px;">PONTOS CONQUISTADOS</div>
+        <div id="final-pts-label" style="font-size: 24px; color: var(--gold); margin-bottom: 40px; font-weight: bold;">PONTOS CONQUISTADOS</div>
         <button class="btn-restart" onclick="window.location.href='pesca.html'">JOGAR NOVAMENTE</button>
     </div>
 
@@ -125,35 +141,37 @@
     let state = 'swing', angle = 0, dir = 1, len = 60, caught = null;
     let items = [];
 
-    // Definição dos itens
     const types = {
-        PEIXE: { ico: '🐟', pts: 10, w: 1, s: 0.9 },
-        RARO:  { ico: '🐠', pts: 25, w: 0.8, s: 1.3 },
-        GORDINHO: { ico: '🐡', pts: 40, w: 1.6, s: 0.7 },
-        TUBARAO: { ico: '🦈', pts: 150, w: 5, s: 0.5 },
-        SAPATO: { ico: '👞', pts: -50, w: 2, s: 1.2 },
-        LATA: { ico: '🥫', pts: -30, w: 1.2, s: 1.5 }
+        'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 0.9, name: 'Peixinhos' },
+        'RARO': { ico: '🐠', pts: 30, w: 0.8, s: 1.3, name: 'Peixes Raros' },
+        'TUBARAO': { ico: '🦈', pts: 150, w: 5, s: 0.5, name: 'Tubarões' },
+        'SAPATO': { ico: '👞', pts: -5, w: 2, s: 1.2, name: 'Sapatos Velhos' },
+        'LATA': { ico: '🥫', pts: -10, w: 1.2, s: 1.5, name: 'Latas de Lixo' }
     };
 
-    // SISTEMA DE OBJETIVOS
     let currentMission = null;
-    let missionCount = 0;
+    let missionProgress = 0;
 
-    function generateMission() {
-        const pool = [
-            { target: 'PEIXE', name: 'Peixinhos', qty: 3 + level, bonus: 10 },
-            { target: 'RARO', name: 'Peixes Coloridos', qty: 2 + Math.floor(level/2), bonus: 12 },
-            { target: 'TUBARAO', name: 'Tubarões', qty: 1, bonus: 15 },
-            { target: 'SAPATO', name: 'Sapatos (Limpeza)', qty: 2, bonus: 8 }
+    function startNewMission() {
+        const missions = [
+            { target: 'PEIXE', qty: 3 + level, bonus: 10 },
+            { target: 'RARO', qty: 2, bonus: 12 },
+            { target: 'TUBARAO', qty: 1, bonus: 15 },
+            { target: 'SAPATO', qty: 1, bonus: 8 }
         ];
-        currentMission = pool[Math.floor(Math.random() * pool.length)];
-        missionCount = 0;
-        updateMissionUI();
-    }
+        currentMission = missions[Math.floor(Math.random() * missions.length)];
+        missionProgress = 0;
 
-    function updateMissionUI() {
-        document.getElementById('mission-text').innerText = `OBJETIVO: Pescar ${currentMission.qty} ${currentMission.name}`;
-        document.getElementById('mission-progress').innerText = `${missionCount} / ${currentMission.qty}`;
+        // Mostrar Alerta Visual Bonito
+        const alert = document.getElementById('mission-alert');
+        document.getElementById('mission-title').innerText = `Pesque ${currentMission.qty} ${types[currentMission.target].name}`;
+        document.getElementById('mission-reward').innerText = `RECOMPENSA: +${currentMission.bonus} SEGUNDOS`;
+        
+        alert.style.display = 'flex';
+        setTimeout(() => {
+            alert.style.opacity = '0';
+            setTimeout(() => { alert.style.display = 'none'; alert.style.opacity = '1'; }, 500);
+        }, 3000);
     }
 
     function createPopup(txt, color, x, y) {
@@ -161,10 +179,10 @@
         p.className = 'floating-text';
         p.innerText = txt;
         p.style.color = color;
-        p.style.left = (x || window.innerWidth/2 - 50) + 'px';
-        p.style.top = (y || 150) + 'px';
+        p.style.left = (x || window.innerWidth/2 - 20) + 'px';
+        p.style.top = (y || 200) + 'px';
         document.body.appendChild(p);
-        setTimeout(() => p.remove(), 1000);
+        setTimeout(() => p.remove(), 1200);
     }
 
     function spawn() {
@@ -172,15 +190,15 @@
         const batch = Math.min(8, 2 + level);
         const keys = Object.keys(types);
         for(let i=0; i<batch; i++) {
-            const typeKey = keys[Math.floor(Math.random() * keys.length)];
-            const t = types[typeKey];
+            const k = keys[Math.floor(Math.random() * keys.length)];
+            const t = types[k];
             const it = {
                 el: document.createElement('div'),
+                type: k,
                 x: window.innerWidth + 100, 
                 y: 50 + Math.random() * (window.innerHeight - 300), 
                 t: t,
-                typeKey: typeKey,
-                speed: (Math.random() * t.s + 1) + (level * 0.2),
+                speed: (Math.random() * t.s + 1.2) + (level * 0.2), 
                 sinOff: Math.random() * 10
             };
             it.el.className = 'item';
@@ -200,17 +218,18 @@
         items.forEach((it, i) => {
             if(it === caught) return;
             it.x -= it.speed;
-            it.el.style.transform = `translate(${it.x}px, ${it.y + Math.sin(it.x * 0.02) * 10}px)`;
+            it.el.style.transform = `translate(${it.x}px, ${it.y + Math.sin(it.x * 0.02) * 15}px)`;
             if(it.x < -150) { it.el.remove(); items.splice(i, 1); }
         });
 
         if(state === 'swing') {
-            angle += (1.5 + (level * 0.2)) * dir;
+            angle += (1.4 + (level * 0.2)) * dir;
             if(Math.abs(angle) > 65) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
         else if(state === 'launch') {
-            len += 15; line.style.height = len + 'px';
+            len += 16; 
+            line.style.height = len + 'px';
             const hRect = hook.getBoundingClientRect();
             items.forEach(it => {
                 if(!caught) {
@@ -237,21 +256,20 @@
                     score += caught.t.pts;
                     document.getElementById('pts').innerText = score;
 
-                    // VERIFICA MISSÃO
-                    if(caught.typeKey === currentMission.target) {
-                        missionCount++;
-                        createPopup("ALVO!", var(--success));
-                        if(missionCount >= currentMission.qty) {
+                    // Lógica de Missão
+                    if(caught.type === currentMission.target) {
+                        missionProgress++;
+                        if(missionProgress >= currentMission.qty) {
                             timeLeft += currentMission.bonus;
-                            createPopup(`+${currentMission.bonus}s EXTRA!`, var(--gold));
                             level++;
                             document.getElementById('lvl').innerText = level;
-                            generateMission();
+                            createPopup(`MISSÃO COMPLETA! +${currentMission.bonus}s`, "var(--success)");
+                            startNewMission();
                         } else {
-                            updateMissionUI();
+                            createPopup(`Progresso: ${missionProgress}/${currentMission.qty}`, "var(--gold)");
                         }
                     } else {
-                        createPopup(caught.t.pts > 0 ? "Peixe Errado" : "Lixo!", var(--danger));
+                        createPopup(caught.t.pts > 0 ? "Peixe Errado!" : "Lixo!", "var(--danger)");
                     }
 
                     caught.el.remove();
@@ -263,18 +281,19 @@
         requestAnimationFrame(update);
     }
 
-    setInterval(() => {
+    const timer = setInterval(() => {
         if(!active) return;
         timeLeft--;
         document.getElementById('time').innerText = timeLeft;
         if(timeLeft <= 0) {
             active = false;
+            clearInterval(timer);
             document.getElementById('final-score-val').innerText = score;
             document.getElementById('game-over').style.display = 'flex';
         }
     }, 1000);
 
-    generateMission();
+    startNewMission();
     spawn();
     update();
 </script>
