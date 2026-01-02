@@ -27,29 +27,38 @@
             background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
         }
 
-        .sun {
-            position: absolute; bottom: -20px; left: 70%;
-            width: 80px; height: 80px; background: #feb47b;
-            border-radius: 50%; box-shadow: 0 0 50px rgba(254, 180, 123, 0.6);
-        }
-
         #sea {
             position: absolute; top: 200px; width: 100%; height: calc(100% - 200px);
             background: linear-gradient(to bottom, var(--sea-top), var(--sea-deep));
             overflow: hidden;
         }
 
-        #container { position: relative; width: 100%; height: 100%; }
-
         #boat-container {
             position: absolute; top: 140px; left: 50%;
-            width: 120px; z-index: 100;
+            width: 120px; height: 60px; z-index: 100;
             animation: boatRock 5s ease-in-out infinite;
+            transform-origin: center;
         }
 
         @keyframes boatRock {
-            0%, 100% { transform: translateX(-50%) translateY(0) rotate(-2deg); }
-            50% { transform: translateX(-40%) translateY(-5px) rotate(2deg); }
+            0%, 100% { transform: translateX(-50%) rotate(-2deg); }
+            50% { transform: translateX(-40%) rotate(2deg); }
+        }
+
+        /* LINHA: Agora dentro do barco, saindo da ponta da vara */
+        #line {
+            position: absolute; 
+            top: 5px; /* Alinhado com a ponta da vara no SVG */
+            right: 5px; /* Ponta direita da vara */
+            width: 2px; height: 60px; 
+            background: rgba(255,255,255,0.9);
+            transform-origin: top center; 
+            z-index: 110; /* À frente do barco */
+        }
+        #hook { 
+            position: absolute; bottom: -25px; left: -12px; 
+            font-size: 26px; z-index: 120;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
         }
 
         #hud {
@@ -57,28 +66,14 @@
             display: flex; justify-content: center; gap: 8px; z-index: 200;
         }
         .stat {
-            background: rgba(0,0,0,0.6); border: 1px solid var(--gold);
+            background: rgba(0,0,0,0.7); border: 1px solid var(--gold);
             padding: 8px 10px; border-radius: 12px; color: white;
             font-weight: bold; font-size: 12px; min-width: 75px; text-align: center;
         }
 
-        /* LINHA: Agora começa com 40px de altura para o anzol aparecer */
-        #line {
-            position: absolute; 
-            top: 155px; 
-            left: calc(50% + 40px); 
-            width: 2px; 
-            height: 40px; /* Altura inicial fixa */
-            background: rgba(255,255,255,0.8);
-            transform-origin: top center; z-index: 50;
-        }
-        #hook { position: absolute; bottom: -22px; left: -11px; font-size: 24px; }
-
         .item {
-            position: absolute; z-index: 40;
-            left: 0; top: 0;
-            will-change: transform;
-            pointer-events: none;
+            position: absolute; z-index: 40; left: 0; top: 0;
+            will-change: transform; pointer-events: none;
         }
 
         .overlay {
@@ -91,7 +86,7 @@
 <body onclick="shoot()">
 
     <div id="game-container">
-        <div id="sky"><div class="sun"></div></div>
+        <div id="sky"></div>
 
         <div id="hud">
             <div class="stat">NÍVEL: <span id="lvl">1</span></div>
@@ -100,16 +95,15 @@
         </div>
 
         <div id="boat-container">
-            <svg viewBox="0 0 100 60">
+            <svg viewBox="0 0 100 60" style="width:100%; height:100%">
                 <path d="M5,35 L95,35 L85,55 L15,55 Z" fill="#5d4037" />
                 <circle cx="45" cy="22" r="7" fill="#ffdbac" />
                 <line x1="52" y1="32" x2="95" y2="5" stroke="#222" stroke-width="3" />
             </svg>
+            <div id="line"><div id="hook">🪝</div></div>
         </div>
 
         <div id="sea"><div id="container"></div></div>
-
-        <div id="line"><div id="hook">🪝</div></div>
     </div>
 
     <div id="game-over" class="overlay">
@@ -124,7 +118,7 @@
     const hook = document.getElementById('hook');
     
     let score = 0, level = 1, timeLeft = 60, active = true;
-    let state = 'swing', angle = 0, dir = 1, len = 40, caught = null; // Começa com len 40
+    let state = 'swing', angle = 0, dir = 1, len = 60, caught = null;
     let items = [];
 
     const types = [
@@ -138,26 +132,24 @@
 
     function spawn() {
         if(!active) return;
-        const seaRect = container.getBoundingClientRect();
-        const batch = 3; // Sempre gera em abundância
-        
+        const batch = 3;
         for(let i=0; i<batch; i++) {
             const t = types[Math.floor(Math.random()*types.length)];
             const it = {
                 el: document.createElement('div'),
                 x: window.innerWidth + (Math.random() * 400 + 50), 
-                y: Math.random() * (seaRect.height - 60), 
+                y: Math.random() * (window.innerHeight - 300), 
                 t: t,
-                speed: (Math.random() * t.s + 0.5) + (level * 0.2), 
+                speed: (Math.random() * t.s + 0.6) + (level * 0.2), 
                 sinOff: Math.random() * 10
             };
             it.el.className = 'item';
             it.el.innerHTML = t.ico;
-            it.el.style.fontSize = (22 + t.w * 8) + 'px';
+            it.el.style.fontSize = (24 + t.w * 8) + 'px';
             container.appendChild(it.el);
             items.push(it);
         }
-        setTimeout(spawn, Math.max(250, 900 - (level * 60)));
+        setTimeout(spawn, Math.max(300, 1000 - (level * 60)));
     }
 
     function shoot() {
@@ -179,12 +171,12 @@
         });
 
         if(state === 'swing') {
-            angle += (0.9 + (level * 0.1)) * dir; // Balanço suave
+            angle += (1.0 + (level * 0.1)) * dir;
             if(Math.abs(angle) > 70) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
         else if(state === 'launch') {
-            len += (7 + (level * 2)); 
+            len += (8 + (level * 2)); 
             line.style.height = len + 'px';
             
             const hRect = hook.getBoundingClientRect();
@@ -198,11 +190,11 @@
                     }
                 }
             });
-            if(len > window.innerHeight - 200) state = 'back';
+            if(len > window.innerHeight) state = 'back';
         } 
         else if(state === 'back') {
-            let s = (10 + (level * 2));
-            if(caught) s = Math.max(1.5, s / caught.t.w);
+            let s = (12 + (level * 2));
+            if(caught) s = Math.max(2, s / caught.t.w);
             len -= s;
             line.style.height = len + 'px';
 
@@ -213,9 +205,8 @@
                 hook.appendChild(caught.el);
             }
 
-            // Volta para a altura inicial de 40px
-            if(len <= 40) {
-                len = 40; 
+            if(len <= 60) {
+                len = 60; 
                 state = 'swing';
                 if(caught) {
                     score += caught.t.pts;
