@@ -48,8 +48,8 @@
         }
 
         @keyframes boatRock {
-            0%, 100% { transform: translateX(-55%) translateY(0) rotate(-2deg); }
-            50% { transform: translateX(-45%) translateY(-5px) rotate(2deg); }
+            0%, 100% { transform: translateX(-50%) translateY(0) rotate(-2deg); }
+            50% { transform: translateX(-40%) translateY(-5px) rotate(2deg); }
         }
 
         #hud {
@@ -62,12 +62,17 @@
             font-weight: bold; font-size: 12px; min-width: 75px; text-align: center;
         }
 
+        /* LINHA: Agora começa com 40px de altura para o anzol aparecer */
         #line {
-            position: absolute; top: 185px; left: 50%;
-            width: 2px; height: 0; background: rgba(255,255,255,0.8);
+            position: absolute; 
+            top: 155px; 
+            left: calc(50% + 40px); 
+            width: 2px; 
+            height: 40px; /* Altura inicial fixa */
+            background: rgba(255,255,255,0.8);
             transform-origin: top center; z-index: 50;
         }
-        #hook { position: absolute; bottom: -22px; left: -11px; font-size: 22px; }
+        #hook { position: absolute; bottom: -22px; left: -11px; font-size: 24px; }
 
         .item {
             position: absolute; z-index: 40;
@@ -98,7 +103,7 @@
             <svg viewBox="0 0 100 60">
                 <path d="M5,35 L95,35 L85,55 L15,55 Z" fill="#5d4037" />
                 <circle cx="45" cy="22" r="7" fill="#ffdbac" />
-                <line x1="52" y1="32" x2="90" y2="5" stroke="#222" stroke-width="3" />
+                <line x1="52" y1="32" x2="95" y2="5" stroke="#222" stroke-width="3" />
             </svg>
         </div>
 
@@ -119,48 +124,40 @@
     const hook = document.getElementById('hook');
     
     let score = 0, level = 1, timeLeft = 60, active = true;
-    let state = 'swing', angle = 0, dir = 1, len = 0, caught = null;
+    let state = 'swing', angle = 0, dir = 1, len = 40, caught = null; // Começa com len 40
     let items = [];
 
     const types = [
-        { ico: '🐟', pts: 10, w: 1, s: 1.2 },
-        { ico: '🐠', pts: 20, w: 0.8, s: 1.8 },
-        { ico: '🐡', pts: 35, w: 1.5, s: 1.0 },
-        { ico: '🦈', pts: 120, w: 4, s: 0.6 },
-        { ico: '👞', pts: -15, w: 2, s: 1.5 },
-        { ico: '🥫', pts: -10, w: 1.2, s: 1.8 },
-        { ico: '🦴', pts: -5, w: 1, s: 1.4 }
+        { ico: '🐟', pts: 10, w: 1, s: 0.8 },
+        { ico: '🐠', pts: 20, w: 0.8, s: 1.2 },
+        { ico: '🐡', pts: 35, w: 1.5, s: 0.7 },
+        { ico: '🦈', pts: 150, w: 5, s: 0.5 },
+        { ico: '👞', pts: -15, w: 2, s: 1.2 },
+        { ico: '🥫', pts: -10, w: 1.2, s: 1.5 }
     ];
 
     function spawn() {
         if(!active) return;
-
         const seaRect = container.getBoundingClientRect();
-        
-        // CORREÇÃO: Cria de 1 a 3 peixes de uma vez para abundância
-        const batch = Math.floor(Math.random() * 2) + 1;
+        const batch = 3; // Sempre gera em abundância
         
         for(let i=0; i<batch; i++) {
             const t = types[Math.floor(Math.random()*types.length)];
             const it = {
                 el: document.createElement('div'),
-                x: window.innerWidth + (Math.random() * 200 + 50), 
+                x: window.innerWidth + (Math.random() * 400 + 50), 
                 y: Math.random() * (seaRect.height - 60), 
                 t: t,
-                speed: (Math.random() * t.s + 0.8) + (level * 0.3), // Mais lento no começo
+                speed: (Math.random() * t.s + 0.5) + (level * 0.2), 
                 sinOff: Math.random() * 10
             };
-
             it.el.className = 'item';
             it.el.innerHTML = t.ico;
             it.el.style.fontSize = (22 + t.w * 8) + 'px';
-            
             container.appendChild(it.el);
             items.push(it);
         }
-        
-        // Spawn muito mais frequente (400ms a 900ms)
-        setTimeout(spawn, Math.max(250, 700 - (level * 80)));
+        setTimeout(spawn, Math.max(250, 900 - (level * 60)));
     }
 
     function shoot() {
@@ -175,7 +172,6 @@
             it.x -= it.speed;
             const yVar = Math.sin(it.x * 0.02 + it.sinOff) * 12;
             it.el.style.transform = `translate(${it.x}px, ${it.y + yVar}px)`;
-
             if(it.x < -150) {
                 it.el.remove();
                 items.splice(i, 1);
@@ -183,12 +179,12 @@
         });
 
         if(state === 'swing') {
-            angle += (1.2 + (level * 0.15)) * dir; // Balanço mais calmo no Nv 1
-            if(Math.abs(angle) > 75) dir *= -1;
+            angle += (0.9 + (level * 0.1)) * dir; // Balanço suave
+            if(Math.abs(angle) > 70) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
         else if(state === 'launch') {
-            len += 16;
+            len += (7 + (level * 2)); 
             line.style.height = len + 'px';
             
             const hRect = hook.getBoundingClientRect();
@@ -205,8 +201,8 @@
             if(len > window.innerHeight - 200) state = 'back';
         } 
         else if(state === 'back') {
-            let s = 15;
-            if(caught) s = Math.max(2, 15 / caught.t.w);
+            let s = (10 + (level * 2));
+            if(caught) s = Math.max(1.5, s / caught.t.w);
             len -= s;
             line.style.height = len + 'px';
 
@@ -217,8 +213,9 @@
                 hook.appendChild(caught.el);
             }
 
-            if(len <= 0) {
-                len = 0; 
+            // Volta para a altura inicial de 40px
+            if(len <= 40) {
+                len = 40; 
                 state = 'swing';
                 if(caught) {
                     score += caught.t.pts;
@@ -227,12 +224,10 @@
                     caught.el.remove();
                     items = items.filter(i => i !== caught);
                     caught = null;
-                    
-                    // Progressão de nível por pontos
-                    if(score >= level * 250) {
+                    if(score >= level * 300) {
                         level++;
                         document.getElementById('lvl').innerText = level;
-                        timeLeft += 15;
+                        timeLeft += 10;
                     }
                 }
             }
