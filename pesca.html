@@ -117,10 +117,10 @@
 
     <div id="mission-alert">
         <div id="mission-box">
-            <h2 style="color:var(--gold); margin:0;">DESAFIO DE MISSÃO</h2>
+            <h2 style="color:var(--gold); margin:0;">DESAFIO ATIVADO</h2>
             <h1 id="mission-title">---</h1>
             <p id="mission-reward" style="color:var(--success); font-size: 20px;"></p>
-            <small style="color: #888;">Jogo Pausado!</small>
+            <small style="color: #888;">Relógio pausado...</small>
         </div>
     </div>
 
@@ -139,6 +139,7 @@
     let state = 'swing', angle = 0, dir = 1, len = 60, caught = null;
     let items = [];
     let currentMission = null, missionProgress = 0, inMissionMode = false;
+    let missionTriggeredOnce = false; // Controle para a primeira missão imediata
 
     const types = {
         'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 1.5, name: 'Peixinhos' },
@@ -150,11 +151,13 @@
     };
 
     function showMission() {
-        // Agora aparece abaixo de 50 segundos e se não estiver em missão
-        if(!active || inMissionMode || state !== 'swing' || timeLeft >= 50) return;
+        if(!active || inMissionMode || state !== 'swing') return;
+        if(timeLeft >= 50) return; 
         
         isPaused = true; 
         inMissionMode = true;
+        missionTriggeredOnce = true;
+
         const missionList = [
             { target: 'PEIXE', qty: 3 + Math.floor(level/2), bonus: 15 },
             { target: 'RARO', qty: 2, bonus: 20 }
@@ -164,35 +167,32 @@
 
         const alert = document.getElementById('mission-alert');
         document.getElementById('mission-title').innerText = `Capture ${currentMission.qty} ${types[currentMission.target].name}`;
-        document.getElementById('mission-reward').innerText = `PRÊMIO: +${currentMission.bonus}s`;
+        document.getElementById('mission-reward').innerText = `BÔNUS: +${currentMission.bonus}s`;
         alert.style.display = 'flex';
         
-        setTimeout(() => { alert.style.display = 'none'; isPaused = false; }, 3000);
+        setTimeout(() => { 
+            alert.style.display = 'none'; 
+            isPaused = false; 
+        }, 3500);
     }
 
     function spawn() {
         if(!active || isPaused) { setTimeout(spawn, 1000); return; }
-
-        const qty = 4 + Math.min(level, 6); // Aumenta o número de itens conforme o nível
+        const qty = 4 + Math.min(level, 7); 
         for(let i=0; i<qty; i++) {
             let chance = Math.random();
             let k = 'PEIXE';
-            
-            // Lógica de lixo aumentada conforme o nível
-            let trashChance = 0.75 - (level * 0.04); // Diminui a chance de peixe comum
+            let trashThreshold = Math.max(0.35, 0.70 - (level * 0.05)); 
             let bonusThreshold = Math.max(0.01, 0.12 - (level * 0.015));
-
             if(chance < bonusThreshold) k = 'BONUS';
-            else if(chance < 0.25) k = 'RARO';
-            else if(chance > Math.max(0.4, trashChance)) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+            else if(chance < 0.22) k = 'RARO';
+            else if(chance > trashThreshold) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
             else if(level > 2 && chance > 0.90) k = 'TUBARAO';
-
             const t = types[k];
             const el = document.createElement('div');
             el.className = 'item' + (k === 'BONUS' ? ' bonus-glow' : '');
             if(k === 'TUBARAO') el.classList.add('shark-size');
             el.innerHTML = t.ico;
-            
             const item = {
                 el: el, type: k,
                 x: window.innerWidth + (Math.random() * 600),
@@ -203,12 +203,16 @@
             container.appendChild(el);
             items.push(item);
         }
-        // Spawn mais frequente em níveis altos
-        setTimeout(spawn, Math.max(1200, 2800 - (level * 150)));
+        setTimeout(spawn, Math.max(1000, 2800 - (level * 180)));
     }
 
     function update() {
         if(!active || isPaused) { requestAnimationFrame(update); return; }
+
+        // Trigger imediato da primeira missão quando chegar em 49s
+        if(!missionTriggeredOnce && timeLeft < 50) {
+            showMission();
+        }
 
         items.forEach((it, i) => {
             if(it === caught) return;
@@ -254,7 +258,7 @@
                         missionProgress++;
                         if(missionProgress >= currentMission.qty) {
                             timeLeft += currentMission.bonus; inMissionMode = false;
-                            createPopup("MISSÃO OK! +"+currentMission.bonus+"s", "#2ecc71");
+                            createPopup("MISSÃO COMPLETA! +"+currentMission.bonus+"s", "#2ecc71");
                         }
                     }
                     document.getElementById('pts').innerText = score;
@@ -262,6 +266,11 @@
                     items = items.filter(i => i !== caught);
                     caught = null;
                     if(score >= level * 200) { level++; document.getElementById('lvl').innerText = level; }
+                } else {
+                    // ERRO: Perde 10 pontos
+                    score = Math.max(0, score - 10);
+                    document.getElementById('pts').innerText = score;
+                    createPopup("-10", "#e74c3c");
                 }
                 len = 60; state = 'swing';
             }
@@ -293,7 +302,8 @@
 
     spawn();
     update();
-    setInterval(showMission, 10000); // Tenta mostrar missão a cada 10 segundos
+    // Verificação periódica para as próximas missões a cada 10 segundos
+    setInterval(showMission, 10000); 
 </script>
 </body>
 </html>
