@@ -91,6 +91,12 @@
             display: none; flex-direction: column; align-items: center; justify-content: center;
             color: white; z-index: 2000; text-align: center;
         }
+        
+        /* Efeito visual para o Slow Motion */
+        .slow-mo-active #sea {
+            filter: hue-rotate(45deg) saturate(1.5);
+            transition: filter 0.5s;
+        }
     </style>
 </head>
 <body onclick="shoot()">
@@ -121,7 +127,7 @@
     <div id="game-over" class="overlay">
         <h1 style="color:var(--gold); font-size: 45px;">FIM DA PESCARIA!</h1>
         <h2 id="final-score" style="font-size: 60px; margin: 10px 0;">0</h2>
-        <button style="padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer; background: var(--gold); border: none; border-radius: 50px;" onclick="location.reload()">RECOMEÇAR</button>
+        <button style="padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer; background: var(--gold); border: none; border-radius: 50px;" onclick="window.location.href='pesca.html'">RECOMEÇAR</button>
     </div>
 
 <script>
@@ -134,6 +140,7 @@
     let items = [];
     let currentMission = null, missionProgress = 0, inMissionMode = false;
     let missionTriggeredOnce = false;
+    let slowMoFactor = 1; // 1 = normal, < 1 = lento
 
     const types = {
         'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 1.5, name: 'Peixinhos' },
@@ -141,7 +148,8 @@
         'TUBARAO': { ico: '🦈', pts: 150, w: 5, s: 0.8, name: 'Tubarões' },
         'SAPATO': { ico: '👞', pts: -10, w: 2, s: 1.2, name: 'Sapatos' },
         'LATA': { ico: '🥫', pts: -15, w: 1.5, s: 1.5, name: 'Latas' },
-        'BONUS': { ico: '✨', pts: 20, w: 0.5, s: 2.2, name: 'Estrelas' }
+        'BONUS': { ico: '✨', pts: 20, w: 0.5, s: 2.2, name: 'Estrelas' },
+        'SLOW': { ico: '⌛️', pts: 5, w: 0.5, s: 2.5, name: 'Tempo Lento' }
     };
 
     function showMission() {
@@ -167,11 +175,12 @@
             let chance = Math.random();
             let k = 'PEIXE';
             
-            let effectiveLevel = Math.min(level, 7);
-            let trashChance = 0.05 + (effectiveLevel * 0.06); 
+            let effectiveLevel = Math.min(level, 15);
+            let trashChance = 0.05 + (effectiveLevel * 0.028); 
             let bonusThreshold = 0.05;
 
             if(chance < bonusThreshold) k = 'BONUS';
+            else if(level >= 10 && chance < 0.12) k = 'SLOW'; // Ampulheta do nível 10 em diante
             else if(chance < 0.2) k = 'RARO';
             else if(chance > (1 - trashChance)) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
             else {
@@ -182,7 +191,7 @@
 
             const t = types[k];
             const el = document.createElement('div');
-            el.className = 'item' + (k === 'BONUS' ? ' bonus-glow' : '');
+            el.className = 'item' + (k === 'BONUS' || k === 'SLOW' ? ' bonus-glow' : '');
             if(k === 'TUBARAO') el.classList.add('shark-size');
             el.innerHTML = t.ico;
             const item = {
@@ -196,20 +205,30 @@
         setTimeout(spawn, Math.max(1200, 3000 - (level * 150)));
     }
 
+    function activateSlowMo() {
+        slowMoFactor = 0.3; // 70% mais lento
+        document.body.classList.add('slow-mo-active');
+        createPopup("SLOW MOTION!", "#3498db");
+        setTimeout(() => {
+            slowMoFactor = 1;
+            document.body.classList.remove('slow-mo-active');
+        }, 5000); // 5 segundos de duração
+    }
+
     function update() {
         if(!active || isPaused) { requestAnimationFrame(update); return; }
         if(!missionTriggeredOnce && timeLeft < 50) showMission();
 
         items.forEach((it, i) => {
             if(it === caught) return;
-            it.x -= it.speed;
+            it.x -= (it.speed * slowMoFactor); // Aplica slow motion no movimento
             it.el.style.left = it.x + 'px';
             it.el.style.top = it.y + (Math.sin(it.x * 0.02) * 8) + 'px';
             if(it.x < -150) { it.el.remove(); items.splice(i, 1); }
         });
 
         if(state === 'swing') {
-            angle += (1.1 + (level * 0.12)) * dir;
+            angle += ((1.1 + (level * 0.12)) * dir) * slowMoFactor; // Aplica slow motion no balanço
             if(Math.abs(angle) > 60) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
@@ -236,10 +255,12 @@
             if(len <= 60) {
                 if(caught) {
                     if(caught.type === 'BONUS') { timeLeft += 10; createPopup("+10s", "#f1c40f"); }
+                    else if(caught.type === 'SLOW') { activateSlowMo(); } // Ativa efeito
                     else {
                         score += caught.pts;
                         createPopup(caught.pts > 0 ? "+"+caught.pts : caught.pts, caught.pts > 0 ? "#fff" : "#e74c3c");
                     }
+                    
                     if(inMissionMode && caught.type === currentMission.target) {
                         missionProgress++;
                         if(missionProgress >= currentMission.qty) {
@@ -249,7 +270,6 @@
                     }
                     
                     if(score > maxScoreReached) maxScoreReached = score;
-                    // ALTERADO PARA 100 PONTOS POR NÍVEL
                     let targetLevel = Math.floor(maxScoreReached / 100) + 1;
                     if(targetLevel > level) {
                         level = targetLevel;
