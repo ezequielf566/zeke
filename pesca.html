@@ -167,14 +167,21 @@
             let chance = Math.random();
             let k = 'PEIXE';
             
-            // LIXO PROGRESSIVO: Nivel 1 quase nada (5%), Nivel 10 muito (50%+)
-            let trashChance = Math.min(0.05 + (level * 0.06), 0.6); 
+            // Trava de dificuldade no Nível 7
+            let effectiveLevel = Math.min(level, 7);
+            let trashChance = 0.05 + (effectiveLevel * 0.06); // Máximo ~47%
             let bonusThreshold = 0.05;
 
             if(chance < bonusThreshold) k = 'BONUS';
             else if(chance < 0.2) k = 'RARO';
             else if(chance > (1 - trashChance)) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
-            else if(level > 2 && chance > 0.92) k = 'TUBARAO';
+            else {
+                // Peixe Comum garantido em pelo menos ~50% após o Nível 7
+                k = 'PEIXE';
+            }
+            
+            // Tubarão extra raro em níveis maiores
+            if(level > 2 && k === 'PEIXE' && Math.random() > 0.9) k = 'TUBARAO';
 
             const t = types[k];
             const el = document.createElement('div');
@@ -244,7 +251,6 @@
                         }
                     }
                     
-                    // PROGRESSÃO DE NÍVEL (Meta a cada 50 pontos)
                     if(score > maxScoreReached) maxScoreReached = score;
                     let targetLevel = Math.floor(maxScoreReached / 50) + 1;
                     if(targetLevel > level) {
