@@ -3,175 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Jogos - A Saga</title>
+    <title>A SAGA - Galeria de Jogos</title>
     <style>
         :root {
             --gold: #f1c40f;
-            --blue: #3498db;
-            --green: #2ecc71;
-            --dark: #121212;
-            --glass: rgba(255, 255, 255, 0.1);
+            --glass: rgba(255, 255, 255, 0.07);
+            --bg-dark: #050505;
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #0f0f0f 0%, #2c3e50 100%);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; padding: 0;
+            background: radial-gradient(circle at top, #1a2a3a 0%, var(--bg-dark) 100%);
+            font-family: 'Segoe UI', system-ui, sans-serif;
             color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            display: flex; flex-direction: column; align-items: center;
             min-height: 100vh;
         }
 
-        header {
-            padding: 40px 20px;
-            text-align: center;
+        header { padding: 60px 20px 40px; text-align: center; }
+        header h1 { 
+            margin: 0; font-size: 3.5rem; letter-spacing: 6px; color: var(--gold);
+            text-shadow: 0 0 40px rgba(241, 196, 15, 0.4);
+            font-family: 'Georgia', serif;
         }
+        header p { color: #aaa; margin-top: 15px; letter-spacing: 1px; font-weight: 300; }
 
-        header h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            letter-spacing: 2px;
-            color: var(--gold);
-            text-shadow: 0 0 20px rgba(241, 196, 15, 0.4);
-        }
-
-        header p {
-            color: #bdc3c7;
-            margin-top: 10px;
-        }
-
-        .container {
+        .game-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
+            gap: 40px;
             width: 90%;
-            max-width: 1000px;
-            padding-bottom: 50px;
+            max-width: 1200px;
+            padding: 20px;
         }
 
-        /* ESTILO DO CARD */
-        .game-card {
+        /* CARD */
+        .card {
             background: var(--glass);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
             overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            color: white;
+            display: flex; flex-direction: column;
             position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        .game-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+        .card:hover {
+            transform: translateY(-15px);
             border-color: var(--gold);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+            background: rgba(255, 255, 255, 0.12);
         }
 
-        /* CAPA DO JOGO */
-        .game-cover {
-            width: 100%;
-            height: 180px;
-            background-size: cover;
-            background-position: center;
+        /* CAPA SVG */
+        .cover {
+            height: 220px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.3);
             position: relative;
         }
 
-        /* Cores temporárias para as capas enquanto não temos as imagens */
-        .bg-jose { background: linear-gradient(45deg, #d35400, #f1c40f); }
-        .bg-jaco { background: linear-gradient(45deg, #2980b9, #9b59b6); }
-        .bg-pesca { background: linear-gradient(45deg, #16a085, #2ecc71); }
+        .bg-jose { background: linear-gradient(135deg, #e67e22, #f1c40f); }
+        .bg-pesca { background: linear-gradient(135deg, #1abc9c, #2980b9); }
+        .bg-jaco { background: linear-gradient(135deg, #9b59b6, #34495e); }
 
-        .game-info {
-            padding: 20px;
-            text-align: center;
+        .card svg { 
+            width: 110px; height: 110px; 
+            filter: drop-shadow(0 8px 15px rgba(0,0,0,0.4));
         }
 
-        .game-info h2 {
-            margin: 0;
-            font-size: 1.4rem;
-            color: #fff;
+        .info { padding: 30px; text-align: center; }
+        .info h2 { margin: 0; font-size: 1.6rem; font-family: 'Georgia', serif; color: #fff; }
+        
+        .status-badge {
+            position: absolute; top: 20px; right: 20px;
+            padding: 6px 14px; border-radius: 50px; font-size: 0.75rem;
+            font-weight: bold; text-transform: uppercase;
+            background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2);
+            z-index: 2;
+        }
+        .online { color: #2ecc71; border-color: #2ecc71; }
+
+        .play-btn {
+            margin-top: 20px; display: inline-block;
+            padding: 10px 25px; border-radius: 50px;
+            background: var(--gold); color: black;
+            font-weight: bold; font-size: 0.9rem;
+            transition: 0.3s;
         }
 
-        .btn-play {
-            margin-top: 15px;
-            padding: 10px 25px;
-            border-radius: 50px;
-            border: none;
-            background: var(--gold);
-            color: #000;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
-
-        .badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(0,0,0,0.6);
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            border: 1px solid var(--gold);
-            color: var(--gold);
-        }
-
-        footer {
-            margin-top: auto;
-            padding: 20px;
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.4);
-        }
+        footer { margin-top: auto; padding: 60px; color: #444; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>A SAGA</h1>
-        <p>Escolha sua jornada e comece a jogar</p>
+        <p>JOGOS QUE INSPIRAM</p>
     </header>
 
-    <div class="container">
+    <div class="game-grid">
         
-        <div class="game-card">
-            <div class="badge">DISPONÍVEL</div>
-            <div class="game-cover bg-jose">
-                </div>
-            <div class="game-info">
+        <a href="jose.html" class="card">
+            <span class="status-badge online">Disponível</span>
+            <div class="cover bg-jose">
+                <svg viewBox="0 0 100 100">
+                    <path d="M15,60 L85,60 L75,80 L25,80 Z" fill="#4e342e"/>
+                    <rect x="35" y="45" width="30" height="15" fill="#6d4c41"/>
+                    <path d="M35,45 L50,30 L65,45 Z" fill="#3e2723"/>
+                </svg>
+            </div>
+            <div class="info">
                 <h2>José e a Arca</h2>
-                <button class="btn-play">Jogar Agora</button>
+                <span class="play-btn">JOGAR</span>
             </div>
-        </div>
+        </a>
 
-        <div class="game-card">
-            <div class="badge">EM BREVE</div>
-            <div class="game-cover bg-jaco">
-                </div>
-            <div class="game-info">
-                <h2>A Escada de Jacó</h2>
-                <button class="btn-play" style="background: #7f8c8d; cursor: default;">Bloqueado</button>
+        <a href="pesca.html" class="card">
+            <span class="status-badge online">Disponível</span>
+            <div class="cover bg-pesca">
+                <svg viewBox="0 0 100 100">
+                    <path d="M10,50 L90,50 L80,75 L20,75 Z" fill="#f5f5f5"/>
+                    <line x1="55" y1="50" x2="85" y2="15" stroke="#333" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="85" cy="15" r="3" fill="#333"/>
+                </svg>
             </div>
-        </div>
-
-        <div class="game-card">
-            <div class="badge">EM BREVE</div>
-            <div class="game-cover bg-pesca">
-                </div>
-            <div class="game-info">
+            <div class="info">
                 <h2>Pescador de Milagres</h2>
-                <button class="btn-play" style="background: #7f8c8d; cursor: default;">Bloqueado</button>
+                <span class="play-btn">JOGAR</span>
             </div>
-        </div>
+        </a>
+
+        <a href="#" class="card" style="opacity: 0.6; cursor: default;">
+            <span class="status-badge">Em Breve</span>
+            <div class="cover bg-jaco">
+                <svg viewBox="0 0 100 100">
+                    <line x1="35" y1="20" x2="35" y2="80" stroke="white" stroke-width="5" opacity="0.8"/>
+                    <line x1="65" y1="20" x2="65" y2="80" stroke="white" stroke-width="5" opacity="0.8"/>
+                    <line x1="35" y1="35" x2="65" y2="35" stroke="white" stroke-width="5" opacity="0.8"/>
+                    <line x1="35" y1="55" x2="65" y2="55" stroke="white" stroke-width="5" opacity="0.8"/>
+                </svg>
+            </div>
+            <div class="info">
+                <h2>A Escada de Jacó</h2>
+                <span class="play-btn" style="background:#444; color:#888">BLOQUEADO</span>
+            </div>
+        </a>
 
     </div>
 
     <footer>
-        &copy; 2026 A Saga Games - Todos os direitos reservados
+        &copy; 2026 A Saga Games | Desenvolvido para Web Mobile
     </footer>
 
 </body>
