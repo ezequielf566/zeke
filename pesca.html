@@ -82,7 +82,9 @@
         }
         @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
 
-        .item { position: absolute; z-index: 40; pointer-events: none; font-size: 42px; }
+        /* Aumentei o tamanho geral dos itens */
+        .item { position: absolute; z-index: 40; pointer-events: none; font-size: 52px; }
+        .shark-size { font-size: 85px !important; }
 
         .floating-text {
             position: absolute; font-weight: 900; font-size: 30px;
@@ -149,7 +151,6 @@
     };
 
     function showMission() {
-        // Agora só aparece se o tempo for menor que 50s
         if(!active || inMissionMode || state !== 'swing' || timeLeft >= 50) return;
         
         isPaused = true; 
@@ -177,7 +178,6 @@
             let chance = Math.random();
             let k = 'PEIXE';
             
-            // Lógica da Estrela: Fica mais rara conforme o nível sobe
             let bonusThreshold = Math.max(0.02, 0.15 - (level * 0.03));
             
             if(chance < bonusThreshold) k = 'BONUS';
@@ -188,12 +188,13 @@
             const t = types[k];
             const el = document.createElement('div');
             el.className = 'item' + (k === 'BONUS' ? ' bonus-glow' : '');
+            if(k === 'TUBARAO') el.classList.add('shark-size');
             el.innerHTML = t.ico;
             
             const item = {
                 el: el, type: k,
                 x: window.innerWidth + (Math.random() * 500),
-                y: 50 + Math.random() * (window.innerHeight - 320),
+                y: 50 + Math.random() * (window.innerHeight - 350),
                 speed: t.s + (level * 0.12),
                 pts: t.pts, w: t.w
             };
@@ -211,7 +212,7 @@
             it.x -= it.speed;
             it.el.style.left = it.x + 'px';
             it.el.style.top = it.y + (Math.sin(it.x * 0.02) * 8) + 'px';
-            if(it.x < -100) { it.el.remove(); items.splice(i, 1); }
+            if(it.x < -150) { it.el.remove(); items.splice(i, 1); }
         });
 
         if(state === 'swing') {
@@ -257,7 +258,6 @@
                     caught.el.remove();
                     items = items.filter(i => i !== caught);
                     caught = null;
-                    // Subida de nível mais rápida (a cada 200 pontos)
                     if(score >= level * 200) { level++; document.getElementById('lvl').innerText = level; }
                 }
                 len = 60; state = 'swing';
@@ -290,7 +290,7 @@
 
     spawn();
     update();
-    setInterval(showMission, 12000); // Checa missão a cada 12 segundos
+    setInterval(showMission, 12000);
 </script>
 </body>
 </html>
