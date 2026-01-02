@@ -19,19 +19,17 @@
             user-select: none; touch-action: manipulation;
         }
 
-        #game-container { position: relative; width: 100%; height: 100%; }
+        #game-container { position: relative; width: 100%; height: 100%; overflow: hidden; }
 
         #sky {
             position: absolute; top: 0; width: 100%; height: 120px;
-            background: url('ceu.jpg') no-repeat center bottom;
-            background-size: cover;
+            background: #87CEEB;
             border-bottom: 2px solid rgba(255,255,255,0.3);
         }
 
         #sea {
             position: absolute; top: 120px; width: 100%; height: calc(100% - 120px);
-            background: url('mar.jpg') no-repeat center top;
-            background-size: cover;
+            background: #1e3799;
             overflow: hidden;
         }
 
@@ -45,77 +43,39 @@
             font-weight: bold; font-size: 14px; min-width: 95px; text-align: center;
         }
 
-        #mission-alert {
-            position: fixed; inset: 0; z-index: 1500;
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
-            animation: fadeIn 0.3s forwards;
-        }
-
-        #mission-box {
-            background: #000; border: 4px solid var(--gold);
-            padding: 40px; border-radius: 25px; text-align: center;
-            box-shadow: 0 0 50px rgba(0,0,0,1);
-            max-width: 80%;
-        }
-
-        #mission-title { 
-            margin: 15px 0; font-size: 32px; color: #fff; 
-            text-shadow: 0 0 15px rgba(255,255,255,0.4);
-            font-weight: 900;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
         #boat-container {
             position: absolute; top: 55px; left: 50%;
             width: 140px; z-index: 100; transform: translateX(-50%);
-            animation: boatRock 4s ease-in-out infinite;
         }
-        @keyframes boatRock {
-            0%, 100% { transform: translateX(-50%) rotate(-2deg); }
-            50% { transform: translateX(-48%) rotate(2deg); }
-        }
-        #boat-img { width: 100%; height: auto; display: block; }
+        #boat-img { width: 100%; height: auto; display: block; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); }
 
         #line {
-            position: absolute; top: 90%; left: 50%; 
-            width: 2px; height: 60px; background: #fff;
-            transform-origin: top center; z-index: 110; 
+            position: absolute; top: 85%; left: 50%; 
+            width: 2px; height: 60px; background: #eee;
+            transform-origin: top center; z-index: 90; 
         }
 
-        #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; }
+        #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; filter: drop-shadow(0 2px 2px #000); }
 
-        /* BRILHO DO BÔNUS REAL - PULSANTE E DINÂMICO */
         .bonus-glow {
-            filter: drop-shadow(0 0 12px var(--gold));
-            animation: moveGlow 1.5s ease-in-out infinite alternate;
+            filter: drop-shadow(0 0 15px var(--gold)) !important;
+            animation: pulse 1s infinite alternate !important;
         }
-        @keyframes moveGlow {
-            from { filter: drop-shadow(0 0 5px #fff); transform: scale(1) rotate(0deg); }
-            to { filter: drop-shadow(0 0 20px var(--gold)); transform: scale(1.2) rotate(5deg); }
-        }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.3); } }
+
+        .item { position: absolute; z-index: 40; pointer-events: none; font-size: 40px; }
 
         .floating-text {
-            position: absolute; font-weight: 900; font-size: 28px;
-            pointer-events: none; z-index: 500; animation: floatUp 1.2s ease-out forwards;
-            text-shadow: 2px 2px 4px #000;
+            position: absolute; font-weight: 900; font-size: 30px;
+            pointer-events: none; z-index: 500; animation: floatUp 1s forwards;
+            text-shadow: 2px 2px 0px #000;
         }
-        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-120px); opacity: 0; } }
-
-        .item { position: absolute; z-index: 40; pointer-events: none; transition: transform 0.1s linear; }
+        @keyframes floatUp { 0% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -100px); opacity: 0; } }
 
         .overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            display: none; flex-direction: column; align-items: center;
-            justify-content: center; color: white; z-index: 2000; text-align: center;
-        }
-
-        #final-score-val { font-size: 80px; font-weight: 900; color: #fff; margin: 0; }
-        .btn-restart {
-            padding: 20px 60px; border-radius: 50px; background: var(--gold);
-            border: none; font-weight: 900; font-size: 20px; color: #000;
-            cursor: pointer; box-shadow: 0 8px 0 #b7950b;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            color: white; z-index: 2000; text-align: center;
         }
     </style>
 </head>
@@ -124,30 +84,21 @@
     <div id="game-container">
         <div id="sky"></div>
         <div id="hud">
-            <div class="stat" style="border-color: var(--blue);">NÍVEL: <span id="lvl">1</span></div>
+            <div class="stat">NÍVEL: <span id="lvl">1</span></div>
             <div class="stat">PONTOS: <span id="pts">0</span></div>
-            <div class="stat" id="time-box" style="border-color: #e67e22;">TEMPO: <span id="time">60</span>s</div>
+            <div class="stat">TEMPO: <span id="time">60</span>s</div>
         </div>
         <div id="boat-container">
-            <img src="barco.png" id="boat-img" alt="Barco">
+            <div style="font-size: 80px; text-align: center;">⛵</div>
             <div id="line"><div id="hook">🪝</div></div>
         </div>
         <div id="sea"><div id="container"></div></div>
     </div>
 
-    <div id="mission-alert">
-        <div id="mission-box">
-            <h2 style="color:var(--gold); margin:0; font-size: 20px; letter-spacing: 3px; font-weight: 900;">NOVA MISSÃO</h2>
-            <h1 id="mission-title">Aguardando...</h1>
-            <p id="mission-reward" style="color:var(--success); font-size: 22px; font-weight: bold; margin: 0;"></p>
-        </div>
-    </div>
-
     <div id="game-over" class="overlay">
-        <h1 style="color:var(--gold); font-size: 45px; margin-bottom: 10px;">PESCARIA ENCERRADA!</h1>
-        <div id="final-score-val">0</div>
-        <div id="final-pts-label" style="font-size: 24px; color: var(--gold); margin-bottom: 40px; font-weight: bold;">PONTOS CONQUISTADOS</div>
-        <button class="btn-restart" onclick="window.location.reload()">JOGAR NOVAMENTE</button>
+        <h1 style="color:var(--gold); font-size: 40px;">FIM DE JOGO!</h1>
+        <h2 id="final-score">0</h2>
+        <button style="padding: 15px 30px; font-size: 20px; cursor: pointer; background: var(--gold); border: none; border-radius: 10px;" onclick="location.reload()">RECOMEÇAR</button>
     </div>
 
 <script>
@@ -158,122 +109,127 @@
     let score = 0, level = 1, timeLeft = 60, active = true;
     let state = 'swing', angle = 0, dir = 1, len = 60, caught = null;
     let items = [];
-    let missionActive = false; 
-    let inMissionMode = false; 
 
     const types = {
-        'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 1.2 },
-        'RARO': { ico: '🐠', pts: 40, w: 0.8, s: 1.8 },
-        'TUBARAO': { ico: '🦈', pts: 150, w: 6, s: 0.6 },
-        'SAPATO': { ico: '👞', pts: -5, w: 2, s: 1.2 },
-        'LATA': { ico: '🥫', pts: -10, w: 1.5, s: 1.5 },
-        'BONUS': { ico: '✨', pts: 100, w: 0.5, s: 2.5 }
+        'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 1.5 },
+        'RARO': { ico: '🐠', pts: 50, w: 0.8, s: 2.2 },
+        'TUBARAO': { ico: '🦈', pts: 150, w: 5, s: 0.8 },
+        'LIXO': { ico: '👞', pts: -10, w: 2, s: 1.0 },
+        'BONUS': { ico: '✨', pts: 20, w: 0.5, s: 3.0 }
     };
 
     function spawn() {
         if(!active) return;
-        
-        // ABUNDÂNCIA: Mar muito mais populado
-        const maxBatch = 5 + level; 
-        for(let i=0; i < maxBatch; i++) {
-            let k = 'PEIXE';
-            let r = Math.random();
 
-            // Lógica de sorteio melhorada
-            if(r < 0.15) k = 'BONUS';
-            else if(r < 0.35) k = 'RARO';
-            else if(r < 0.50 && level > 2) k = 'TUBARAO';
-            else if(r < 0.65 && level > 1) k = (Math.random() > 0.5) ? 'SAPATO' : 'LATA';
+        // Gerar 3 a 6 itens por vez para o mar ficar cheio
+        const qty = 3 + Math.floor(Math.random() * 4);
+        for(let i=0; i<qty; i++) {
+            let chance = Math.random();
+            let k = 'PEIXE';
+            
+            if(chance < 0.1) k = 'BONUS';
+            else if(chance < 0.25) k = 'RARO';
+            else if(chance < 0.35 && level > 1) k = 'TUBARAO';
+            else if(chance < 0.5 && level > 1) k = 'LIXO';
 
             const t = types[k];
-            const it = {
-                el: document.createElement('div'),
-                type: k,
-                x: window.innerWidth + (Math.random() * 500), // Espalha eles na entrada
-                y: 20 + Math.random() * (window.innerHeight - 320), 
-                speed: t.s + (Math.random() * 1.5),
-                t: t
-            };
+            const el = document.createElement('div');
+            el.className = 'item' + (k === 'BONUS' ? ' bonus-glow' : '');
+            el.innerHTML = t.ico;
             
-            it.el.className = 'item' + (k === 'BONUS' ? ' bonus-glow' : '');
-            it.el.innerHTML = t.ico;
-            it.el.style.fontSize = (35 + t.w * 10) + 'px';
-            container.appendChild(it.el);
-            items.push(it);
+            const item = {
+                el: el,
+                type: k,
+                x: window.innerWidth + (Math.random() * 400),
+                y: 50 + Math.random() * (window.innerHeight - 300),
+                speed: t.s + (level * 0.2),
+                pts: t.pts,
+                w: t.w
+            };
+
+            container.appendChild(el);
+            items.push(item);
         }
-        // Spawn mais rápido
-        setTimeout(spawn, Math.max(1200, 3500 - (level * 300)));
+        setTimeout(spawn, 2000 - (level * 100));
     }
 
     function update() {
         if(!active) return;
 
-        items.forEach((it, i) => {
-            if(it === caught) return;
+        // Movimentação dos peixes
+        for(let i = items.length - 1; i >= 0; i--) {
+            let it = items[i];
+            if(it === caught) continue;
+
             it.x -= it.speed;
-            // O Peixe Bônus agora nada em uma linha mais "rápida" e reta
-            const wave = it.type === 'BONUS' ? 5 : 15;
-            it.el.style.transform = `translate(${it.x}px, ${it.y + Math.sin(it.x * 0.02) * wave}px)`;
-            
-            if(it.x < -200) {
+            it.el.style.left = it.x + 'px';
+            it.el.style.top = it.y + 'px';
+
+            // Remove se sumir da tela à esquerda
+            if(it.x < -100) {
                 it.el.remove();
                 items.splice(i, 1);
             }
-        });
+        }
 
         if(state === 'swing') {
-            angle += (1.4 + (level * 0.2)) * dir;
-            if(Math.abs(angle) > 65) dir *= -1;
+            angle += (1.5 + (level * 0.3)) * dir;
+            if(Math.abs(angle) > 60) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
         else if(state === 'launch') {
-            len += 22; // Anzol mais rápido
+            len += 12 + (level * 2); // Começa mais calmo
             line.style.height = len + 'px';
-            const hRect = hook.getBoundingClientRect();
             
-            for(let it of items) {
+            // Colisão
+            const hRect = hook.getBoundingClientRect();
+            items.forEach(it => {
                 if(!caught) {
                     const iRect = it.el.getBoundingClientRect();
                     if(hRect.left < iRect.right && hRect.right > iRect.left && hRect.top < iRect.bottom && hRect.bottom > iRect.top) {
-                        caught = it; state = 'back';
-                        break;
+                        caught = it;
+                        state = 'back';
                     }
                 }
-            }
-            if(len > window.innerHeight - 150) state = 'back';
+            });
+
+            if(len > window.innerHeight - 180) state = 'back';
         } 
         else if(state === 'back') {
-            let s = 30; if(caught) s = Math.max(6, s / caught.t.w);
-            len -= s; line.style.height = len + 'px';
+            let speedBack = 20;
+            if(caught) speedBack /= caught.w;
+            len -= speedBack;
+            line.style.height = len + 'px';
+
             if(caught) {
-                caught.el.style.transform = `translate(-50%, 0)`;
-                caught.el.style.left = "50%"; caught.el.style.top = "100%";
+                caught.el.style.left = '50%';
+                caught.el.style.top = '100%';
+                caught.el.style.transform = 'translate(-50%, -20px)';
                 hook.appendChild(caught.el);
             }
+
             if(len <= 60) {
-                len = 60; state = 'swing';
                 if(caught) {
                     if(caught.type === 'BONUS') {
-                        timeLeft += 12; // BÔNUS DE TEMPO REALMENTE ALTO
-                        score += 100;
-                        createPopup("MILAGRE! +12s", "#f1c40f");
+                        timeLeft += 10;
+                        createPopup("+10s", "#f1c40f");
                     } else {
-                        score += caught.t.pts;
-                        createPopup(caught.t.pts > 0 ? "+"+caught.t.pts : caught.t.pts, caught.t.pts > 0 ? "#fff" : "#e74c3c");
+                        score += caught.pts;
+                        createPopup(caught.pts > 0 ? "+"+caught.pts : caught.pts, caught.pts > 0 ? "#fff" : "#e74c3c");
                     }
-                    document.getElementById('pts').innerText = score;
                     
+                    document.getElementById('pts').innerText = score;
                     caught.el.remove();
                     items = items.filter(i => i !== caught);
                     caught = null;
-                    
-                    // Sobe de nível a cada 300 pontos
-                    let newLvl = Math.floor(score / 300) + 1;
-                    if(newLvl > level) {
-                        level = newLvl;
+
+                    if(score > level * 200) {
+                        level++;
                         document.getElementById('lvl').innerText = level;
                     }
                 }
+                len = 60;
+                state = 'swing';
             }
         }
         requestAnimationFrame(update);
@@ -285,19 +241,20 @@
         const p = document.createElement('div');
         p.className = 'floating-text';
         p.innerText = txt; p.style.color = color;
-        p.style.left = '50%'; p.style.top = '40%';
+        p.style.left = '50%'; p.style.top = '120px';
         document.body.appendChild(p);
         setTimeout(() => p.remove(), 1000);
     }
 
-    setInterval(() => {
+    const timer = setInterval(() => {
         if(!active) return;
         timeLeft--;
         document.getElementById('time').innerText = timeLeft;
         if(timeLeft <= 0) {
             active = false;
-            document.getElementById('final-score-val').innerText = score;
+            document.getElementById('final-score').innerText = "Pontos: " + score;
             document.getElementById('game-over').style.display = 'flex';
+            clearInterval(timer);
         }
     }, 1000);
 
