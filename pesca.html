@@ -18,29 +18,31 @@
 
         #game-container { position: relative; width: 100%; height: 100%; }
 
+        /* CÉU REDUZIDO PARA DAR ESPAÇO AO MAR */
         #sky {
-            position: absolute; top: 0; width: 100%; height: 200px;
+            position: absolute; top: 0; width: 100%; height: 120px;
             background: url('ceu.jpg') no-repeat center bottom;
             background-size: cover;
         }
 
+        /* MAR EXPANDIDO */
         #sea {
-            position: absolute; top: 200px; width: 100%; height: calc(100% - 200px);
+            position: absolute; top: 120px; width: 100%; height: calc(100% - 120px);
             background: url('mar.jpg') no-repeat center top;
             background-size: cover;
             overflow: hidden;
         }
 
-        /* BARCO: Subi mais (135px) e adicionei entrada suave (fadeIn) */
+        /* BARCO POSICIONADO BEM NO TOPO */
         #boat-container {
             position: absolute; 
-            top: 135px; 
+            top: 55px; 
             left: 50%;
-            width: 160px; 
+            width: 140px; 
             z-index: 100;
             animation: boatRock 4s ease-in-out infinite, fadeIn 1.5s ease-out forwards;
             transform-origin: center;
-            opacity: 0; /* Começa invisível para o fadeIn */
+            opacity: 0;
         }
 
         #boat-img {
@@ -50,7 +52,7 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
@@ -59,12 +61,12 @@
             50% { transform: translateX(-48%) rotate(2deg); }
         }
 
-        /* LINHA: Sai do rodapé exato do barco */
+        /* LINHA: Ajustada para a nova altura */
         #line {
             position: absolute; 
-            top: 95%; 
+            top: 90%; 
             left: 50%; 
-            width: 2px; height: 40px; 
+            width: 2px; height: 60px; 
             background: #fff;
             transform-origin: top center; 
             z-index: 110; 
@@ -78,13 +80,13 @@
         }
 
         #hud {
-            position: absolute; top: 20px; width: 100%;
+            position: absolute; top: 15px; width: 100%;
             display: flex; justify-content: center; gap: 8px; z-index: 200;
         }
         .stat {
             background: rgba(0,0,0,0.7); border: 1px solid var(--gold);
-            padding: 8px 12px; border-radius: 12px; color: white;
-            font-weight: bold; font-size: 14px; min-width: 80px; text-align: center;
+            padding: 6px 10px; border-radius: 12px; color: white;
+            font-weight: bold; font-size: 13px; min-width: 75px; text-align: center;
         }
 
         .item {
@@ -130,7 +132,7 @@
     const hook = document.getElementById('hook');
     
     let score = 0, level = 1, timeLeft = 60, active = true;
-    let state = 'swing', angle = 0, dir = 1, len = 40, caught = null;
+    let state = 'swing', angle = 0, dir = 1, len = 60, caught = null;
     let items = [];
 
     const types = [
@@ -150,8 +152,8 @@
             const it = {
                 el: document.createElement('div'),
                 x: window.innerWidth + (Math.random() * 400), 
-                // Ajustado para os peixes não ficarem "colados" no barco
-                y: 50 + Math.random() * (window.innerHeight - 380), 
+                // Agora os peixes podem usar quase toda a altura da tela
+                y: 20 + Math.random() * (window.innerHeight - 200), 
                 t: t,
                 speed: (Math.random() * t.s + 0.7) + (level * 0.2), 
                 sinOff: Math.random() * 10
@@ -203,7 +205,8 @@
                     }
                 }
             });
-            if(len > window.innerHeight - 250) state = 'back';
+            // Aumentado o alcance do lançamento para o fundo do novo mar
+            if(len > window.innerHeight - 150) state = 'back';
         } 
         else if(state === 'back') {
             let s = (14 + (level * 2));
@@ -218,8 +221,8 @@
                 hook.appendChild(caught.el);
             }
 
-            if(len <= 40) {
-                len = 40; 
+            if(len <= 60) {
+                len = 60; 
                 state = 'swing';
                 if(caught) {
                     score += caught.t.pts;
