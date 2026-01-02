@@ -9,6 +9,7 @@
             --gold: #f1c40f;
             --success: #2ecc71;
             --danger: #e74c3c;
+            --blue: #3498db;
         }
 
         body, html { 
@@ -65,51 +66,56 @@
             font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
         }
 
-        /* HUD ESTILIZADO */
         #hud {
             position: absolute; top: 15px; width: 100%;
             display: flex; justify-content: center; gap: 10px; z-index: 200;
         }
         .stat {
-            background: rgba(0,0,0,0.8); border: 2px solid var(--gold);
-            padding: 8px 15px; border-radius: 15px; color: white;
-            font-weight: bold; font-size: 14px; min-width: 90px; text-align: center;
+            background: rgba(0,0,0,0.85); border: 2px solid var(--gold);
+            padding: 8px 12px; border-radius: 15px; color: white;
+            font-weight: bold; font-size: 14px; min-width: 95px; text-align: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
         }
 
-        /* POPUPS DE PONTOS E AVISOS */
         .floating-text {
-            position: absolute; font-weight: 900; font-size: 24px;
-            pointer-events: none; z-index: 500; animation: floatUp 1s ease-out forwards;
-            text-shadow: 2px 2px 0 #000;
+            position: absolute; font-weight: 900; font-size: 26px;
+            pointer-events: none; z-index: 500; animation: floatUp 1.2s ease-out forwards;
+            text-shadow: 2px 2px 4px #000;
         }
 
         @keyframes floatUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-100px); opacity: 0; }
-        }
-
-        .level-up {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 48px; color: var(--gold); font-weight: 900;
-            z-index: 1000; text-shadow: 0 0 20px rgba(0,0,0,0.5);
-            animation: levelAnim 2s ease-in-out forwards;
-        }
-
-        @keyframes levelAnim {
-            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-            20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-120px) scale(1.2); opacity: 0; }
         }
 
         .item { position: absolute; z-index: 40; pointer-events: none; }
 
         .overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
             display: none; flex-direction: column; align-items: center;
             justify-content: center; color: white; z-index: 2000;
+            text-align: center;
         }
+
+        #final-score-val {
+            font-size: 80px; font-weight: 900; color: #fff; margin: 0;
+            line-height: 1; text-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+
+        #final-pts-label {
+            font-size: 24px; color: var(--gold); text-transform: uppercase;
+            letter-spacing: 2px; margin-bottom: 40px; font-weight: bold;
+        }
+
+        .btn-restart {
+            padding: 20px 60px; border-radius: 50px; background: var(--gold);
+            border: none; font-weight: 900; font-size: 20px; color: #000;
+            cursor: pointer; transition: transform 0.2s;
+            box-shadow: 0 10px 0 #b7950b;
+        }
+
+        .btn-restart:hover { transform: scale(1.05); }
     </style>
 </head>
 <body onclick="shoot()">
@@ -118,9 +124,9 @@
         <div id="sky"></div>
 
         <div id="hud">
-            <div class="stat" style="border-color: #3498db;">NÍVEL: <span id="lvl">1</span></div>
+            <div class="stat" style="border-color: var(--blue);">NÍVEL: <span id="lvl">1</span></div>
             <div class="stat">PONTOS: <span id="pts">0</span></div>
-            <div class="stat" style="border-color: #e67e22;">TEMPO: <span id="time">60</span>s</div>
+            <div class="stat" id="time-box" style="border-color: #e67e22;">TEMPO: <span id="time">30</span>s</div>
         </div>
 
         <div id="boat-container">
@@ -132,9 +138,10 @@
     </div>
 
     <div id="game-over" class="overlay">
-        <h1 style="color:var(--gold); font-size: 40px;">PESCARIA ENCERRADA!</h1>
-        <p id="final-pts" style="font-size: 30px; margin-bottom: 30px;"></p>
-        <button onclick="location.reload()" style="padding: 18px 50px; border-radius: 50px; background:var(--gold); border:none; font-weight:bold; font-size: 18px; cursor:pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">JOGAR NOVAMENTE</button>
+        <h1 style="color:var(--gold); font-size: 45px; margin-bottom: 10px;">PESCARIA ENCERRADA!</h1>
+        <div id="final-score-val">0</div>
+        <div id="final-pts-label">Pontos Conquistados</div>
+        <button class="btn-restart" onclick="window.location.href='pesca.html'">JOGAR NOVAMENTE</button>
     </div>
 
 <script>
@@ -142,17 +149,18 @@
     const line = document.getElementById('line');
     const hook = document.getElementById('hook');
     
-    let score = 0, level = 1, timeLeft = 60, active = true;
+    let score = 0, level = 1, timeLeft = 30, active = true;
     let state = 'swing', angle = 0, dir = 1, len = 60, caught = null;
     let items = [];
 
+    // MECÂNICA DE RISCO: Itens ruins agora tiram tempo (-5s, -8s)
     const types = [
-        { ico: '🐟', pts: 10, w: 1, s: 0.9, msg: "Bom!" },
-        { ico: '🐠', pts: 20, w: 0.8, s: 1.3, msg: "Raro!" },
-        { ico: '🐡', pts: 35, w: 1.5, s: 0.7, msg: "Pesado!" },
-        { ico: '🦈', pts: 150, w: 5, s: 0.5, msg: "LENDÁRIO!" },
-        { ico: '👞', pts: -15, w: 2, s: 1.2, msg: "Lixo!" },
-        { ico: '🥫', pts: -10, w: 1.2, s: 1.5, msg: "Poluição!" }
+        { ico: '🐟', pts: 10, w: 1, s: 0.9, msg: "+1s", timeBonus: 1 },
+        { ico: '🐠', pts: 25, w: 0.8, s: 1.3, msg: "+2s", timeBonus: 2 },
+        { ico: '🐡', pts: 40, w: 1.6, s: 0.7, msg: "+3s", timeBonus: 3 },
+        { ico: '🦈', pts: 150, w: 5, s: 0.5, msg: "LENDÁRIO! +8s", timeBonus: 8 },
+        { ico: '👞', pts: -50, w: 2, s: 1.2, msg: "PERDA! -5s", timeBonus: -5 },
+        { ico: '🥫', pts: -30, w: 1.2, s: 1.5, msg: "LIXO! -8s", timeBonus: -8 }
     ];
 
     function createPopup(txt, color, x, y) {
@@ -160,32 +168,38 @@
         p.className = 'floating-text';
         p.innerText = txt;
         p.style.color = color;
-        p.style.left = (x || window.innerWidth/2) + 'px';
+        p.style.left = (x || window.innerWidth/2 - 50) + 'px';
         p.style.top = (y || 150) + 'px';
         document.body.appendChild(p);
-        setTimeout(() => p.remove(), 1000);
+        setTimeout(() => p.remove(), 1200);
     }
 
     function spawn() {
         if(!active) return;
-        const batch = Math.floor(Math.random() * 2) + 1 + Math.floor(level/2);
+        // DIFICULDADE: Aumenta quantidade de itens na tela conforme nível
+        const batch = Math.min(8, Math.floor(Math.random() * 3) + level);
         for(let i=0; i<batch; i++) {
-            const t = types[Math.floor(Math.random()*types.length)];
+            // DIFICULDADE: Em níveis altos, sapatos e latas aparecem mais
+            let roll = Math.random();
+            let t;
+            if (level > 5 && roll > 0.6) t = types[Math.floor(Math.random() * 2) + 4]; // Mais lixo
+            else t = types[Math.floor(Math.random() * types.length)];
+
             const it = {
                 el: document.createElement('div'),
                 x: window.innerWidth + 100, 
-                y: 50 + Math.random() * (window.innerHeight - 250), 
+                y: 50 + Math.random() * (window.innerHeight - 280), 
                 t: t,
-                speed: (Math.random() * t.s + 0.8) + (level * 0.15), 
+                speed: (Math.random() * t.s + 1.0) + (level * 0.25), // Mais rápido por nível
                 sinOff: Math.random() * 10
             };
             it.el.className = 'item';
             it.el.innerHTML = t.ico;
-            it.el.style.fontSize = (30 + t.w * 8) + 'px';
+            it.el.style.fontSize = (32 + t.w * 8) + 'px';
             container.appendChild(it.el);
             items.push(it);
         }
-        setTimeout(spawn, Math.max(500, 1500 - (level * 100)));
+        setTimeout(spawn, Math.max(400, 2000 - (level * 150)));
     }
 
     function shoot() {
@@ -207,12 +221,13 @@
         });
 
         if(state === 'swing') {
-            angle += (1.2 + (level * 0.1)) * dir;
-            if(Math.abs(angle) > 65) dir *= -1;
+            // DIFICULDADE: Gancho balança muito mais rápido em níveis altos
+            angle += (1.5 + (level * 0.2)) * dir;
+            if(Math.abs(angle) > 70) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
         else if(state === 'launch') {
-            len += (10 + (level * 1.5)); 
+            len += 15; 
             line.style.height = len + 'px';
             
             const hRect = hook.getBoundingClientRect();
@@ -223,14 +238,13 @@
                        hRect.top < iRect.bottom && hRect.bottom > iRect.top) {
                         caught = it;
                         state = 'back';
-                        if(it.t.w > 2) createPopup("PESADO!", "orange", hRect.left, hRect.top);
                     }
                 }
             });
             if(len > window.innerHeight - 150) state = 'back';
         } 
         else if(state === 'back') {
-            let s = (15 + (level * 2));
+            let s = 20;
             if(caught) s = Math.max(3, s / caught.t.w);
             len -= s;
             line.style.height = len + 'px';
@@ -246,30 +260,32 @@
                 len = 60; 
                 state = 'swing';
                 if(caught) {
-                    const p = caught.t.pts;
-                    score += p;
+                    score += caught.t.pts;
+                    // DIFICULDADE: Ganho de tempo diminui em níveis altos
+                    let finalBonus = caught.t.timeBonus;
+                    if(level > 5 && finalBonus > 0) finalBonus = Math.max(1, finalBonus - 1);
+                    
+                    timeLeft += finalBonus;
                     if(score < 0) score = 0;
+                    
                     document.getElementById('pts').innerText = score;
+                    
+                    const color = finalBonus > 0 ? "#2ecc71" : "#e74c3c";
+                    createPopup(finalBonus > 0 ? `+${finalBonus}s` : `${finalBonus}s`, color);
 
-                    // Feedback Visual
-                    const color = p > 0 ? "#2ecc71" : "#e74c3c";
-                    const prefix = p > 0 ? "+" : "";
-                    createPopup(`${prefix}${p} ${caught.t.msg}`, color);
+                    if(finalBonus > 0) {
+                        const tb = document.getElementById('time-box');
+                        tb.style.transform = "scale(1.2)";
+                        setTimeout(() => tb.style.transform = "scale(1)", 200);
+                    }
 
                     caught.el.remove();
                     items = items.filter(i => i !== caught);
                     caught = null;
 
-                    // Level Up
-                    if(score >= level * 400) {
+                    if(score >= level * 600) {
                         level++;
                         document.getElementById('lvl').innerText = level;
-                        timeLeft += 15;
-                        const lUp = document.createElement('div');
-                        lUp.className = 'level-up';
-                        lUp.innerText = `NÍVEL ${level}`;
-                        document.body.appendChild(lUp);
-                        setTimeout(() => lUp.remove(), 2000);
                     }
                 }
             }
@@ -280,12 +296,18 @@
     const timer = setInterval(() => {
         if(!active) return;
         timeLeft--;
-        document.getElementById('time').innerText = timeLeft + "s";
+        document.getElementById('time').innerText = timeLeft;
+        
+        if(timeLeft <= 7) document.getElementById('time-box').style.borderColor = "red";
+        else document.getElementById('time-box').style.borderColor = "#e67e22";
+
         if(timeLeft <= 0) {
+            timeLeft = 0;
+            document.getElementById('time').innerText = 0;
             active = false;
             clearInterval(timer);
+            document.getElementById('final-score-val').innerText = score;
             document.getElementById('game-over').style.display = 'flex';
-            document.getElementById('final-pts').innerText = score + " Pontos Conquistados";
         }
     }, 1000);
 
