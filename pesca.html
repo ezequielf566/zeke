@@ -76,12 +76,6 @@
         }
         @keyframes missionPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        .bonus-glow {
-            filter: drop-shadow(0 0 15px var(--gold)) !important;
-            animation: pulse 0.8s infinite alternate !important;
-        }
-        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
-
         .item { position: absolute; z-index: 40; pointer-events: none; font-size: 52px; }
         .shark-size { font-size: 85px !important; }
 
@@ -135,11 +129,11 @@
     const line = document.getElementById('line');
     const hook = document.getElementById('hook');
     
-    let score = 0, level = 1, timeLeft = 60, active = true, isPaused = false;
+    let score = 0, maxScoreReached = 0, level = 1, timeLeft = 60, active = true, isPaused = false;
     let state = 'swing', angle = 0, dir = 1, len = 60, caught = null;
     let items = [];
     let currentMission = null, missionProgress = 0, inMissionMode = false;
-    let missionTriggeredOnce = false; // Controle para a primeira missão imediata
+    let missionTriggeredOnce = false;
 
     const types = {
         'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 1.5, name: 'Peixinhos' },
@@ -151,68 +145,56 @@
     };
 
     function showMission() {
-        if(!active || inMissionMode || state !== 'swing') return;
-        if(timeLeft >= 50) return; 
-        
-        isPaused = true; 
-        inMissionMode = true;
-        missionTriggeredOnce = true;
-
+        if(!active || inMissionMode || state !== 'swing' || timeLeft >= 50) return;
+        isPaused = true; inMissionMode = true; missionTriggeredOnce = true;
         const missionList = [
             { target: 'PEIXE', qty: 3 + Math.floor(level/2), bonus: 15 },
             { target: 'RARO', qty: 2, bonus: 20 }
         ];
         currentMission = missionList[Math.floor(Math.random() * missionList.length)];
         missionProgress = 0;
-
         const alert = document.getElementById('mission-alert');
         document.getElementById('mission-title').innerText = `Capture ${currentMission.qty} ${types[currentMission.target].name}`;
         document.getElementById('mission-reward').innerText = `BÔNUS: +${currentMission.bonus}s`;
         alert.style.display = 'flex';
-        
-        setTimeout(() => { 
-            alert.style.display = 'none'; 
-            isPaused = false; 
-        }, 3500);
+        setTimeout(() => { alert.style.display = 'none'; isPaused = false; }, 3500);
     }
 
     function spawn() {
         if(!active || isPaused) { setTimeout(spawn, 1000); return; }
-        const qty = 4 + Math.min(level, 7); 
+        const qty = 3 + Math.min(level, 6); 
         for(let i=0; i<qty; i++) {
             let chance = Math.random();
             let k = 'PEIXE';
-            let trashThreshold = Math.max(0.35, 0.70 - (level * 0.05)); 
-            let bonusThreshold = Math.max(0.01, 0.12 - (level * 0.015));
+            
+            // LIXO PROGRESSIVO: Nivel 1 quase nada (5%), Nivel 10 muito (50%+)
+            let trashChance = Math.min(0.05 + (level * 0.06), 0.6); 
+            let bonusThreshold = 0.05;
+
             if(chance < bonusThreshold) k = 'BONUS';
-            else if(chance < 0.22) k = 'RARO';
-            else if(chance > trashThreshold) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
-            else if(level > 2 && chance > 0.90) k = 'TUBARAO';
+            else if(chance < 0.2) k = 'RARO';
+            else if(chance > (1 - trashChance)) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+            else if(level > 2 && chance > 0.92) k = 'TUBARAO';
+
             const t = types[k];
             const el = document.createElement('div');
             el.className = 'item' + (k === 'BONUS' ? ' bonus-glow' : '');
             if(k === 'TUBARAO') el.classList.add('shark-size');
             el.innerHTML = t.ico;
             const item = {
-                el: el, type: k,
-                x: window.innerWidth + (Math.random() * 600),
+                el: el, type: k, x: window.innerWidth + (Math.random() * 600),
                 y: 50 + Math.random() * (window.innerHeight - 380),
-                speed: t.s + (level * 0.15),
-                pts: t.pts, w: t.w
+                speed: t.s + (level * 0.12), pts: t.pts, w: t.w
             };
             container.appendChild(el);
             items.push(item);
         }
-        setTimeout(spawn, Math.max(1000, 2800 - (level * 180)));
+        setTimeout(spawn, Math.max(1200, 3000 - (level * 150)));
     }
 
     function update() {
         if(!active || isPaused) { requestAnimationFrame(update); return; }
-
-        // Trigger imediato da primeira missão quando chegar em 49s
-        if(!missionTriggeredOnce && timeLeft < 50) {
-            showMission();
-        }
+        if(!missionTriggeredOnce && timeLeft < 50) showMission();
 
         items.forEach((it, i) => {
             if(it === caught) return;
@@ -223,12 +205,12 @@
         });
 
         if(state === 'swing') {
-            angle += (1.1 + (level * 0.15)) * dir;
+            angle += (1.1 + (level * 0.12)) * dir;
             if(Math.abs(angle) > 60) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
         else if(state === 'launch') {
-            len += 13 + (level * 1.5);
+            len += 13 + (level * 1.2);
             line.style.height = len + 'px';
             const hRect = hook.getBoundingClientRect();
             for(let it of items) {
@@ -258,16 +240,24 @@
                         missionProgress++;
                         if(missionProgress >= currentMission.qty) {
                             timeLeft += currentMission.bonus; inMissionMode = false;
-                            createPopup("MISSÃO COMPLETA! +"+currentMission.bonus+"s", "#2ecc71");
+                            createPopup("MISSÃO OK! +"+currentMission.bonus+"s", "#2ecc71");
                         }
                     }
+                    
+                    // PROGRESSÃO DE NÍVEL (Meta a cada 50 pontos)
+                    if(score > maxScoreReached) maxScoreReached = score;
+                    let targetLevel = Math.floor(maxScoreReached / 50) + 1;
+                    if(targetLevel > level) {
+                        level = targetLevel;
+                        document.getElementById('lvl').innerText = level;
+                        createPopup("NÍVEL " + level, "#f1c40f");
+                    }
+
                     document.getElementById('pts').innerText = score;
                     caught.el.remove();
                     items = items.filter(i => i !== caught);
                     caught = null;
-                    if(score >= level * 200) { level++; document.getElementById('lvl').innerText = level; }
                 } else {
-                    // ERRO: Perde 10 pontos
                     score = Math.max(0, score - 10);
                     document.getElementById('pts').innerText = score;
                     createPopup("-10", "#e74c3c");
@@ -302,7 +292,6 @@
 
     spawn();
     update();
-    // Verificação periódica para as próximas missões a cada 10 segundos
     setInterval(showMission, 10000); 
 </script>
 </body>
