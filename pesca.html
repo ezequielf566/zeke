@@ -7,63 +7,70 @@
     <style>
         :root {
             --gold: #f1c40f;
-            --sky-top: #2c3e50;
-            --sky-bottom: #ff7e5f;
-            --sea-top: #4fc3f7;
-            --sea-deep: #012b4d;
         }
 
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; font-family: 'Segoe UI', sans-serif;
-            background: var(--sky-top);
+            background: #87CEEB; /* Cor de reserva */
             user-select: none; touch-action: manipulation;
         }
 
         #game-container { position: relative; width: 100%; height: 100%; }
 
+        /* CÉU COM IMAGEM */
         #sky {
             position: absolute; top: 0; width: 100%; height: 200px;
-            background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
+            background: url('ceu.jpg') no-repeat center bottom;
+            background-size: cover;
         }
 
+        /* MAR COM IMAGEM */
         #sea {
             position: absolute; top: 200px; width: 100%; height: calc(100% - 200px);
-            background: linear-gradient(to bottom, var(--sea-top), var(--sea-deep));
+            background: url('mar.jpg') no-repeat center top;
+            background-size: cover;
             overflow: hidden;
         }
 
-        /* BARCO: Agora posicionado para entrar na água */
+        /* BARCO EM PNG: Z-index 100 */
         #boat-container {
             position: absolute; 
-            top: 175px; /* Base do barco entra no mar */
+            top: 155px; /* Ajuste para o barco assentar na linha do mar */
             left: 50%;
-            width: 120px; height: 60px;
+            width: 150px; /* Ajuste conforme o tamanho real do seu PNG */
             z-index: 100;
             animation: boatRock 4s ease-in-out infinite;
             transform-origin: center;
         }
 
-        @keyframes boatRock {
-            0%, 100% { transform: translateX(-50%) rotate(-3deg); }
-            50% { transform: translateX(-45%) rotate(3deg); }
+        #boat-img {
+            width: 100%;
+            height: auto;
+            display: block;
         }
 
-        /* LINHA: Saindo do centro inferior do barco */
+        @keyframes boatRock {
+            0%, 100% { transform: translateX(-50%) rotate(-2deg); }
+            50% { transform: translateX(-48%) rotate(2deg); }
+        }
+
+        /* LINHA E ANZOL: Z-index 110 para ficar NA FRENTE do barco */
         #line {
             position: absolute; 
-            top: 45px; /* Sai da base do casco */
+            top: 60px; /* Sai de dentro do barco */
             left: 50%; 
             width: 2px; height: 50px; 
-            background: white;
+            background: #eee;
             transform-origin: top center; 
-            z-index: 90; /* Atrás do barco, mas na frente do mar */
+            z-index: 110; 
+            box-shadow: 0 0 5px rgba(255,255,255,0.5);
         }
 
         #hook { 
             position: absolute; bottom: -25px; left: -12px; 
             font-size: 28px; 
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
         }
 
         #hud {
@@ -100,11 +107,7 @@
         </div>
 
         <div id="boat-container">
-            <svg viewBox="0 0 100 60" style="width:100%; height:100%">
-                <path d="M5,35 L95,35 L85,55 L15,55 Z" fill="#5d4037" />
-                <circle cx="45" cy="22" r="7" fill="#ffdbac" />
-                <line x1="52" y1="32" x2="90" y2="10" stroke="#222" stroke-width="3" />
-            </svg>
+            <img src="barco.png" id="boat-img" alt="Barco de Pesca">
             <div id="line"><div id="hook">🪝</div></div>
         </div>
 
@@ -137,14 +140,13 @@
 
     function spawn() {
         if(!active) return;
-        // Spawna entre 2 e 4 itens por vez para abundância
         const batch = Math.floor(Math.random() * 3) + 2;
         for(let i=0; i<batch; i++) {
             const t = types[Math.floor(Math.random()*types.length)];
             const it = {
                 el: document.createElement('div'),
                 x: window.innerWidth + (Math.random() * 400), 
-                y: Math.random() * (window.innerHeight - 300), 
+                y: Math.random() * (window.innerHeight - 350), 
                 t: t,
                 speed: (Math.random() * t.s + 0.7) + (level * 0.2), 
                 sinOff: Math.random() * 10
@@ -196,7 +198,7 @@
                     }
                 }
             });
-            if(len > window.innerHeight - 200) state = 'back';
+            if(len > window.innerHeight - 250) state = 'back';
         } 
         else if(state === 'back') {
             let s = (14 + (level * 2));
