@@ -86,6 +86,16 @@
 
         #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; }
 
+        /* ESTILO DO PEIXE BÔNUS BRILHANTE */
+        .bonus-glow {
+            text-shadow: 0 0 15px #fff, 0 0 25px var(--gold);
+            animation: pulseGlow 1s ease-in-out infinite alternate;
+        }
+        @keyframes pulseGlow {
+            from { filter: drop-shadow(0 0 2px var(--gold)); transform: scale(1); }
+            to { filter: drop-shadow(0 0 10px var(--gold)); transform: scale(1.1); }
+        }
+
         .floating-text {
             position: absolute; font-weight: 900; font-size: 28px;
             pointer-events: none; z-index: 500; animation: floatUp 1.2s ease-out forwards;
@@ -156,50 +166,38 @@
         'RARO': { ico: '🐠', pts: 30, w: 0.8, s: 1.3, name: 'Peixes Raros' },
         'TUBARAO': { ico: '🦈', pts: 150, w: 5, s: 0.5, name: 'Tubarões' },
         'SAPATO': { ico: '👞', pts: -5, w: 2, s: 1.2, name: 'Sapatos' },
-        'LATA': { ico: '🥫', pts: -10, w: 1.2, s: 1.5, name: 'Latas' }
+        'LATA': { ico: '🥫', pts: -10, w: 1.2, s: 1.5, name: 'Latas' },
+        'BONUS': { ico: '✨', pts: 50, w: 0.7, s: 1.8, name: 'Bônus Estelar' } // NOVO PEIXE
     };
 
     let currentMission = null;
     let missionProgress = 0;
 
     function scheduleNextMission() {
-        // Intervalo equilibrado entre missões
         const waitTime = Math.max(5000, (Math.random() * 8000 + 5000) - (level * 400));
-        
         setTimeout(() => {
-            if(active && !inMissionMode) {
-                showMissionPanel();
-            }
+            if(active && !inMissionMode) showMissionPanel();
         }, waitTime);
     }
 
     function showMissionPanel() {
         missionActive = true; 
         inMissionMode = true;
-
         const missions = [
             { target: 'PEIXE', qty: 2 + level, bonus: 10 + level },
             { target: 'RARO', qty: 2, bonus: 15 },
-            { target: 'TUBARAO', qty: 1, bonus: 20 },
-            { target: 'SAPATO', qty: 2, bonus: 12 }
+            { target: 'TUBARAO', qty: 1, bonus: 20 }
         ];
-        
         currentMission = missions[Math.floor(Math.random() * missions.length)];
         missionProgress = 0;
-
         const alert = document.getElementById('mission-alert');
         document.getElementById('mission-title').innerText = `Capture ${currentMission.qty} ${types[currentMission.target].name}`;
         document.getElementById('mission-reward').innerText = `RECOMPENSA: +${currentMission.bonus} SEGUNDOS`;
-        
         alert.style.display = 'flex';
         alert.style.opacity = '1';
-
         setTimeout(() => {
             alert.style.opacity = '0';
-            setTimeout(() => { 
-                alert.style.display = 'none'; 
-                missionActive = false; 
-            }, 500);
+            setTimeout(() => { alert.style.display = 'none'; missionActive = false; }, 500);
         }, 3500);
     }
 
@@ -218,8 +216,14 @@
         if(!active) return;
         const batch = Math.min(6, 2 + Math.floor(level/2));
         const keys = Object.keys(types);
+        
         for(let i=0; i<batch; i++) {
-            const k = keys[Math.floor(Math.random() * keys.length)];
+            let k = keys[Math.floor(Math.random() * (keys.length - 1))]; // Pega tipos normais
+            
+            // LÓGICA DO PEIXE BÔNUS: Mais frequente no início ou se o tempo estiver baixo
+            const bonusChance = (level === 1 || timeLeft < 20) ? 0.25 : 0.05;
+            if(Math.random() < bonusChance) k = 'BONUS';
+
             const t = types[k];
             const it = {
                 el: document.createElement('div'),
@@ -227,16 +231,16 @@
                 x: window.innerWidth + 100, 
                 y: 50 + Math.random() * (window.innerHeight - 300), 
                 t: t,
-                speed: (Math.random() * t.s + 1.2) + (level * 0.22), 
+                speed: (Math.random() * t.s + 1.2) + (level * 0.2), 
                 sinOff: Math.random() * 10
             };
-            it.el.className = 'item';
+            it.el.className = 'item' + (k === 'BONUS' ? ' bonus-glow' : '');
             it.el.innerHTML = t.ico;
             it.el.style.fontSize = (32 + t.w * 8) + 'px';
             container.appendChild(it.el);
             items.push(it);
         }
-        setTimeout(spawn, Math.max(700, 2500 - (level * 180)));
+        setTimeout(spawn, Math.max(800, 2500 - (level * 180)));
     }
 
     function shoot() { 
@@ -254,7 +258,9 @@
         });
 
         if(state === 'swing') {
-            angle += (1.7 + (level * 0.18)) * dir;
+            // VELOCIDADE ESCALÁVEL: Começa em 1.2 no Nível 1 e sobe devagar
+            const swingSpeed = 1.2 + (level * 0.2); 
+            angle += swingSpeed * dir;
             if(Math.abs(angle) > 65) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
@@ -287,20 +293,26 @@
                     score += caught.t.pts;
                     document.getElementById('pts').innerText = score;
 
+                    // AÇÃO DO PEIXE BÔNUS
+                    if(caught.type === 'BONUS') {
+                        timeLeft += 5;
+                        createPopup("BÔNUS! +5s", "#f1c40f");
+                    }
+
                     if(inMissionMode && caught.type === currentMission.target) {
                         missionProgress++;
                         if(missionProgress >= currentMission.qty) {
                             timeLeft += currentMission.bonus;
                             level++;
                             document.getElementById('lvl').innerText = level;
-                            createPopup("MISSÃO COMPLETA! +" + currentMission.bonus + "s", "#2ecc71");
+                            createPopup("CONCLUÍDO! +" + currentMission.bonus + "s", "#2ecc71");
                             inMissionMode = false;
                             currentMission = null;
                             scheduleNextMission(); 
                         } else {
                             createPopup(missionProgress + "/" + currentMission.qty, "#f1c40f");
                         }
-                    } else {
+                    } else if(caught.type !== 'BONUS') {
                         createPopup(caught.t.pts > 0 ? "+" + caught.t.pts : caught.t.pts, caught.t.pts > 0 ? "#fff" : "#e74c3c");
                     }
 
