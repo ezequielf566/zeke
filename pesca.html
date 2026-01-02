@@ -62,18 +62,19 @@
             transform-origin: top center; z-index: 90; 
         }
 
-        #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; }
+        #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; transition: transform 0.1s; }
 
-        /* MISSÕES */
         #mission-alert {
             position: fixed; inset: 0; z-index: 1500;
             display: none; flex-direction: column; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
         }
         #mission-box {
             background: #000; border: 4px solid var(--gold);
             padding: 30px; border-radius: 25px; text-align: center; color: white;
+            animation: missionPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        @keyframes missionPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         .bonus-glow {
             filter: drop-shadow(0 0 15px var(--gold)) !important;
@@ -115,16 +116,17 @@
 
     <div id="mission-alert">
         <div id="mission-box">
-            <h2 style="color:var(--gold); margin:0;">NOVA MISSÃO</h2>
-            <h1 id="mission-title">Aguardando...</h1>
-            <p id="mission-reward" style="color:var(--success); font-weight: bold;"></p>
+            <h2 style="color:var(--gold); margin:0; letter-spacing: 2px;">DESAFIO ATIVADO</h2>
+            <h1 id="mission-title">---</h1>
+            <p id="mission-reward" style="color:var(--success); font-size: 20px;"></p>
+            <small style="color: #888;">Relógio pausado...</small>
         </div>
     </div>
 
     <div id="game-over" class="overlay">
         <h1 style="color:var(--gold); font-size: 45px;">PESCARIA ENCERRADA!</h1>
         <h2 id="final-score" style="font-size: 60px; margin: 10px 0;">0</h2>
-        <button style="padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer; background: var(--gold); border: none; border-radius: 50px;" onclick="location.reload()">JOGAR NOVAMENTE</button>
+        <button style="padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer; background: var(--gold); border: none; border-radius: 50px; box-shadow: 0 5px 0 #b7950b;" onclick="location.reload()">JOGAR NOVAMENTE</button>
     </div>
 
 <script>
@@ -132,7 +134,7 @@
     const line = document.getElementById('line');
     const hook = document.getElementById('hook');
     
-    let score = 0, level = 1, timeLeft = 60, active = true;
+    let score = 0, level = 1, timeLeft = 60, active = true, isPaused = false;
     let state = 'swing', angle = 0, dir = 1, len = 60, caught = null;
     let items = [];
     let currentMission = null, missionProgress = 0, inMissionMode = false;
@@ -147,38 +149,38 @@
     };
 
     function showMission() {
-        if(!active || inMissionMode) return;
+        if(!active || inMissionMode || state !== 'swing') return;
+        
+        isPaused = true; 
         inMissionMode = true;
         const missionList = [
             { target: 'PEIXE', qty: 3 + level, bonus: 15 },
-            { target: 'RARO', qty: 2, bonus: 20 }
+            { target: 'RARO', qty: 2, bonus: 20 },
+            { target: 'BONUS', qty: 1, bonus: 15 }
         ];
         currentMission = missionList[Math.floor(Math.random() * missionList.length)];
         missionProgress = 0;
 
         const alert = document.getElementById('mission-alert');
         document.getElementById('mission-title').innerText = `Capture ${currentMission.qty} ${types[currentMission.target].name}`;
-        document.getElementById('mission-reward').innerText = `RECOMPENSA: +${currentMission.bonus}s`;
+        document.getElementById('mission-reward').innerText = `BÔNUS: +${currentMission.bonus}s`;
         alert.style.display = 'flex';
         
-        setTimeout(() => { alert.style.display = 'none'; }, 3000);
+        setTimeout(() => { 
+            alert.style.display = 'none'; 
+            isPaused = false; 
+        }, 3000);
     }
 
     function spawn() {
-        if(!active) return;
+        if(!active || isPaused) { setTimeout(spawn, 1000); return; }
 
         const qty = 3 + Math.min(level, 5); 
         for(let i=0; i<qty; i++) {
             let chance = Math.random();
-            let k = 'PEIXE';
-            
-            // Ambulância: Aumenta chance de bônus se o tempo estiver acabando
-            let bonusBoost = timeLeft < 15 ? 0.3 : 0.1;
-            
-            if(chance < bonusBoost) k = 'BONUS';
-            else if(chance < 0.3) k = 'RARO';
-            else if(chance < 0.45 && level > 1) k = (Math.random() > 0.5 ? 'SAPATO' : 'LATA');
-            else if(chance < 0.55 && level > 2) k = 'TUBARAO';
+            let k = (chance < 0.1) ? 'BONUS' : (chance < 0.3) ? 'RARO' : 'PEIXE';
+            if(level > 1 && chance > 0.8) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+            if(level > 2 && chance > 0.9) k = 'TUBARAO';
 
             const t = types[k];
             const el = document.createElement('div');
@@ -186,48 +188,42 @@
             el.innerHTML = t.ico;
             
             const item = {
-                el: el,
-                type: k,
+                el: el, type: k,
                 x: window.innerWidth + (Math.random() * 500),
                 y: 50 + Math.random() * (window.innerHeight - 320),
-                speed: t.s + (level * 0.15),
-                pts: t.pts,
-                w: t.w
+                speed: t.s + (level * 0.12),
+                pts: t.pts, w: t.w
             };
-
             container.appendChild(el);
             items.push(item);
         }
-        setTimeout(spawn, 2500 - (level * 150));
+        setTimeout(spawn, 2500 - (level * 100));
     }
 
     function update() {
-        if(!active) return;
+        if(!active || isPaused) { requestAnimationFrame(update); return; }
 
-        for(let i = items.length - 1; i >= 0; i--) {
-            let it = items[i];
-            if(it === caught) continue;
+        items.forEach((it, i) => {
+            if(it === caught) return;
             it.x -= it.speed;
             it.el.style.left = it.x + 'px';
-            it.el.style.top = it.y + (Math.sin(it.x * 0.02) * 10) + 'px';
+            it.el.style.top = it.y + (Math.sin(it.x * 0.02) * 8) + 'px';
             if(it.x < -100) { it.el.remove(); items.splice(i, 1); }
-        }
+        });
 
         if(state === 'swing') {
-            angle += (1.3 + (level * 0.2)) * dir;
+            angle += (1.1 + (level * 0.15)) * dir; // Movimento inicial mais suave
             if(Math.abs(angle) > 60) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } 
         else if(state === 'launch') {
-            len += 14 + (level * 1.5);
+            len += 13 + (level * 1.5);
             line.style.height = len + 'px';
             const hRect = hook.getBoundingClientRect();
             for(let it of items) {
-                if(!caught) {
-                    const iRect = it.el.getBoundingClientRect();
-                    if(hRect.left < iRect.right && hRect.right > iRect.left && hRect.top < iRect.bottom && hRect.bottom > iRect.top) {
-                        caught = it; state = 'back'; break;
-                    }
+                const iRect = it.el.getBoundingClientRect();
+                if(hRect.left < iRect.right && hRect.right > iRect.left && hRect.top < iRect.bottom && hRect.bottom > iRect.top) {
+                    caught = it; state = 'back'; break;
                 }
             }
             if(len > window.innerHeight - 180) state = 'back';
@@ -242,28 +238,23 @@
             }
             if(len <= 60) {
                 if(caught) {
-                    if(caught.type === 'BONUS') {
-                        timeLeft += 10; createPopup("+10s", "#f1c40f");
-                    } else {
+                    if(caught.type === 'BONUS') { timeLeft += 10; createPopup("+10s", "#f1c40f"); }
+                    else {
                         score += caught.pts;
                         createPopup(caught.pts > 0 ? "+"+caught.pts : caught.pts, caught.pts > 0 ? "#fff" : "#e74c3c");
                     }
-                    
-                    // Lógica de Missão
                     if(inMissionMode && caught.type === currentMission.target) {
                         missionProgress++;
                         if(missionProgress >= currentMission.qty) {
-                            timeLeft += currentMission.bonus;
-                            inMissionMode = false;
-                            createPopup("MISSÃO OK! +"+currentMission.bonus+"s", "#2ecc71");
+                            timeLeft += currentMission.bonus; inMissionMode = false;
+                            createPopup("MISSÃO COMPLETA! +"+currentMission.bonus+"s", "#2ecc71");
                         }
                     }
-
                     document.getElementById('pts').innerText = score;
                     caught.el.remove();
                     items = items.filter(i => i !== caught);
                     caught = null;
-                    if(score > level * 300) { level++; document.getElementById('lvl').innerText = level; }
+                    if(score >= level * 400) { level++; document.getElementById('lvl').innerText = level; }
                 }
                 len = 60; state = 'swing';
             }
@@ -271,7 +262,7 @@
         requestAnimationFrame(update);
     }
 
-    function shoot() { if(state === 'swing' && active) state = 'launch'; }
+    function shoot() { if(state === 'swing' && active && !isPaused) state = 'launch'; }
 
     function createPopup(txt, color) {
         const p = document.createElement('div');
@@ -282,21 +273,20 @@
         setTimeout(() => p.remove(), 1000);
     }
 
-    const timer = setInterval(() => {
-        if(!active) return;
+    setInterval(() => {
+        if(!active || isPaused) return;
         timeLeft--;
         document.getElementById('time').innerText = timeLeft;
         if(timeLeft <= 0) {
             active = false;
             document.getElementById('final-score').innerText = score;
             document.getElementById('game-over').style.display = 'flex';
-            clearInterval(timer);
         }
     }, 1000);
 
     spawn();
     update();
-    setInterval(showMission, 15000); // Missão a cada 15 segundos
+    setInterval(showMission, 20000); // Nova missão a cada 20 segundos
 </script>
 </body>
 </html>
