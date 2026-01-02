@@ -12,20 +12,18 @@
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; font-family: 'Segoe UI', sans-serif;
-            background: #87CEEB; /* Cor de reserva */
+            background: #87CEEB; 
             user-select: none; touch-action: manipulation;
         }
 
         #game-container { position: relative; width: 100%; height: 100%; }
 
-        /* CÉU COM IMAGEM */
         #sky {
             position: absolute; top: 0; width: 100%; height: 200px;
             background: url('ceu.jpg') no-repeat center bottom;
             background-size: cover;
         }
 
-        /* MAR COM IMAGEM */
         #sea {
             position: absolute; top: 200px; width: 100%; height: calc(100% - 200px);
             background: url('mar.jpg') no-repeat center top;
@@ -33,12 +31,12 @@
             overflow: hidden;
         }
 
-        /* BARCO EM PNG: Z-index 100 */
+        /* BARCO: Subi para 145px para ficar rente ao mar */
         #boat-container {
             position: absolute; 
-            top: 155px; /* Ajuste para o barco assentar na linha do mar */
+            top: 145px; 
             left: 50%;
-            width: 150px; /* Ajuste conforme o tamanho real do seu PNG */
+            width: 150px; 
             z-index: 100;
             animation: boatRock 4s ease-in-out infinite;
             transform-origin: center;
@@ -55,10 +53,10 @@
             50% { transform: translateX(-48%) rotate(2deg); }
         }
 
-        /* LINHA E ANZOL: Z-index 110 para ficar NA FRENTE do barco */
+        /* LINHA: Agora sai do rodapé (85%) do PNG do barco */
         #line {
             position: absolute; 
-            top: 60px; /* Sai de dentro do barco */
+            top: 85%; 
             left: 50%; 
             width: 2px; height: 50px; 
             background: #eee;
@@ -107,7 +105,7 @@
         </div>
 
         <div id="boat-container">
-            <img src="barco.png" id="boat-img" alt="Barco de Pesca">
+            <img src="barco.png" id="boat-img" alt="Barco">
             <div id="line"><div id="hook">🪝</div></div>
         </div>
 
