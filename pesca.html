@@ -19,6 +19,18 @@
             overflow: hidden; font-family: 'Arial Black', 'Arial Bold', Gadget, sans-serif;
             background: var(--deep-blue); 
             user-select: none; touch-action: manipulation;
+            transition: background 0.5s;
+        }
+
+        /* Efeito de Slow Motion no fundo */
+        body.slow-mode {
+            background: #002d5a;
+            animation: pulseBlue 2s infinite;
+        }
+        @keyframes pulseBlue {
+            0% { box-shadow: inset 0 0 100px rgba(9, 132, 227, 0.5); }
+            50% { box-shadow: inset 0 0 200px rgba(9, 132, 227, 0.8); }
+            100% { box-shadow: inset 0 0 100px rgba(9, 132, 227, 0.5); }
         }
 
         .fade-in { animation: fadeIn 0.5s forwards; }
@@ -82,6 +94,7 @@
         .floating-text {
             position: absolute; font-weight: 900; font-size: 36px;
             pointer-events: none; z-index: 500; animation: floatUp 1s forwards;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
         }
         @keyframes floatUp { 0% { transform: translate3d(-50%, 0, 0); opacity: 1; } 100% { transform: translate3d(-50%, -120px, 0); opacity: 0; } }
 
@@ -196,11 +209,17 @@
             let chance = Math.random();
             let k = 'PEIXE';
             
-            // Lógica de sorteio corrigida
-            if(chance < 0.08) k = 'BONUS'; // Tempo Extra
-            else if(chance < 0.18) k = 'SLOW'; // Ampulheta (Desacelerar)
-            else if(chance < 0.30) k = 'RARO'; // Peixe colorido
-            else if(chance > 0.85) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA'; // Lixo
+            // Itens especiais (Ampulheta e Brilho) só aparecem a partir do LVL 10
+            if(level >= 10) {
+                if(chance < 0.10) k = 'BONUS';
+                else if(chance < 0.20) k = 'SLOW';
+                else if(chance < 0.35) k = 'RARO';
+                else if(chance > 0.88) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+            } else {
+                // Até o LVL 9, apenas peixes e lixo
+                if(chance < 0.15) k = 'RARO';
+                else if(chance > 0.85) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+            }
             
             if(level > 2 && k === 'PEIXE' && Math.random() > 0.8) k = 'TUBARAO';
 
@@ -252,8 +271,12 @@
                     if(caught.type === 'BONUS') { timeLeft += 10; createPopup("+10s", "var(--success)"); }
                     else if(caught.type === 'SLOW') { 
                         slowMoFactor = 0.3; 
+                        document.body.classList.add('slow-mode'); // Ativa efeito CSS
                         createPopup("DEVAGAR!", "var(--gold)");
-                        setTimeout(()=>slowMoFactor=1, 5000); 
+                        setTimeout(() => {
+                            slowMoFactor = 1;
+                            document.body.classList.remove('slow-mode'); // Desativa efeito CSS
+                        }, 5000); 
                     }
                     else { 
                         score += caught.pts; 
@@ -289,7 +312,7 @@
         const t = setInterval(() => {
             if(!active) { clearInterval(t); return; }
             timeLeft--;
-            if(timeLeft < 0) timeLeft = 0; // Impede tempo negativo
+            if(timeLeft < 0) timeLeft = 0;
             timeDisplay.innerText = timeLeft;
             if(timeLeft === 0) {
                 active = false;
@@ -297,6 +320,7 @@
                 document.getElementById('final-score').innerText = score;
                 document.getElementById('game-over').style.display = 'flex';
                 document.getElementById('game-over').classList.add('fade-in');
+                document.body.classList.remove('slow-mode');
                 clearInterval(t);
             }
         }, 1000);
