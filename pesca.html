@@ -163,7 +163,7 @@
         'TUBARAO': { ico: '🦈', pts: 150, w: 5, s: 0.8 },
         'SAPATO': { ico: '👞', pts: -10, w: 2, s: 1.2 },
         'LATA': { ico: '🥫', pts: -15, w: 1.5, s: 1.5 },
-        'BONUS': { ico: '✨', pts: 15, w: 0.5, s: 2.2 }, // Pontos de bônus reduzidos para balancear
+        'BONUS': { ico: '✨', pts: 15, w: 0.5, s: 2.2 },
         'SLOW': { ico: '⌛️', pts: 5, w: 0.5, s: 2.5 }
     };
 
@@ -211,7 +211,6 @@
                 let chance = Math.random();
                 let k = 'PEIXE';
                 
-                // SISTEMA DE TETOS: Se tempo > 90s, reduz chance de BONUS drasticamente
                 let bonusChance = timeLeft > 90 ? 0.02 : 0.18;
 
                 if (level >= 20) {
@@ -317,15 +316,12 @@
                         }, 5000); 
                     }
                     else { 
-                        // AJUSTE: Nível 15+ lixo tira tempo
-                        if(level >= 15 && (caught.type === 'SAPATO' || caught.type === 'LATA')) {
-                            timeLeft -= 2;
-                            createPopup("-2s", "var(--danger)");
-                        }
                         score += caught.pts; 
                         createPopup(caught.pts > 0 ? "+"+caught.pts : caught.pts, caught.pts > 0 ? "var(--ocean-blue)" : "var(--danger)"); 
                     }
-                    level = Math.floor(score / 100) + 1;
+                    
+                    level = Math.max(1, Math.floor(score / 200) + 1);
+                    
                     lvlDisplay.innerText = level;
                     ptsDisplay.innerText = score;
                     caught.el.remove();
