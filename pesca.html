@@ -184,11 +184,13 @@
             let k = 'PEIXE';
             let effectiveLevel = Math.min(level, 15);
             let trashChance = 0.05 + (effectiveLevel * 0.028); 
-            let bonusThreshold = 0.05;
+            
+            // AJUSTE: Bônus de tempo fica mais raro conforme o nível sobe
+            let bonusThreshold = Math.max(0.015, 0.05 - (level * 0.0005));
 
             if(chance < bonusThreshold) k = 'BONUS';
-            else if(level >= 10 && chance < 0.12) k = 'SLOW';
-            else if(chance < 0.2) k = 'RARO';
+            else if(level >= 10 && chance < (bonusThreshold + 0.07)) k = 'SLOW';
+            else if(chance < (bonusThreshold + 0.15)) k = 'RARO';
             else if(chance > (1 - trashChance)) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
             else k = 'PEIXE';
             
@@ -241,18 +243,13 @@
         }
 
         if(state === 'swing') {
-            // CORREÇÃO: Velocidade de oscilação limitada para não bugar no nível 40+
             let swingSpeed = Math.min(4.5, 1.1 + (level * 0.08)); 
             angle += (swingSpeed * dir) * slowMoFactor;
-            
-            // CORREÇÃO: Lógica de borda mais robusta
             if(angle > 60) { angle = 60; dir = -1; }
             if(angle < -60) { angle = -60; dir = 1; }
-            
             line.style.transform = `rotate(${angle}deg)`;
         } 
         else if(state === 'launch') {
-            // CORREÇÃO: Velocidade de lançamento limitada
             let launchSpeed = Math.min(25, 13 + (level * 0.5));
             len += launchSpeed;
             line.style.height = len + 'px';
@@ -302,9 +299,17 @@
                     items = items.filter(i => i !== caught);
                     caught = null;
                 } else {
-                    score = Math.max(0, score - 10);
+                    // AJUSTE: Perda de pontos cresce com o nível. Acima do nível 50 perde tempo ao errar.
+                    let penalty = 10 + (level * 2);
+                    score = Math.max(0, score - penalty);
                     ptsDisplay.innerText = score;
-                    createPopup("-10", "#e74c3c");
+                    
+                    let popupMsg = `-${penalty}`;
+                    if(level >= 50) {
+                        timeLeft = Math.max(0, timeLeft - 3);
+                        popupMsg += " | -3s";
+                    }
+                    createPopup(popupMsg, "#e74c3c");
                 }
                 len = 60; state = 'swing';
             }
@@ -336,7 +341,8 @@
 
     spawn();
     update();
-    setInterval(showMission, 10000); 
+    // Missões ficam levemente mais espaçadas em níveis altos para focar na precisão
+    setInterval(showMission, Math.min(15000, 10000 + (level * 100))); 
 </script>
 </body>
 </html>
