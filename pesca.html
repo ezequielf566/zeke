@@ -27,9 +27,9 @@
             animation: pulseBlue 2s infinite;
         }
         @keyframes pulseBlue {
-            0% { box-shadow: inset 0 0 100px rgba(9, 132, 227, 0.5); }
-            50% { box-shadow: inset 0 0 200px rgba(9, 132, 227, 0.8); }
-            100% { box-shadow: inset 0 0 100px rgba(9, 132, 227, 0.5); }
+            0% { box-shadow: inset 0 0 80px rgba(9, 132, 227, 0.4); }
+            50% { box-shadow: inset 0 0 160px rgba(9, 132, 227, 0.7); }
+            100% { box-shadow: inset 0 0 80px rgba(9, 132, 227, 0.4); }
         }
 
         .fade-in { animation: fadeIn 0.5s forwards; }
@@ -87,7 +87,7 @@
         #line { position: absolute; top: 90%; left: 50%; width: 2.5px; height: 65px; background: #fff; transform-origin: top center; z-index: 90; }
         #hook { position: absolute; bottom: -30px; left: -15px; font-size: 34px; }
 
-        .item { position: absolute; z-index: 40; pointer-events: none; font-size: 55px; }
+        .item { position: absolute; z-index: 40; pointer-events: none; font-size: 55px; will-change: transform; }
         .shark-size { font-size: 90px !important; }
 
         .floating-text {
@@ -155,6 +155,7 @@
     let state = 'swing', angle = 0, dir = 1, len = 65, caught = null;
     let items = [];
     let slowMoFactor = 1;
+    const MAX_ITEMS = 15; // OTIMIZAÇÃO: Limite de itens na tela
 
     const types = {
         'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 1.5 },
@@ -203,59 +204,82 @@
 
     function spawn() {
         if(!active) return;
-        // MAIS PEIXES NO INÍCIO: qty base aumentada de 2 para 4
-        const qty = 4 + Math.min(level, 4); 
-        for(let i=0; i<qty; i++) {
-            let chance = Math.random();
-            let k = 'PEIXE';
-            
-            if(level >= 10) {
-                if(chance < 0.12) k = 'BONUS';
-                else if(chance < 0.22) k = 'SLOW';
-                else if(chance < 0.40) k = 'RARO';
-                else if(chance > 0.90) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
-            } else {
-                if(chance < 0.25) k = 'RARO'; // Mais peixes raros no começo para subir de nível rápido
-                else if(chance > 0.92) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
-            }
-            
-            if(level > 2 && k === 'PEIXE' && Math.random() > 0.8) k = 'TUBARAO';
+        
+        // OTIMIZAÇÃO: Se já tem muitos peixes, espera antes de criar mais
+        if(items.length < MAX_ITEMS) {
+            const batchSize = level < 10 ? 3 : 2; // Menos peixes por vez em níveis altos para não travar
+            for(let i=0; i < batchSize; i++) {
+                let chance = Math.random();
+                let k = 'PEIXE';
+                
+                if(level >= 10) {
+                    if(chance < 0.15) k = 'BONUS';
+                    else if(chance < 0.25) k = 'SLOW';
+                    else if(chance < 0.45) k = 'RARO';
+                    else if(chance > 0.85) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+                } else {
+                    if(chance < 0.20) k = 'RARO';
+                    else if(chance > 0.90) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+                }
+                
+                if(level > 2 && k === 'PEIXE' && Math.random() > 0.8) k = 'TUBARAO';
 
-            const t = types[k];
-            const el = document.createElement('div');
-            el.className = 'item' + (k === 'TUBARAO' ? ' shark-size' : '');
-            el.innerHTML = t.ico;
-            const item = { el: el, type: k, x: window.innerWidth + (Math.random() * 200), y: 50 + Math.random() * (window.innerHeight - 350), speed: t.s + (level * 0.15), pts: t.pts, w: t.w };
-            container.appendChild(el);
-            items.push(item);
+                const t = types[k];
+                const el = document.createElement('div');
+                el.className = 'item' + (k === 'TUBARAO' ? ' shark-size' : '');
+                el.innerHTML = t.ico;
+                // Velocidade máxima limitada em s + level*0.12 para não ficar impossível
+                const item = { 
+                    el: el, 
+                    type: k, 
+                    x: window.innerWidth + (Math.random() * 150), 
+                    y: 50 + Math.random() * (window.innerHeight - 350), 
+                    speed: t.s + (Math.min(level, 15) * 0.12), 
+                    pts: t.pts, 
+                    w: t.w 
+                };
+                container.appendChild(el);
+                items.push(item);
+            }
         }
-        // SPAWN MAIS RÁPIDO NO INÍCIO: delay reduzido
-        setTimeout(spawn, 2000 - Math.min(1200, level * 150));
+        
+        // OTIMIZAÇÃO: Spawn rate equilibrado (mínimo de 800ms)
+        let nextSpawn = 2000 - (level * 100);
+        setTimeout(spawn, Math.max(800, nextSpawn));
     }
 
     function update() {
         if(!active) return;
-        items.forEach((it, i) => {
-            if(it === caught) return;
+        
+        for (let i = items.length - 1; i >= 0; i--) {
+            const it = items[i];
+            if(it === caught) continue;
+            
             it.x -= it.speed * slowMoFactor;
             it.el.style.transform = `translate3d(${it.x}px, ${it.y + Math.sin(it.x*0.02)*8}px, 0)`;
-            if(it.x < -150) { it.el.remove(); items.splice(i, 1); }
-        });
+            
+            if(it.x < -150) {
+                it.el.remove();
+                items.splice(i, 1);
+            }
+        }
 
         if(state === 'swing') {
-            angle += (1.4 + (level * 0.12)) * dir * slowMoFactor;
+            angle += (1.4 + (Math.min(level, 12) * 0.1)) * dir * slowMoFactor;
             if(Math.abs(angle) > 65) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } else if(state === 'launch') {
-            len += 20;
+            len += 22;
             line.style.height = len + 'px';
             const hRect = hook.getBoundingClientRect();
-            items.forEach(it => {
+            
+            for(let it of items) {
                 const iRect = it.el.getBoundingClientRect();
                 if(hRect.left < iRect.right && hRect.right > iRect.left && hRect.top < iRect.bottom && hRect.bottom > iRect.top) {
                     caught = it; state = 'back';
+                    break;
                 }
-            });
+            }
             if(len > window.innerHeight - 150) state = 'back';
         } else if(state === 'back') {
             len -= 25 / (caught ? caught.w : 1);
@@ -271,7 +295,7 @@
                     else if(caught.type === 'SLOW') { 
                         slowMoFactor = 0.3; 
                         document.body.classList.add('slow-mode');
-                        createPopup("DEVAGAR!", "var(--gold)");
+                        createPopup("TEMPO LENTO!", "var(--gold)");
                         setTimeout(() => {
                             slowMoFactor = 1;
                             document.body.classList.remove('slow-mode');
@@ -285,10 +309,9 @@
                     lvlDisplay.innerText = level;
                     ptsDisplay.innerText = score;
                     caught.el.remove();
+                    // Remove da lista de itens ativos
+                    items = items.filter(i => i !== caught);
                     caught = null;
-                } else {
-                    // DANO DE ERRO REMOVIDO (Não remove mais 3 segundos)
-                    // createPopup("MISSED", "gray"); 
                 }
                 state = 'swing';
             }
