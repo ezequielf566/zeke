@@ -7,56 +7,62 @@
     <style>
         :root {
             --gold: #f1c40f;
-            --success: #2ecc71;
+            --ocean-dark: rgba(0, 31, 63, 0.95);
+            --ocean-light: #3498db;
             --danger: #e74c3c;
-            --blue: #3498db;
-            --glass: rgba(0, 0, 0, 0.85);
+            --success: #2ecc71;
         }
 
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #87CEEB; 
+            overflow: hidden; font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #001f3f; 
             user-select: none; touch-action: manipulation;
         }
 
         #game-container { position: relative; width: 100%; height: 100%; overflow: hidden; display: none; }
 
-        /* Estilo dos Menus Profissionais */
+        /* Telas de Menu Estilizadas em Azul Oceano */
         .screen {
             position: fixed; inset: 0; z-index: 3000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url('mar.jpg');
-            background-size: cover; background-position: center; text-align: center; color: white;
+            background: linear-gradient(rgba(0, 20, 40, 0.7), rgba(0, 20, 40, 0.9)), url('mar.jpg');
+            background-size: cover; background-position: center; color: white;
         }
 
         .menu-box {
-            background: var(--glass); padding: 35px; border-radius: 30px;
-            border: 3px solid var(--gold); box-shadow: 0 0 25px rgba(0,0,0,0.5);
-            width: 85%; max-width: 380px; backdrop-filter: blur(5px);
+            background: var(--ocean-dark); padding: 40px; border-radius: 30px;
+            border: 2px solid var(--ocean-light); 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 15px rgba(52, 152, 219, 0.3);
+            width: 85%; max-width: 360px; backdrop-filter: blur(12px);
+            text-align: center;
         }
 
         button {
             width: 100%; padding: 16px; margin: 12px 0; font-size: 18px; font-weight: bold;
-            text-transform: uppercase; border-radius: 50px; border: none; cursor: pointer;
-            transition: all 0.2s;
+            text-transform: uppercase; border-radius: 15px; border: none; cursor: pointer;
+            transition: all 0.3s ease; letter-spacing: 1px;
         }
 
-        .btn-start { background: var(--gold); color: #000; box-shadow: 0 4px 0 #b7950b; }
-        .btn-rank { background: transparent; border: 2px solid var(--gold); color: var(--gold); }
-        button:active { transform: translateY(4px); box-shadow: none; }
+        .btn-start { 
+            background: linear-gradient(135deg, var(--ocean-light), #2980b9); 
+            color: white; border-bottom: 4px solid #1a5276;
+        }
+        .btn-rank { 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid var(--ocean-light); color: var(--ocean-light); 
+        }
+        button:active { transform: translateY(3px); border-bottom-width: 1px; }
 
-        /* Elementos do Jogo Restaurados */
+        /* Elementos de Jogo */
         #sky {
             position: absolute; top: 0; width: 100%; height: 120px;
-            background: url('ceu.jpg') no-repeat center bottom;
-            background-size: cover; border-bottom: 2px solid rgba(255,255,255,0.3);
+            background: url('ceu.jpg') no-repeat center bottom; background-size: cover;
         }
 
         #sea {
             position: absolute; top: 120px; width: 100%; height: calc(100% - 120px);
-            background: url('mar.jpg') no-repeat center top;
-            background-size: cover; overflow: hidden;
+            background: url('mar.jpg') no-repeat center top; background-size: cover;
         }
 
         #hud {
@@ -64,28 +70,23 @@
             display: flex; justify-content: center; gap: 10px; z-index: 200;
         }
         .stat {
-            background: rgba(0,0,0,0.85); border: 2px solid var(--gold);
-            padding: 8px 12px; border-radius: 15px; color: white;
-            font-weight: bold; font-size: 14px; min-width: 95px; text-align: center;
+            background: rgba(0, 15, 30, 0.85); border: 1.5px solid var(--gold);
+            padding: 8px 12px; border-radius: 12px; color: white;
+            font-weight: bold; font-size: 13px; min-width: 90px; text-align: center;
         }
 
         #boat-container {
-            position: absolute; top: 55px; left: 50%;
-            width: 140px; z-index: 100; transform: translateX(-50%);
+            position: absolute; top: 55px; left: 50%; width: 140px; 
+            z-index: 100; transform: translateX(-50%);
             animation: boatRock 4s ease-in-out infinite;
         }
-        @keyframes boatRock {
-            0%, 100% { transform: translateX(-50%) rotate(-2deg); }
-            50% { transform: translateX(-48%) rotate(2deg); }
-        }
+        @keyframes boatRock { 0%, 100% { transform: translateX(-50%) rotate(-2deg); } 50% { transform: translateX(-48%) rotate(2deg); } }
         #boat-img { width: 100%; height: auto; display: block; }
 
         #line {
-            position: absolute; top: 90%; left: 50%; 
-            width: 2px; height: 60px; background: #fff;
-            transform-origin: top center; z-index: 90; 
+            position: absolute; top: 90%; left: 50%; width: 2px; height: 60px;
+            background: #fff; transform-origin: top center; z-index: 90; 
         }
-
         #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; }
 
         .item { position: absolute; z-index: 40; pointer-events: none; font-size: 52px; }
@@ -94,16 +95,14 @@
         .floating-text {
             position: absolute; font-weight: 900; font-size: 30px;
             pointer-events: none; z-index: 500; animation: floatUp 1s forwards;
-            text-shadow: 2px 2px 0px #000;
         }
         @keyframes floatUp { 0% { transform: translate3d(-50%, 0, 0); opacity: 1; } 100% { transform: translate3d(-50%, -100px, 0); opacity: 0; } }
 
-        /* Ranking List */
         #ranking-list { list-style: none; padding: 0; margin: 20px 0; }
         #ranking-list li { 
-            background: rgba(255,255,255,0.1); margin: 8px 0; padding: 12px; 
-            border-radius: 15px; display: flex; justify-content: space-between;
-            border-left: 4px solid var(--gold);
+            background: rgba(52, 152, 219, 0.1); margin: 8px 0; padding: 12px; 
+            border-radius: 12px; display: flex; justify-content: space-between;
+            border-bottom: 1px solid rgba(52, 152, 219, 0.3);
         }
     </style>
 </head>
@@ -111,18 +110,18 @@
 
     <div id="main-menu" class="screen">
         <div class="menu-box">
-            <h1 style="color:var(--gold); margin-bottom: 10px; font-size: 28px;">PESCADOR DE MILAGRES</h1>
-            <p style="margin-bottom: 30px; font-size: 14px; opacity: 0.8;">Desafie os mares e colha vitórias</p>
-            <button class="btn-start" onclick="startGame()">Iniciar Pesca</button>
-            <button class="btn-rank" onclick="showRanking()">Ranking Top 5</button>
+            <h1 style="color:var(--ocean-light); margin-bottom: 5px; font-size: 26px;">PESCA MASTER</h1>
+            <p style="margin-bottom: 25px; font-size: 13px; color: #aabccf;">Pescador de Milagres Pro</p>
+            <button class="btn-start" onclick="startGame(event)">Iniciar Pesca</button>
+            <button class="btn-rank" onclick="showRanking(event)">Ranking Top 5</button>
         </div>
     </div>
 
     <div id="ranking-screen" class="screen" style="display: none;">
         <div class="menu-box">
-            <h2 style="color:var(--gold); margin-bottom: 15px;">MELHORES DA SEMANA</h2>
+            <h2 style="color:var(--gold); margin-bottom: 15px; font-size: 20px;">MELHORES PONTUAÇÕES</h2>
             <ul id="ranking-list"></ul>
-            <button class="btn-rank" onclick="hideRanking()">Voltar ao Menu</button>
+            <button class="btn-rank" onclick="hideRanking(event)">Voltar</button>
         </div>
     </div>
 
@@ -142,9 +141,9 @@
 
     <div id="game-over" class="screen" style="display: none;">
         <div class="menu-box">
-            <h1 style="color:var(--gold); font-size: 35px; margin: 0;">FIM DA PESCA!</h1>
-            <p style="margin-top: 20px;">Sua pontuação final:</p>
-            <h2 id="final-score" style="font-size: 55px; margin: 10px 0; text-shadow: 0 0 10px var(--gold);">0</h2>
+            <h1 style="color:var(--danger); font-size: 30px;">FIM DA LINHA!</h1>
+            <p style="margin-top: 15px; color: #fff;">Sua pontuação:</p>
+            <h2 id="final-score" style="font-size: 45px; color: var(--gold); margin: 10px 0;">0</h2>
             <button class="btn-start" onclick="location.reload()">Jogar Novamente</button>
         </div>
     </div>
@@ -172,7 +171,8 @@
         'SLOW': { ico: '⌛️', pts: 5, w: 0.5, s: 2.5 }
     };
 
-    function startGame() {
+    function startGame(e) {
+        if(e) e.stopPropagation();
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         active = true;
@@ -181,41 +181,43 @@
         startTimer();
     }
 
-    function showRanking() {
+    function showRanking(e) {
+        if(e) e.stopPropagation();
         const list = document.getElementById('ranking-list');
         const scores = JSON.parse(localStorage.getItem('fishing_rank') || '[]');
         list.innerHTML = scores.length ? '' : '<li>Ainda sem recordes</li>';
         scores.forEach((s, i) => {
-            list.innerHTML += `<li><span>#${i+1} Lugar</span> <strong>${s} pts</strong></li>`;
+            list.innerHTML += `<li><span>${i+1}º Lugar</span> <strong>${s} pts</strong></li>`;
         });
         document.getElementById('ranking-screen').style.display = 'flex';
     }
 
-    function hideRanking() { document.getElementById('ranking-screen').style.display = 'none'; }
+    function hideRanking(e) { 
+        if(e) e.stopPropagation();
+        document.getElementById('ranking-screen').style.display = 'none'; 
+    }
 
     function saveScore(finalScore) {
         let scores = JSON.parse(localStorage.getItem('fishing_rank') || '[]');
         scores.push(finalScore);
         scores.sort((a, b) => b - a);
-        scores = scores.slice(0, 5);
+        scores = scores.slice(0, 5); // Mantém apenas o Top 5
         localStorage.setItem('fishing_rank', JSON.stringify(scores));
     }
 
     function updateScoreDisplay() {
-        let s = score.toString();
-        ptsDisplay.innerText = s.length > 4 ? s.substring(0, 4) : s;
+        ptsDisplay.innerText = score > 9999 ? score.toString().substring(0, 4) : score;
     }
 
     function spawn() {
         if(!active) return;
-        const qty = 2 + Math.min(level, 5); 
+        const qty = 2 + Math.min(level, 4); 
         for(let i=0; i<qty; i++) {
             let chance = Math.random();
             let k = 'PEIXE';
             if(chance < 0.05) k = 'BONUS';
             else if(chance < 0.15) k = 'RARO';
             else if(chance > 0.85) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
-            
             if(level > 2 && k === 'PEIXE' && Math.random() > 0.9) k = 'TUBARAO';
 
             const t = types[k];
@@ -267,16 +269,15 @@
                     if(caught.type === 'BONUS') { timeLeft += 10; createPopup("+10s", "var(--success)"); }
                     else if(caught.type === 'SLOW') { slowMoFactor = 0.3; setTimeout(()=>slowMoFactor=1, 5000); }
                     else { score += caught.pts; createPopup(caught.pts > 0 ? "+"+caught.pts : caught.pts, caught.pts > 0 ? "white" : "var(--danger)"); }
-                    
-                    level = Math.floor(score / 250) + 1;
+                    level = Math.floor(score / 300) + 1;
                     lvlDisplay.innerText = level;
                     updateScoreDisplay();
                     caught.el.remove();
                     caught = null;
                 } else {
-                    // PENALIDADE 10 SEGUNDOS AO ERRAR
-                    timeLeft = Math.max(0, timeLeft - 10);
-                    createPopup("-10s", "var(--danger)");
+                    // PENALIDADE DE 3 SEGUNDOS AO ERRAR
+                    timeLeft = Math.max(0, timeLeft - 3);
+                    createPopup("-3s", "var(--danger)");
                 }
                 state = 'swing';
             }
