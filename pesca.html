@@ -43,6 +43,7 @@
             background: rgba(0,0,0,0.85); border: 2px solid var(--gold);
             padding: 8px 12px; border-radius: 15px; color: white;
             font-weight: bold; font-size: 14px; min-width: 95px; text-align: center;
+            white-space: nowrap;
         }
 
         #boat-container {
@@ -160,6 +161,16 @@
         'SLOW': { ico: '⌛️', pts: 5, w: 0.5, s: 2.5, name: 'Tempo Lento' }
     };
 
+    // NOVA FUNÇÃO: Limita a exibição do score no HUD para 4 dígitos
+    function updateScoreDisplay() {
+        let strScore = score.toString();
+        if(strScore.length > 4) {
+            ptsDisplay.innerText = strScore.substring(0, 4);
+        } else {
+            ptsDisplay.innerText = score;
+        }
+    }
+
     function showMission() {
         if(!active || inMissionMode || state !== 'swing' || timeLeft >= 50) return;
         isPaused = true; inMissionMode = true; missionTriggeredOnce = true;
@@ -185,7 +196,6 @@
             let effectiveLevel = Math.min(level, 15);
             let trashChance = 0.05 + (effectiveLevel * 0.028); 
             
-            // AJUSTE: Bônus de tempo fica mais raro conforme o nível sobe
             let bonusThreshold = Math.max(0.015, 0.05 - (level * 0.0005));
 
             if(chance < bonusThreshold) k = 'BONUS';
@@ -236,10 +246,7 @@
             it.x -= (it.speed * slowMoFactor);
             const waveY = it.y + (Math.sin(it.x * 0.02) * 8);
             it.el.style.transform = `translate3d(${it.x}px, ${waveY}px, 0)`;
-            if(it.x < -150) { 
-                it.el.remove(); 
-                items.splice(i, 1); 
-            }
+            if(it.x < -150) { it.el.remove(); items.splice(i, 1); }
         }
 
         if(state === 'swing') {
@@ -253,7 +260,6 @@
             let launchSpeed = Math.min(25, 13 + (level * 0.5));
             len += launchSpeed;
             line.style.height = len + 'px';
-            
             const hRect = hook.getBoundingClientRect();
             for(let it of items) {
                 const iRect = it.el.getBoundingClientRect();
@@ -268,8 +274,7 @@
             len -= sb; line.style.height = len + 'px';
             if(caught) {
                 caught.el.style.transform = `translate3d(-50%, -15px, 0)`;
-                caught.el.style.left = '50%';
-                caught.el.style.top = '100%';
+                caught.el.style.left = '50%'; caught.el.style.top = '100%';
                 hook.appendChild(caught.el);
             }
             if(len <= 60) {
@@ -294,21 +299,16 @@
                         lvlDisplay.innerText = level;
                         createPopup("NÍVEL " + level, "#f1c40f");
                     }
-                    ptsDisplay.innerText = score;
+                    updateScoreDisplay(); // Chama a função formatada
                     caught.el.remove();
                     items = items.filter(i => i !== caught);
                     caught = null;
                 } else {
-                    // AJUSTE: Perda de pontos cresce com o nível. Acima do nível 50 perde tempo ao errar.
                     let penalty = 10 + (level * 2);
                     score = Math.max(0, score - penalty);
-                    ptsDisplay.innerText = score;
-                    
+                    updateScoreDisplay(); // Chama a função formatada
                     let popupMsg = `-${penalty}`;
-                    if(level >= 50) {
-                        timeLeft = Math.max(0, timeLeft - 3);
-                        popupMsg += " | -3s";
-                    }
+                    if(level >= 50) { timeLeft = Math.max(0, timeLeft - 3); popupMsg += " | -3s"; }
                     createPopup(popupMsg, "#e74c3c");
                 }
                 len = 60; state = 'swing';
@@ -334,6 +334,7 @@
         timeDisplay.innerText = timeLeft;
         if(timeLeft <= 0) {
             active = false;
+            // AQUI: Mostra o score REAL completo no Game Over
             document.getElementById('final-score').innerText = score;
             document.getElementById('game-over').style.display = 'flex';
         }
@@ -341,7 +342,6 @@
 
     spawn();
     update();
-    // Missões ficam levemente mais espaçadas em níveis altos para focar na precisão
     setInterval(showMission, Math.min(15000, 10000 + (level * 100))); 
 </script>
 </body>
