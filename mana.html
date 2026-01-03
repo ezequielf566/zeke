@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Maná: Fluxo Perfeito</title>
     <style>
-        :root { --gold: #f1c40f; }
+        :root { --gold: #f1c40f; --dirt: #5d4037; --grass: #2e7d32; }
         body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; touch-action: none; user-select: none; }
         
         #world { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
@@ -14,14 +14,25 @@
         .noite { background: linear-gradient(to bottom, #09203f 0%, #537895 100%); }
 
         #clouds-origin {
-            position: absolute; top: 0; width: 100%; height: 120px;
-            background: rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px);
-            border-bottom: 4px solid rgba(255,255,255,0.5); z-index: 10;
+            position: absolute; top: 0; width: 100%; height: 80px;
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(8px);
+            border-bottom: 2px solid rgba(255,255,255,0.3); z-index: 10;
             display: flex; align-items: center; justify-content: center;
-            color: #fff; font-weight: bold; font-size: 18px;
+            color: #fff; font-weight: bold; letter-spacing: 2px;
         }
 
-        #ground { position: absolute; bottom: 0; width: 100%; height: 60px; background: #2d1e12; border-top: 6px solid #4a3728; z-index: 20; }
+        /* CHÃO COM TEXTURA DE TERRA E GRAMA */
+        #ground { 
+            position: absolute; bottom: 0; width: 100%; height: 60px; 
+            background-color: var(--dirt);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M0 40 a20 20 0 0 1 20 -20 a20 20 0 0 0 20 -20' fill='none' stroke='%234e342e' stroke-width='2'/%3E%3C/svg%3E");
+            z-index: 20; 
+        }
+        #ground::before {
+            content: ''; position: absolute; top: -10px; width: 100%; height: 10px;
+            background: var(--grass); border-radius: 5px 5px 0 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
 
         #player {
             position: absolute; bottom: 60px; width: 80px; height: 80px;
@@ -38,38 +49,37 @@
         }
 
         #ui-container {
-            position: absolute; top: 140px; width: 100%; display: flex; 
+            position: absolute; top: 100px; width: 100%; display: flex; 
             justify-content: space-between; box-sizing: border-box; padding: 0 20px; z-index: 30;
         }
 
         .glass-card {
-            background: rgba(0,0,0,0.7); padding: 12px; border-radius: 12px;
-            color: white; border: 1px solid rgba(255,255,255,0.2); min-width: 100px;
+            background: rgba(0,0,0,0.6); padding: 12px; border-radius: 12px;
+            color: white; border: 1px solid rgba(255,255,255,0.1); min-width: 100px;
+            backdrop-filter: blur(4px);
         }
 
         #challenge-box { border: 2px solid var(--gold); text-align: right; }
 
         .overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
             display: flex; flex-direction: column; align-items: center; 
             justify-content: center; z-index: 100; color: white; text-align: center;
+            padding: 20px;
         }
         
-        .btn { padding: 15px 40px; font-size: 20px; cursor: pointer; border-radius: 50px; border: none; background: var(--gold); font-weight: bold; }
-
-        .collect-effect { animation: collect 0.3s ease-out; }
-        @keyframes collect { 0% { transform: scale(1); filter: brightness(2); } 100% { transform: scale(1.5); filter: brightness(1); opacity: 0; } }
+        .btn { padding: 15px 40px; font-size: 20px; cursor: pointer; border-radius: 50px; border: none; background: var(--gold); font-weight: bold; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body class="dia">
 
     <div id="world" class="dia">
-        <div id="clouds-origin">☁️ CAMADA CELESTIAL ☁️</div>
+        <div id="clouds-origin">CELESTIAL</div>
 
         <div id="ui-container">
             <div class="glass-card">
                 <b id="lvl-tag" style="color: var(--gold);">FASE 1</b><br>
-                Total: <span id="cur-mana">0/15</span>
+                Mana: <span id="cur-mana">0/15</span>
             </div>
             <div class="glass-card" id="challenge-box">
                 <small>DESAFIO</small><br>
@@ -83,13 +93,15 @@
     </div>
 
     <div id="screen-start" class="overlay">
-        <h1 style="font-size: 50px; color: var(--gold);">MANÁ</h1>
-        <p>Pegue apenas as frutas pedidas!</p>
-        <button class="btn" onclick="startGame()">INICIAR</button>
+        <h1 style="font-size: 48px; color: var(--gold); margin-bottom: 10px;">MANÁ</h1>
+        <p style="font-size: 18px;">Colete as frutas pedidas para progredir.</p>
+        <p style="font-size: 14px; opacity: 0.8;">Cuidado: Pegar o item errado reseta seu combo!</p><br>
+        <button class="btn" onclick="startGame()">INICIAR JOGO</button>
     </div>
 
     <div id="screen-win" class="overlay" style="display:none;">
-        <h1 style="color: var(--gold);">FASE CONCLUÍDA!</h1>
+        <h1 style="color: var(--gold);">EXCELENTE!</h1>
+        <p>Você dominou o fluxo desta fase.</p><br>
         <button class="btn" onclick="nextLevel()">PRÓXIMA FASE</button>
     </div>
 
@@ -105,11 +117,11 @@
             mana: 0,
             playerX: window.innerWidth / 2,
             moveDir: 0,
-            playerSpeed: 22,
+            playerSpeed: 20,
             items: [],
             lastSpawn: 0,
-            spawnRate: 380,
-            itemSpeed: 8.5,
+            spawnRate: 1200, // MAIS LENTO (Nível 1 amigável)
+            itemSpeed: 4.0,   // QUEDA SUAVE
             targetEmoji: '',
             targetGoal: 3,
             currentSequence: 0,
@@ -118,7 +130,7 @@
 
         function setChallenge() {
             game.targetEmoji = foodPool[Math.floor(Math.random() * foodPool.length)];
-            game.targetGoal = 2 + Math.floor(game.level / 1.5);
+            game.targetGoal = 2 + Math.floor(game.level / 2);
             game.currentSequence = 0;
             game.challengeComplete = false;
             updateUI();
@@ -140,13 +152,11 @@
         function gameLoop(timestamp) {
             if (!game.active) return;
 
-            // Movimento Jogador
             game.playerX += game.moveDir * game.playerSpeed;
             game.playerX = Math.max(40, Math.min(window.innerWidth - 40, game.playerX));
             player.style.left = game.playerX + 'px';
             player.style.transform = `translateX(-50%) scaleX(${game.moveDir < 0 ? -1 : 1})`;
 
-            // Spawn
             if (timestamp - game.lastSpawn > game.spawnRate) {
                 spawnItem();
                 game.lastSpawn = timestamp;
@@ -157,23 +167,16 @@
         }
 
         function spawnItem() {
-            const isJunk = Math.random() > 0.88;
+            const isJunk = Math.random() > 0.90;
             const emoji = isJunk ? junkPool[Math.floor(Math.random() * junkPool.length)] : foodPool[Math.floor(Math.random() * foodPool.length)];
             
             const element = document.createElement('div');
             element.className = 'entity';
             element.innerText = emoji;
-            const startX = Math.random() * (window.innerWidth - 60);
+            const startX = 40 + Math.random() * (window.innerWidth - 80);
             element.style.left = startX + 'px';
             
-            const itemObj = {
-                el: element,
-                x: startX,
-                y: -50,
-                emoji: emoji,
-                isJunk: isJunk
-            };
-            
+            const itemObj = { el: element, x: startX, y: -50, emoji: emoji, isJunk: isJunk };
             world.appendChild(element);
             game.items.push(itemObj);
         }
@@ -184,7 +187,6 @@
                 item.y += game.itemSpeed;
                 item.el.style.transform = `translateY(${item.y}px)`;
 
-                // Colisão Melhorada (Baseada no centro dos objetos)
                 const playerCenter = game.playerX;
                 const itemCenter = item.x + 30;
 
@@ -196,7 +198,6 @@
                     }
                 }
 
-                // Saiu da tela (Agora não pune se cair no chão)
                 if (item.y > window.innerHeight) {
                     destroyItem(i);
                 }
@@ -205,14 +206,15 @@
 
         function handleCollect(item) {
             if (item.isJunk) {
-                game.currentSequence = 0; // Tocou lixo reseta
+                game.currentSequence = 0;
+                game.mana = Math.max(0, game.mana - 1);
             } else {
                 game.mana++;
                 if (item.emoji === game.targetEmoji) {
                     game.currentSequence++;
                     if (game.currentSequence >= game.targetGoal) game.challengeComplete = true;
                 } else {
-                    game.currentSequence = 0; // Tocou fruta errada reseta
+                    game.currentSequence = 0; 
                 }
                 checkWin();
             }
@@ -220,14 +222,12 @@
         }
 
         function destroyItem(index) {
-            if(game.items[index] && game.items[index].el) {
-                game.items[index].el.remove();
-            }
+            if(game.items[index] && game.items[index].el) game.items[index].el.remove();
             game.items.splice(index, 1);
         }
 
         function updateUI() {
-            const mGoal = 10 + (game.level * 5);
+            const mGoal = 10 + (game.level * 2);
             document.getElementById('cur-mana').innerText = `${game.mana}/${mGoal}`;
             document.getElementById('target-count').innerText = game.targetGoal;
             document.getElementById('target-emoji').innerText = game.targetEmoji;
@@ -236,11 +236,11 @@
             
             const box = document.getElementById('challenge-box');
             box.style.borderColor = game.challengeComplete ? "#2ecc71" : "var(--gold)";
-            box.style.background = game.challengeComplete ? "rgba(46, 204, 113, 0.2)" : "rgba(0,0,0,0.7)";
+            box.style.background = game.challengeComplete ? "rgba(46, 204, 113, 0.2)" : "rgba(0,0,0,0.6)";
         }
 
         function checkWin() {
-            const mGoal = 10 + (game.level * 5);
+            const mGoal = 10 + (game.level * 2);
             if (game.mana >= mGoal && game.challengeComplete) {
                 game.active = false;
                 document.getElementById('screen-win').style.display = 'flex';
@@ -250,11 +250,12 @@
         function nextLevel() {
             game.level++;
             game.mana = 0;
-            game.itemSpeed += 0.4;
-            game.spawnRate = Math.max(180, game.spawnRate - 20);
+            // Aumento de dificuldade gradual
+            game.itemSpeed += 0.5;
+            game.spawnRate = Math.max(400, game.spawnRate - 100);
             
-            if (game.level <= 5) world.className = 'dia';
-            else if (game.level <= 10) world.className = 'tarde';
+            if (game.level <= 3) world.className = 'dia';
+            else if (game.level <= 6) world.className = 'tarde';
             else world.className = 'noite';
 
             game.items.forEach(item => item.el.remove());
