@@ -3,25 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pescador de Milagres Pro</title>
+    <title>Maré de Sorte - Pescador Pro</title>
     <style>
         :root {
             --gold: #f39c12;
             --ocean-blue: #0984e3;
             --deep-blue: #001f3f;
-            --clean-white: rgba(255, 255, 255, 0.95);
+            --clean-white: rgba(255, 255, 255, 0.98);
             --danger: #d63031;
             --success: #00b894;
         }
 
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif;
+            overflow: hidden; font-family: 'Arial Black', Gadget, sans-serif;
             background: var(--deep-blue); 
             user-select: none; touch-action: manipulation;
         }
 
-        /* Animação de transição entre telas */
         .fade-in { animation: fadeIn 0.5s forwards; }
         .fade-out { animation: fadeOut 0.5s forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -29,40 +28,38 @@
 
         #game-container { position: relative; width: 100%; height: 100%; overflow: hidden; display: none; opacity: 0; }
 
-        /* Novo Menu Azul e Branco */
         .screen {
             position: fixed; inset: 0; z-index: 3000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('mar.jpg');
-            background-size: cover; background-position: center; color: var(--deep-blue);
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('mar.jpg');
+            background-size: cover; background-position: center;
         }
 
         .menu-box {
-            background: var(--clean-white); padding: 40px; border-radius: 40px;
-            border: 6px solid var(--ocean-blue); 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            width: 80%; max-width: 340px; text-align: center;
+            background: var(--clean-white); padding: 45px 30px; border-radius: 45px;
+            border: 8px solid var(--ocean-blue); 
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+            width: 85%; max-width: 350px; text-align: center;
         }
 
-        h1 { color: var(--ocean-blue); font-size: 28px; margin-bottom: 5px; text-transform: uppercase; }
-        p { color: #636e72; font-size: 14px; margin-bottom: 30px; }
+        h1 { color: var(--ocean-blue); font-size: 34px; margin: 0; line-height: 1; text-shadow: 2px 2px 0px rgba(0,0,0,0.1); }
+        .subtitle { color: var(--gold); font-size: 16px; margin-bottom: 30px; letter-spacing: 1px; }
 
         button {
-            width: 100%; padding: 16px; margin: 10px 0; font-size: 18px; font-weight: bold;
-            text-transform: uppercase; border-radius: 20px; border: none; cursor: pointer;
-            transition: all 0.2s;
+            width: 100%; padding: 20px; margin: 12px 0; font-size: 20px; font-weight: 900;
+            text-transform: uppercase; border-radius: 25px; border: none; cursor: pointer;
+            transition: all 0.2s; font-family: 'Arial Black', sans-serif;
         }
 
         .btn-start { 
             background: var(--ocean-blue); color: white; 
-            box-shadow: 0 6px 0 #076ad0;
+            box-shadow: 0 8px 0 #076ad0;
         }
         .btn-rank { 
-            background: white; border: 2px solid var(--ocean-blue); color: var(--ocean-blue); 
+            background: white; border: 3px solid var(--ocean-blue); color: var(--ocean-blue); 
         }
-        button:active { transform: translateY(4px); box-shadow: none; }
+        button:active { transform: translateY(5px); box-shadow: none; }
 
-        /* Elementos do Jogo */
         #sky {
             position: absolute; top: 0; width: 100%; height: 130px;
             background: url('ceu.jpg') no-repeat center bottom; background-size: cover;
@@ -75,44 +72,42 @@
 
         #hud {
             position: absolute; top: 20px; width: 100%;
-            display: flex; justify-content: center; gap: 10px; z-index: 200;
+            display: flex; justify-content: center; gap: 8px; z-index: 200;
         }
         .stat {
-            background: var(--clean-white); border: 2px solid var(--ocean-blue);
-            padding: 8px 15px; border-radius: 20px; color: var(--deep-blue);
-            font-weight: 800; font-size: 12px; min-width: 85px; text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background: var(--clean-white); border: 2.5px solid var(--ocean-blue);
+            padding: 10px; border-radius: 18px; color: var(--deep-blue);
+            font-weight: 900; font-size: 11px; min-width: 90px; text-align: center;
         }
 
         #boat-container {
-            position: absolute; top: 60px; left: 50%; width: 130px; 
+            position: absolute; top: 60px; left: 50%; width: 135px; 
             z-index: 100; transform: translateX(-50%);
             animation: boatRock 4s ease-in-out infinite;
         }
         @keyframes boatRock { 0%, 100% { transform: translateX(-50%) rotate(-2deg); } 50% { transform: translateX(-48%) rotate(2deg); } }
-        #boat-img { width: 100%; height: auto; display: block; filter: drop-shadow(0 10px 5px rgba(0,0,0,0.2)); }
+        #boat-img { width: 100%; filter: drop-shadow(0 12px 6px rgba(0,0,0,0.25)); }
 
         #line {
-            position: absolute; top: 90%; left: 50%; width: 2px; height: 60px;
+            position: absolute; top: 90%; left: 50%; width: 2.5px; height: 65px;
             background: #fff; transform-origin: top center; z-index: 90; 
         }
-        #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
+        #hook { position: absolute; bottom: -30px; left: -15px; font-size: 34px; }
 
-        .item { position: absolute; z-index: 40; pointer-events: none; font-size: 50px; }
-        .shark-size { font-size: 85px !important; }
+        .item { position: absolute; z-index: 40; pointer-events: none; font-size: 55px; }
+        .shark-size { font-size: 90px !important; }
 
         .floating-text {
-            position: absolute; font-weight: 900; font-size: 32px;
+            position: absolute; font-weight: 900; font-size: 36px;
             pointer-events: none; z-index: 500; animation: floatUp 1s forwards;
-            text-shadow: 2px 2px 0px rgba(0,0,0,0.2);
         }
-        @keyframes floatUp { 0% { transform: translate3d(-50%, 0, 0); opacity: 1; } 100% { transform: translate3d(-50%, -100px, 0); opacity: 0; } }
+        @keyframes floatUp { 0% { transform: translate3d(-50%, 0, 0); opacity: 1; } 100% { transform: translate3d(-50%, -120px, 0); opacity: 0; } }
 
         #ranking-list { list-style: none; padding: 0; margin: 20px 0; }
         #ranking-list li { 
-            background: rgba(9, 132, 227, 0.1); margin: 8px 0; padding: 12px; 
-            border-radius: 15px; display: flex; justify-content: space-between;
-            color: var(--deep-blue); font-weight: bold;
+            background: rgba(9, 132, 227, 0.1); margin: 10px 0; padding: 15px; 
+            border-radius: 18px; display: flex; justify-content: space-between;
+            color: var(--deep-blue); font-size: 18px;
         }
     </style>
 </head>
@@ -120,27 +115,27 @@
 
     <div id="main-menu" class="screen">
         <div class="menu-box">
-            <h1>PESCA PRO</h1>
-            <p>Pescador de Milagres</p>
-            <button class="btn-start" onclick="startGame(event)">Lançar Vara</button>
-            <button class="btn-rank" onclick="showRanking(event)">Recordes</button>
+            <h1>MARÉ DE SORTE</h1>
+            <div class="subtitle">DESAFIO PESCADOR PRO</div>
+            <button class="btn-start" onclick="startGame(event)">FISGAR AGORA!</button>
+            <button class="btn-rank" onclick="showRanking(event)">MELHORES DO MAR</button>
         </div>
     </div>
 
     <div id="ranking-screen" class="screen" style="display: none;">
         <div class="menu-box">
-            <h1 style="font-size: 22px;">TOP 5 PESCADORES</h1>
+            <h1 style="font-size: 24px;">LENDAS DA PESCA</h1>
             <ul id="ranking-list"></ul>
-            <button class="btn-rank" onclick="hideRanking(event)">Voltar</button>
+            <button class="btn-rank" onclick="hideRanking(event)">VOLTAR AO PORTO</button>
         </div>
     </div>
 
     <div id="game-container">
         <div id="sky"></div>
         <div id="hud">
-            <div class="stat">NÍVEL: <span id="lvl">1</span></div>
-            <div class="stat">PONTOS: <span id="pts">0</span></div>
-            <div class="stat">TEMPO: <span id="time">60</span>s</div>
+            <div class="stat">MARÉ: <span id="lvl">1</span></div>
+            <div class="stat">SCORE: <span id="pts">0</span></div>
+            <div class="stat">OXIGÊNIO: <span id="time">60</span>s</div>
         </div>
         <div id="boat-container">
             <img src="barco.png" id="boat-img" alt="Barco">
@@ -151,10 +146,10 @@
 
     <div id="game-over" class="screen" style="display: none;">
         <div class="menu-box">
-            <h1 style="color:var(--danger)">FIM DA PESCA</h1>
-            <p>Resultado da sua jornada:</p>
-            <h2 id="final-score" style="font-size: 50px; color: var(--ocean-blue); margin: 10px 0;">0</h2>
-            <button class="btn-start" onclick="location.reload()">Recomeçar</button>
+            <h1 style="color:var(--danger)">REDE CHEIA!</h1>
+            <div class="subtitle" style="margin-top:10px">Sua pontuação final foi:</div>
+            <h2 id="final-score" style="font-size: 60px; color: var(--ocean-blue); margin: 15px 0;">0</h2>
+            <button class="btn-start" onclick="location.reload()">TENTAR NOVAMENTE</button>
         </div>
     </div>
 
@@ -167,7 +162,7 @@
     const timeDisplay = document.getElementById('time');
     
     let score = 0, level = 1, timeLeft = 60, active = false;
-    let state = 'swing', angle = 0, dir = 1, len = 60, caught = null;
+    let state = 'swing', angle = 0, dir = 1, len = 65, caught = null;
     let items = [];
     let slowMoFactor = 1;
 
@@ -183,12 +178,9 @@
 
     function startGame(e) {
         if(e) e.stopPropagation();
-        
         const menu = document.getElementById('main-menu');
         const game = document.getElementById('game-container');
-        
         menu.classList.add('fade-out');
-        
         setTimeout(() => {
             menu.style.display = 'none';
             game.style.display = 'block';
@@ -197,14 +189,14 @@
             spawn();
             update();
             startTimer();
-        }, 400); // Tempo da animação
+        }, 400);
     }
 
     function showRanking(e) {
         if(e) e.stopPropagation();
         const list = document.getElementById('ranking-list');
         const scores = JSON.parse(localStorage.getItem('fishing_rank') || '[]');
-        list.innerHTML = scores.length ? '' : '<li>Nenhum recorde</li>';
+        list.innerHTML = scores.length ? '' : '<li>Aguardando Heróis</li>';
         scores.forEach((s, i) => {
             list.innerHTML += `<li><span>${i+1}º</span> <span>${s} pts</span></li>`;
         });
@@ -223,10 +215,6 @@
         scores.sort((a, b) => b - a);
         scores = scores.slice(0, 5);
         localStorage.setItem('fishing_rank', JSON.stringify(scores));
-    }
-
-    function updateScoreDisplay() {
-        ptsDisplay.innerText = score;
     }
 
     function spawn() {
@@ -253,7 +241,6 @@
 
     function update() {
         if(!active) return;
-
         items.forEach((it, i) => {
             if(it === caught) return;
             it.x -= it.speed * slowMoFactor;
@@ -262,11 +249,11 @@
         });
 
         if(state === 'swing') {
-            angle += (1.2 + (level * 0.1)) * dir * slowMoFactor;
-            if(Math.abs(angle) > 60) dir *= -1;
+            angle += (1.4 + (level * 0.1)) * dir * slowMoFactor;
+            if(Math.abs(angle) > 65) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } else if(state === 'launch') {
-            len += 18;
+            len += 20;
             line.style.height = len + 'px';
             const hRect = hook.getBoundingClientRect();
             items.forEach(it => {
@@ -277,21 +264,21 @@
             });
             if(len > window.innerHeight - 150) state = 'back';
         } else if(state === 'back') {
-            len -= 22 / (caught ? caught.w : 1);
+            len -= 25 / (caught ? caught.w : 1);
             line.style.height = len + 'px';
             if(caught) {
                 caught.el.style.left = '50%'; caught.el.style.top = '100%';
                 caught.el.style.transform = 'translate(-50%, -10px)';
                 hook.appendChild(caught.el);
             }
-            if(len <= 60) {
+            if(len <= 65) {
                 if(caught) {
                     if(caught.type === 'BONUS') { timeLeft += 10; createPopup("+10s", "var(--success)"); }
                     else if(caught.type === 'SLOW') { slowMoFactor = 0.3; setTimeout(()=>slowMoFactor=1, 5000); }
                     else { score += caught.pts; createPopup(caught.pts > 0 ? "+"+caught.pts : caught.pts, caught.pts > 0 ? "var(--ocean-blue)" : "var(--danger)"); }
-                    level = Math.floor(score / 300) + 1;
+                    level = Math.floor(score / 350) + 1;
                     lvlDisplay.innerText = level;
-                    updateScoreDisplay();
+                    ptsDisplay.innerText = score;
                     caught.el.remove();
                     caught = null;
                 } else {
