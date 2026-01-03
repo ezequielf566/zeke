@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>A Saga de José - Equilibrado</title>
+    <title>A Saga de José - Versão Final</title>
     <style>
         :root { --gold: #f1c40f; --neon-green: #2ecc71; --red: #ff4757; }
         body, html { 
@@ -17,71 +17,78 @@
             background: url('fundo.jpg') center/cover no-repeat;
             position: relative; overflow: hidden;
             display: none; touch-action: none;
+            transition: filter 1.2s linear;
         }
         
+        /* MENU RESPONSIVO */
         #main-menu {
             width: 100vw; height: 100vh;
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo.jpg') center/cover;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             position: absolute; z-index: 500; text-align: center;
         }
-        #menu-logo { width: 150px; margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--gold)); }
-        .menu-group { display: flex; flex-direction: column; gap: 10px; width: 250px; }
+        #menu-logo { width: 180px; margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--gold)); }
+        .menu-group { display: flex; flex-direction: column; gap: 12px; width: 280px; }
 
         .menu-btn {
-            padding: 12px; border-radius: 50px; border: 2px solid var(--gold);
+            padding: 15px; border-radius: 50px; border: 2px solid var(--gold);
             background: rgba(0,0,0,0.8); color: white; font-weight: bold; cursor: pointer;
-            transition: 0.2s; font-size: 14px;
+            transition: 0.3s; font-size: 16px;
         }
         .menu-btn:hover { background: var(--gold); color: black; }
         .btn-survival { border-color: var(--neon-green); }
 
+        /* HUD E UI */
         #ui-header { position: absolute; top: 15px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 100; pointer-events: none; }
         #hud { width: 90%; display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
         .hud-item {
             background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
             padding: 8px 15px; border-radius: 8px; border: 1px solid var(--gold);
-            color: white; font-weight: bold; font-size: 13px; min-width: 70px; text-align: center;
+            color: white; font-weight: bold; font-size: 14px; min-width: 80px; text-align: center;
         }
 
-        #pause-btn {
-            position: absolute; top: 75px; right: 5%; width: 45px; height: 45px;
-            background: rgba(0,0,0,0.7); border: 2px solid white; color: white;
-            border-radius: 50%; font-weight: bold; cursor: pointer; z-index: 110;
-        }
+        #progress-wrapper { width: 80%; height: 12px; background: rgba(0,0,0,0.7); border-radius: 50px; border: 1px solid rgba(255,255,255,0.3); position: relative; margin-top: 10px; }
+        #progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #1e8449, #f1c40f); border-radius: 50px; transition: width 0.5s linear; }
+        #walker-container { position: absolute; left: 0%; top: 50%; transform: translate(-50%, -50%); width: 35px; height: 35px; transition: left 0.5s linear; }
 
-        #progress-wrapper { width: 80%; height: 10px; background: rgba(0,0,0,0.7); border-radius: 50px; border: 1px solid rgba(255,255,255,0.3); position: relative; margin-top: 10px; }
-        #progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #1e8449, #f1c40f); border-radius: 50px; }
-        #walker-container { position: absolute; left: 0%; top: 50%; transform: translate(-50%, -50%); width: 30px; height: 30px; }
+        /* PERSONAGENS E ELEMENTOS */
+        #player { width: 120px; height: 120px; position: absolute; left: 12%; z-index: 50; pointer-events: none; }
+        #chao { position: absolute; bottom: 0; width: 100%; height: 120px; background: linear-gradient(to bottom, #1e3d1a, #2c1e14); z-index: 10; }
+        #arca-final { position: absolute; bottom: 60px; right: -1000px; width: 500px; z-index: 40; transition: right 4s ease-out; }
 
-        #player { width: 100px; height: 100px; position: absolute; left: 12%; z-index: 50; pointer-events: none; }
-        #chao { position: absolute; bottom: 0; width: 100%; height: 100px; background: linear-gradient(to bottom, #1e3d1a, #2c1e14); z-index: 10; }
+        .rock { position: absolute; width: 55px; height: 55px; background: #333; border-radius: 12px; z-index: 30; }
+        .rock-glow { background: var(--gold) !important; box-shadow: 0 0 25px var(--gold); }
 
-        .rock { position: absolute; width: 50px; height: 50px; background: #333; border-radius: 10px; z-index: 30; }
-        .rock-glow { box-shadow: 0 0 20px var(--gold); background: var(--gold) !important; }
+        #story-msg { position: absolute; top: 25%; width: 100%; text-align: center; color: white; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 5px #000; opacity: 0; z-index: 150; transition: opacity 0.5s; pointer-events:none; }
+        #story-msg.active { opacity: 1; }
 
+        #pause-btn { position: absolute; top: 80px; right: 5%; width: 45px; height: 45px; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; border-radius: 50%; z-index: 200; cursor: pointer; }
         #jump-btn {
-            position: absolute; right: 5%; bottom: 120px; z-index: 120;
-            width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--gold);
-            background: rgba(0,0,0,0.6); color: white; font-weight: 800;
+            position: absolute; right: 5%; bottom: 150px; z-index: 200;
+            padding: 18px 25px; border-radius: 20px; border: 3px solid var(--gold);
+            background: rgba(0,0,0,0.6); color: white; font-weight: 800; font-size: 18px;
             display: none; touch-action: none;
         }
 
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 1000; background: rgba(0,0,0,0.85); color: white; }
-
+        /* AJUSTES LANDSCAPE */
         @media (max-height: 500px) {
-            #player { width: 70px; height: 70px; }
+            #player { width: 80px; height: 80px; }
             #chao { height: 60px; }
-            #jump-btn { bottom: 70px; width: 70px; height: 70px; }
-            .menu-group { flex-direction: row; flex-wrap: wrap; width: 90%; }
+            #jump-btn { bottom: 20px; right: 2%; padding: 12px 20px; }
+            #menu-logo { width: 100px; }
+            .menu-group { flex-direction: row; flex-wrap: wrap; width: 90%; justify-content: center; }
+            .menu-btn { padding: 10px; font-size: 12px; min-width: 120px; }
+            #story-msg { font-size: 16px; }
         }
+
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 1000; background: rgba(0,0,0,0.9); color: white; text-align: center; }
     </style>
 </head>
 <body>
 
 <div id="main-menu">
     <img src="animal.gif" id="menu-logo">
-    <h1 style="color: var(--gold); margin-bottom: 20px;">A SAGA DE JOSÉ</h1>
+    <h1 style="color: var(--gold);">A SAGA DE JOSÉ</h1>
     <div class="menu-group">
         <button class="menu-btn" onclick="startGame('jornada', 'normal')">NORMAL</button>
         <button class="menu-btn" onclick="startGame('jornada', 'medio')">MÉDIO</button>
@@ -97,9 +104,9 @@
     
     <div id="ui-header">
         <div id="hud">
-            <div id="vidas-display" class="hud-item">❤❤❤</div>
-            <div id="dist-display" class="hud-item" style="color: var(--gold);">0m</div>
-            <div id="timer-display" class="hud-item">00:00</div>
+            <div id="vidas-box" class="hud-item">❤❤❤</div>
+            <div id="dist-box" class="hud-item" style="color: var(--gold);">0m</div>
+            <div id="timer-box" class="hud-item">00:00</div>
         </div>
         <div id="progress-wrapper">
             <div id="progress-fill"></div>
@@ -107,8 +114,15 @@
         </div>
     </div>
 
+    <div id="story-msg"></div>
     <div id="player"><img src="animal.gif" style="width:100%;"></div>
+    <img src="arca.png" id="arca-final">
     <div id="chao"></div>
+
+    <div id="win-screen" class="overlay">
+        <h1 style="color: var(--gold);">MISSÃO CUMPRIDA!</h1>
+        <button class="menu-btn" onclick="location.reload()">VOLTAR AO MENU</button>
+    </div>
 
     <div id="lose-screen" class="overlay">
         <h1 style="color: var(--red);">FIM DA JORNADA</h1>
@@ -119,46 +133,69 @@
 <script>
     const canvas = document.getElementById('chuva'), ctx = canvas.getContext('2d');
     const player = document.getElementById('player'), container = document.getElementById('game-container');
-    const jumpBtn = document.getElementById('jump-btn');
+    const jumpBtn = document.getElementById('jump-btn'), storyMsg = document.getElementById('story-msg');
+    const arca = document.getElementById('arca-final');
     
     let gameActive = false, isPaused = false, vidas = 3;
     let playerY = 0, velocityY = 0, jumps = 0, gravity = 0.8;
-    let obstacles = [];
-    let speed = 8, distance = 0, timeElapsed = 0, totalDuration = 150;
-    let gameMode = 'jornada', lastObstacleTime = 0;
+    let obstacles = [], speed = 10, distance = 0, timeElapsed = 0;
+    let totalDuration = 150, lastObstacleTime = 0, gameMode = 'jornada';
+    let brightnessVal = 1;
 
-    const isMobile = 'ontouchstart' in window;
-    if (isMobile) jumpBtn.style.display = "block";
+    const frases = [
+        { p: 1, t: "A aventura começou! Leve o José até a Arca." },
+        { p: 15, t: "Sem perder tempo! Cada salto te leva mais perto." },
+        { p: 35, t: "Continue firme. A Arca está cada vez mais perto." },
+        { p: 55, t: "A noite caiu… falta pouco para chegar!" },
+        { p: 75, t: "Já dá pra ver a Arca! Não desista agora!" },
+        { p: 92, t: "ÚLTIMA RAMPA! ENTRE NA ARCA!" }
+    ];
+
+    if ('ontouchstart' in window) jumpBtn.style.display = "block";
 
     function startGame(mode, diff) {
         gameMode = mode;
-        if(diff === 'medio') { speed = 11; totalDuration = 120; }
-        if(diff === 'dificil') { speed = 14; totalDuration = 90; }
+        if(diff === 'medio') { speed = 13; totalDuration = 120; }
+        if(diff === 'dificil') { speed = 16; totalDuration = 90; }
         
         document.getElementById('main-menu').style.display = 'none';
         container.style.display = 'block';
         gameActive = true;
         resizeCanvas();
         requestAnimationFrame(update);
-        setInterval(secondTick, 1000);
+        setInterval(tick, 1000);
     }
 
-    function secondTick() {
+    function tick() {
         if(!gameActive || isPaused) return;
         timeElapsed++;
+        let percent = (timeElapsed / totalDuration) * 100;
         
-        if(gameMode === 'jornada') {
-            let remain = Math.max(0, totalDuration - timeElapsed);
-            document.getElementById('timer-display').innerText = 
-                `${Math.floor(remain/60)}:${(remain%60).toString().padStart(2,'0')}`;
-            if(timeElapsed >= totalDuration) alert("Você chegou na Arca!");
-        } else {
-            document.getElementById('timer-display').innerText = "∞";
-        }
-
-        let percent = Math.min((timeElapsed / totalDuration) * 100, 100);
+        // Atualiza UI
         document.getElementById('progress-fill').style.width = percent + "%";
         document.getElementById('walker-container').style.left = percent + "%";
+        
+        // Frases e Clima
+        frases.forEach(f => { if(Math.floor(percent) === f.p) showStory(f.t); });
+        
+        let brightnessFactor = Math.abs((percent - 50) / 50);
+        brightnessVal = 0.35 + (brightnessFactor * 0.65);
+        container.style.filter = `brightness(${brightnessVal})`;
+
+        if(gameMode === 'jornada') {
+            let remain = Math.max(0, totalDuration - timeElapsed);
+            document.getElementById('timer-box').innerText = `${Math.floor(remain/60)}:${(remain%60).toString().padStart(2,'0')}`;
+            if(timeElapsed >= totalDuration) finishGame();
+        } else {
+            document.getElementById('timer-box').innerText = "∞";
+            speed += 0.05;
+        }
+    }
+
+    function showStory(txt) {
+        storyMsg.innerText = txt;
+        storyMsg.classList.add('active');
+        setTimeout(() => storyMsg.classList.remove('active'), 3000);
     }
 
     function togglePause(e) {
@@ -175,9 +212,7 @@
 
     function update(timestamp) {
         if(!gameActive) return;
-
         if(!isPaused) {
-            // Movimento Jogador
             velocityY -= gravity;
             playerY += velocityY;
             if (playerY <= 0) { playerY = 0; velocityY = 0; jumps = 0; }
@@ -185,11 +220,9 @@
             const hChao = document.getElementById('chao').offsetHeight;
             player.style.bottom = (hChao + playerY) + 'px';
 
-            // Distância
             distance += (speed / 10);
-            document.getElementById('dist-display').innerText = Math.floor(distance) + "m";
+            document.getElementById('dist-box').innerText = Math.floor(distance) + "m";
 
-            // Obstáculos
             if (timestamp - lastObstacleTime > (2000 - speed * 50)) {
                 spawnObstacle();
                 lastObstacleTime = timestamp;
@@ -203,7 +236,7 @@
     function spawnObstacle() {
         const obs = document.createElement('div');
         obs.classList.add('rock');
-        if(speed > 12) obs.classList.add('rock-glow');
+        if(brightnessVal < 0.6) obs.classList.add('rock-glow');
         obs.style.right = '-60px';
         obs.style.bottom = document.getElementById('chao').offsetHeight + 'px';
         container.appendChild(obs);
@@ -219,40 +252,48 @@
             let pRect = player.getBoundingClientRect();
             let oRect = o.el.getBoundingClientRect();
 
-            if (pRect.right > oRect.left + 15 && pRect.left < oRect.right - 15 && pRect.bottom > oRect.top + 15) {
+            if (pRect.right > oRect.left + 20 && pRect.left < oRect.right - 20 && pRect.bottom > oRect.top + 20) {
                 o.el.remove();
                 obstacles.splice(i, 1);
                 vidas--;
-                document.getElementById('vidas-display').innerText = "❤".repeat(vidas);
+                document.getElementById('vidas-box').innerText = "❤".repeat(Math.max(0, vidas));
                 if(vidas <= 0) { gameActive = false; document.getElementById('lose-screen').style.display = 'flex'; }
                 continue;
             }
-
             if (o.x > window.innerWidth + 100) { o.el.remove(); obstacles.splice(i, 1); }
         }
     }
 
-    // Controles
+    function finishGame() {
+        gameActive = false;
+        arca.style.right = "10%";
+        setTimeout(() => { document.getElementById('win-screen').style.display = 'flex'; }, 3500);
+    }
+
+    // CONTROLES MELHORADOS
     container.addEventListener('touchstart', (e) => {
         if(e.target.tagName !== 'BUTTON') handleJump();
-    });
+    }, {passive: true});
+
     jumpBtn.addEventListener('touchstart', (e) => {
         e.preventDefault(); e.stopPropagation(); handleJump();
-    });
+    }, {passive: false});
+
     window.addEventListener('keydown', (e) => { if(e.code === 'Space') handleJump(); });
+    window.addEventListener('resize', resizeCanvas);
 
     function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; resetRain(); }
     let gotas = [];
     function resetRain() {
         gotas = [];
-        for(let i=0; i<40; i++) gotas.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, v: Math.random()*5+5});
+        for(let i=0; i<45; i++) gotas.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, v: Math.random()*7+7});
     }
     function drawRain() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.strokeStyle = `rgba(255,255,255,${0.1 + (1 - brightnessVal)})`;
         gotas.forEach(g => {
-            ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.lineTo(g.x, g.y+10); ctx.stroke();
-            g.y += g.v; if(g.y > canvas.height) g.y = -10;
+            ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.lineTo(g.x, g.y+12); ctx.stroke();
+            g.y += g.v; if(g.y > canvas.height) g.y = -15;
         });
     }
 </script>
