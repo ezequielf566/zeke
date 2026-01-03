@@ -18,6 +18,8 @@
             position: relative; overflow: hidden;
             display: none; touch-action: none;
             transition: filter 1.2s linear;
+            /* Garante que o conteúdo suba um pouco em relação à borda inferior */
+            padding-bottom: env(safe-area-inset-bottom);
         }
         
         /* MENU RESPONSIVO */
@@ -26,8 +28,9 @@
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo.jpg') center/cover;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             position: absolute; z-index: 500; text-align: center;
+            padding-bottom: 40px; /* Sobe o conteúdo do menu */
         }
-        #menu-logo { width: 180px; margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--gold)); }
+        #menu-logo { width: 160px; margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--gold)); }
         .menu-group { display: flex; flex-direction: column; gap: 12px; width: 280px; }
 
         .menu-btn {
@@ -51,10 +54,10 @@
         #progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #1e8449, #f1c40f); border-radius: 50px; transition: width 0.5s linear; }
         #walker-container { position: absolute; left: 0%; top: 50%; transform: translate(-50%, -50%); width: 35px; height: 35px; transition: left 0.5s linear; }
 
-        /* PERSONAGENS E ELEMENTOS */
-        #player { width: 120px; height: 120px; position: absolute; left: 12%; z-index: 50; pointer-events: none; }
-        #chao { position: absolute; bottom: 0; width: 100%; height: 120px; background: linear-gradient(to bottom, #1e3d1a, #2c1e14); z-index: 10; }
-        #arca-final { position: absolute; bottom: 60px; right: -1000px; width: 500px; z-index: 40; transition: right 4s ease-out; }
+        /* PERSONAGENS E ELEMENTOS - AJUSTE DE ALTURA */
+        #player { width: 110px; height: 110px; position: absolute; left: 12%; z-index: 50; pointer-events: none; }
+        #chao { position: absolute; bottom: 0; width: 100%; height: 140px; background: linear-gradient(to bottom, #1e3d1a, #2c1e14); z-index: 10; }
+        #arca-final { position: absolute; bottom: 80px; right: -1000px; width: 500px; z-index: 40; transition: right 4s ease-out; }
 
         .rock { position: absolute; width: 55px; height: 55px; background: #333; border-radius: 12px; z-index: 30; }
         .rock-glow { background: var(--gold) !important; box-shadow: 0 0 25px var(--gold); }
@@ -64,21 +67,22 @@
 
         #pause-btn { position: absolute; top: 80px; right: 5%; width: 45px; height: 45px; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; border-radius: 50%; z-index: 200; cursor: pointer; }
         #jump-btn {
-            position: absolute; right: 5%; bottom: 150px; z-index: 200;
+            position: absolute; right: 5%; bottom: 170px; z-index: 200;
             padding: 18px 25px; border-radius: 20px; border: 3px solid var(--gold);
             background: rgba(0,0,0,0.6); color: white; font-weight: 800; font-size: 18px;
             display: none; touch-action: none;
         }
 
-        /* AJUSTES LANDSCAPE */
+        /* AJUSTES LANDSCAPE - REFORÇADOS */
         @media (max-height: 500px) {
             #player { width: 80px; height: 80px; }
-            #chao { height: 60px; }
-            #jump-btn { bottom: 20px; right: 2%; padding: 12px 20px; }
-            #menu-logo { width: 100px; }
-            .menu-group { flex-direction: row; flex-wrap: wrap; width: 90%; justify-content: center; }
-            .menu-btn { padding: 10px; font-size: 12px; min-width: 120px; }
+            #chao { height: 90px; } /* Subiu de 60px para 90px para dar folga */
+            #jump-btn { bottom: 100px; right: 3%; padding: 12px 20px; }
+            #menu-logo { width: 100px; margin-bottom: 10px; }
+            .menu-group { flex-direction: row; flex-wrap: wrap; width: 95%; justify-content: center; gap: 8px; }
+            .menu-btn { padding: 12px; font-size: 13px; min-width: 130px; }
             #story-msg { font-size: 16px; }
+            #main-menu { padding-bottom: 20px; }
         }
 
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 1000; background: rgba(0,0,0,0.9); color: white; text-align: center; }
@@ -88,7 +92,7 @@
 
 <div id="main-menu">
     <img src="animal.gif" id="menu-logo">
-    <h1 style="color: var(--gold);">A SAGA DE JOSÉ</h1>
+    <h1 style="color: var(--gold); margin-top: 0; margin-bottom: 20px;">A SAGA DE JOSÉ</h1>
     <div class="menu-group">
         <button class="menu-btn" onclick="startGame('jornada', 'normal')">NORMAL</button>
         <button class="menu-btn" onclick="startGame('jornada', 'medio')">MÉDIO</button>
@@ -171,11 +175,9 @@
         timeElapsed++;
         let percent = (timeElapsed / totalDuration) * 100;
         
-        // Atualiza UI
         document.getElementById('progress-fill').style.width = percent + "%";
         document.getElementById('walker-container').style.left = percent + "%";
         
-        // Frases e Clima
         frases.forEach(f => { if(Math.floor(percent) === f.p) showStory(f.t); });
         
         let brightnessFactor = Math.abs((percent - 50) / 50);
@@ -270,7 +272,6 @@
         setTimeout(() => { document.getElementById('win-screen').style.display = 'flex'; }, 3500);
     }
 
-    // CONTROLES MELHORADOS
     container.addEventListener('touchstart', (e) => {
         if(e.target.tagName !== 'BUTTON') handleJump();
     }, {passive: true});
