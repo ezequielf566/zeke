@@ -155,7 +155,7 @@
     let state = 'swing', angle = 0, dir = 1, len = 65, caught = null;
     let items = [];
     let slowMoFactor = 1;
-    const MAX_ITEMS = 15; // OTIMIZAÇÃO: Limite de itens na tela
+    const MAX_ITEMS = 15;
 
     const types = {
         'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 1.5 },
@@ -205,14 +205,20 @@
     function spawn() {
         if(!active) return;
         
-        // OTIMIZAÇÃO: Se já tem muitos peixes, espera antes de criar mais
         if(items.length < MAX_ITEMS) {
-            const batchSize = level < 10 ? 3 : 2; // Menos peixes por vez em níveis altos para não travar
+            const batchSize = level < 10 ? 3 : 2;
             for(let i=0; i < batchSize; i++) {
                 let chance = Math.random();
                 let k = 'PEIXE';
                 
-                if(level >= 10) {
+                // AJUSTE: Nível 15+ o mar fica muito mais poluído
+                if (level >= 15) {
+                    if (chance < 0.10) k = 'BONUS';
+                    else if (chance < 0.20) k = 'SLOW';
+                    else if (chance < 0.35) k = 'RARO';
+                    else if (chance > 0.65) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA'; // Aumentado de 15% para 35% de chance de lixo
+                }
+                else if(level >= 10) {
                     if(chance < 0.15) k = 'BONUS';
                     else if(chance < 0.25) k = 'SLOW';
                     else if(chance < 0.45) k = 'RARO';
@@ -228,13 +234,12 @@
                 const el = document.createElement('div');
                 el.className = 'item' + (k === 'TUBARAO' ? ' shark-size' : '');
                 el.innerHTML = t.ico;
-                // Velocidade máxima limitada em s + level*0.12 para não ficar impossível
                 const item = { 
                     el: el, 
                     type: k, 
                     x: window.innerWidth + (Math.random() * 150), 
                     y: 50 + Math.random() * (window.innerHeight - 350), 
-                    speed: t.s + (Math.min(level, 15) * 0.12), 
+                    speed: t.s + (Math.min(level, 20) * 0.12), 
                     pts: t.pts, 
                     w: t.w 
                 };
@@ -243,7 +248,6 @@
             }
         }
         
-        // OTIMIZAÇÃO: Spawn rate equilibrado (mínimo de 800ms)
         let nextSpawn = 2000 - (level * 100);
         setTimeout(spawn, Math.max(800, nextSpawn));
     }
@@ -309,7 +313,6 @@
                     lvlDisplay.innerText = level;
                     ptsDisplay.innerText = score;
                     caught.el.remove();
-                    // Remove da lista de itens ativos
                     items = items.filter(i => i !== caught);
                     caught = null;
                 }
