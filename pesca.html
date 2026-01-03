@@ -22,7 +22,6 @@
             transition: background 0.5s;
         }
 
-        /* Efeito de Slow Motion no fundo */
         body.slow-mode {
             background: #002d5a;
             animation: pulseBlue 2s infinite;
@@ -204,21 +203,20 @@
 
     function spawn() {
         if(!active) return;
-        const qty = 2 + Math.min(level, 3); 
+        // MAIS PEIXES NO INÍCIO: qty base aumentada de 2 para 4
+        const qty = 4 + Math.min(level, 4); 
         for(let i=0; i<qty; i++) {
             let chance = Math.random();
             let k = 'PEIXE';
             
-            // Itens especiais (Ampulheta e Brilho) só aparecem a partir do LVL 10
             if(level >= 10) {
-                if(chance < 0.10) k = 'BONUS';
-                else if(chance < 0.20) k = 'SLOW';
-                else if(chance < 0.35) k = 'RARO';
-                else if(chance > 0.88) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+                if(chance < 0.12) k = 'BONUS';
+                else if(chance < 0.22) k = 'SLOW';
+                else if(chance < 0.40) k = 'RARO';
+                else if(chance > 0.90) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
             } else {
-                // Até o LVL 9, apenas peixes e lixo
-                if(chance < 0.15) k = 'RARO';
-                else if(chance > 0.85) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+                if(chance < 0.25) k = 'RARO'; // Mais peixes raros no começo para subir de nível rápido
+                else if(chance > 0.92) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
             }
             
             if(level > 2 && k === 'PEIXE' && Math.random() > 0.8) k = 'TUBARAO';
@@ -227,11 +225,12 @@
             const el = document.createElement('div');
             el.className = 'item' + (k === 'TUBARAO' ? ' shark-size' : '');
             el.innerHTML = t.ico;
-            const item = { el: el, type: k, x: window.innerWidth + 100, y: 50 + Math.random() * (window.innerHeight - 350), speed: t.s + (level * 0.15), pts: t.pts, w: t.w };
+            const item = { el: el, type: k, x: window.innerWidth + (Math.random() * 200), y: 50 + Math.random() * (window.innerHeight - 350), speed: t.s + (level * 0.15), pts: t.pts, w: t.w };
             container.appendChild(el);
             items.push(item);
         }
-        setTimeout(spawn, 3000 - Math.min(1800, level * 200));
+        // SPAWN MAIS RÁPIDO NO INÍCIO: delay reduzido
+        setTimeout(spawn, 2000 - Math.min(1200, level * 150));
     }
 
     function update() {
@@ -271,11 +270,11 @@
                     if(caught.type === 'BONUS') { timeLeft += 10; createPopup("+10s", "var(--success)"); }
                     else if(caught.type === 'SLOW') { 
                         slowMoFactor = 0.3; 
-                        document.body.classList.add('slow-mode'); // Ativa efeito CSS
+                        document.body.classList.add('slow-mode');
                         createPopup("DEVAGAR!", "var(--gold)");
                         setTimeout(() => {
                             slowMoFactor = 1;
-                            document.body.classList.remove('slow-mode'); // Desativa efeito CSS
+                            document.body.classList.remove('slow-mode');
                         }, 5000); 
                     }
                     else { 
@@ -288,8 +287,8 @@
                     caught.el.remove();
                     caught = null;
                 } else {
-                    timeLeft = Math.max(0, timeLeft - 3);
-                    createPopup("-3s", "var(--danger)");
+                    // DANO DE ERRO REMOVIDO (Não remove mais 3 segundos)
+                    // createPopup("MISSED", "gray"); 
                 }
                 state = 'swing';
             }
