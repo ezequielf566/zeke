@@ -19,6 +19,13 @@
             overflow: hidden; font-family: 'Arial Black', 'Arial Bold', Gadget, sans-serif;
             background: var(--deep-blue); 
             user-select: none; touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Otimização de Performance para Celulares */
+        .item, #boat-container, #line {
+            will-change: transform;
+            contain: layout style;
         }
 
         body.slow-mode {
@@ -31,8 +38,8 @@
             100% { box-shadow: inset 0 0 80px rgba(9, 132, 227, 0.4); }
         }
 
-        .fade-in { animation: fadeIn 0.4s forwards; }
-        .fade-out { animation: fadeOut 0.4s forwards; }
+        .fade-in { animation: fadeIn 0.3s forwards; }
+        .fade-out { animation: fadeOut 0.3s forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
@@ -49,61 +56,61 @@
         }
 
         .menu-box {
-            background: var(--clean-white); padding: 45px 30px; border-radius: 45px;
-            border: 8px solid var(--ocean-blue); 
-            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
-            width: 85%; max-width: 350px; text-align: center;
+            background: var(--clean-white); padding: 40px 25px; border-radius: 40px;
+            border: 6px solid var(--ocean-blue); 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            width: 85%; max-width: 320px; text-align: center;
         }
 
-        h1 { color: var(--ocean-blue); font-size: 34px; margin: 0; line-height: 1; }
-        .subtitle { color: var(--gold); font-size: 16px; margin-bottom: 30px; letter-spacing: 1px; }
+        h1 { color: var(--ocean-blue); font-size: 30px; margin: 0; line-height: 1; }
+        .subtitle { color: var(--gold); font-size: 14px; margin-bottom: 25px; letter-spacing: 1px; }
 
         button {
-            width: 100%; padding: 20px; margin: 12px 0; font-size: 19px; font-weight: 900;
-            text-transform: uppercase; border-radius: 25px; border: none; cursor: pointer;
-            transition: all 0.2s; font-family: inherit;
+            width: 100%; padding: 18px; margin: 10px 0; font-size: 18px; font-weight: 900;
+            text-transform: uppercase; border-radius: 20px; border: none; cursor: pointer;
+            transition: transform 0.1s; font-family: inherit;
         }
 
-        .btn-start { background: var(--ocean-blue); color: white; box-shadow: 0 8px 0 #076ad0; }
+        .btn-start { background: var(--ocean-blue); color: white; box-shadow: 0 6px 0 #076ad0; }
         .btn-rank { background: white; border: 3px solid var(--ocean-blue); color: var(--ocean-blue); }
-        button:active { transform: translateY(4px); box-shadow: none; }
+        button:active { transform: scale(0.96); }
 
         #sky { position: absolute; top: 0; width: 100%; height: 135px; background: #87CEEB url('ceu.jpg') no-repeat center bottom; background-size: cover; z-index: 1; }
         #sea { position: absolute; top: 135px; width: 100%; height: calc(100% - 135px); background: #0077be url('mar.jpg') no-repeat center top; background-size: cover; z-index: 1; }
 
-        #hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: center; gap: 8px; z-index: 500; }
+        #hud { position: absolute; top: 15px; width: 100%; display: flex; justify-content: center; gap: 6px; z-index: 500; }
         .stat {
-            background: var(--clean-white); border: 2.5px solid var(--ocean-blue);
-            padding: 10px; border-radius: 18px; color: var(--deep-blue);
-            font-weight: 900; font-size: 10px; min-width: 90px; text-align: center;
+            background: var(--clean-white); border: 2px solid var(--ocean-blue);
+            padding: 8px; border-radius: 15px; color: var(--deep-blue);
+            font-weight: 900; font-size: 10px; min-width: 85px; text-align: center;
         }
 
         #boat-container {
-            position: absolute; top: 65px; left: 50%; width: 135px; 
+            position: absolute; top: 65px; left: 50%; width: 130px; 
             z-index: 100; transform: translateX(-50%);
             animation: boatRock 4s ease-in-out infinite;
         }
         @keyframes boatRock { 0%, 100% { transform: translateX(-50%) rotate(-2deg); } 50% { transform: translateX(-48%) rotate(2deg); } }
-        #boat-img { width: 100%; filter: drop-shadow(0 12px 6px rgba(0,0,0,0.25)); }
+        #boat-img { width: 100%; filter: drop-shadow(0 10px 5px rgba(0,0,0,0.2)); }
 
-        #line { position: absolute; top: 90%; left: 50%; width: 2.5px; height: 65px; background: #fff; transform-origin: top center; z-index: 90; }
-        #hook { position: absolute; bottom: -30px; left: -15px; font-size: 34px; }
+        #line { position: absolute; top: 90%; left: 50%; width: 2px; height: 65px; background: #fff; transform-origin: top center; z-index: 90; }
+        #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; }
 
-        .item { position: absolute; z-index: 40; pointer-events: none; font-size: 55px; will-change: transform; }
-        .shark-size { font-size: 90px !important; }
+        .item { position: absolute; z-index: 40; pointer-events: none; font-size: 50px; }
+        .shark-size { font-size: 85px !important; }
 
         .floating-text {
-            position: absolute; font-weight: 900; font-size: 36px;
-            pointer-events: none; z-index: 1000; animation: floatUp 1s forwards;
-            text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+            position: absolute; font-weight: 900; font-size: 32px;
+            pointer-events: none; z-index: 1000; animation: floatUp 0.8s forwards;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.2);
         }
-        @keyframes floatUp { 0% { transform: translate3d(-50%, 0, 0); opacity: 1; } 100% { transform: translate3d(-50%, -120px, 0); opacity: 0; } }
+        @keyframes floatUp { 0% { transform: translate3d(-50%, 0, 0); opacity: 1; } 100% { transform: translate3d(-50%, -100px, 0); opacity: 0; } }
 
-        #ranking-list { list-style: none; padding: 0; margin: 20px 0; }
-        #ranking-list li { background: rgba(9, 132, 227, 0.1); margin: 10px 0; padding: 15px; border-radius: 18px; display: flex; justify-content: space-between; color: var(--deep-blue); font-size: 18px; }
+        #ranking-list { list-style: none; padding: 0; margin: 15px 0; }
+        #ranking-list li { background: rgba(9, 132, 227, 0.1); margin: 8px 0; padding: 12px; border-radius: 15px; display: flex; justify-content: space-between; color: var(--deep-blue); font-size: 16px; }
     </style>
 </head>
-<body onclick="shoot()">
+<body onmousedown="handleShoot(event)" ontouchstart="handleShoot(event)">
 
     <div id="main-menu" class="screen">
         <div class="menu-box">
@@ -140,8 +147,8 @@
         <div class="menu-box">
             <h1 style="color:var(--danger)">REDE CHEIA!</h1>
             <div class="subtitle" style="margin-top:10px">Sua pontuação final:</div>
-            <h2 id="final-score" style="font-size: 60px; color: var(--ocean-blue); margin: 15px 0;">0</h2>
-            <button class="btn-start" onclick="location.reload()">TENTAR NOVAMENTE</button>
+            <h2 id="final-score" style="font-size: 55px; color: var(--ocean-blue); margin: 10px 0;">0</h2>
+            <button class="btn-start" onclick="resetGame()">TENTAR NOVAMENTE</button>
         </div>
     </div>
 
@@ -157,6 +164,7 @@
     let state = 'swing', angle = 0, dir = 1, len = 65, caught = null;
     let items = [];
     let slowMoFactor = 1;
+    let timerInterval = null;
     const MAX_ITEMS = 15;
 
     const types = {
@@ -183,9 +191,39 @@
             game.classList.add('fade-in');
             active = true;
             spawn();
-            update();
+            requestAnimationFrame(update);
             startTimer();
-        }, 400);
+        }, 300);
+    }
+
+    function resetGame() {
+        // Limpa o mar sem recarregar a página (Rápido!)
+        active = false;
+        clearInterval(timerInterval);
+        items.forEach(it => it.el.remove());
+        items = [];
+        score = 0; level = 1; timeLeft = 60;
+        state = 'swing'; angle = 0; len = 65; caught = null;
+        slowMoFactor = 1;
+        
+        // Atualiza o HUD
+        ptsDisplay.innerText = "0";
+        lvlDisplay.innerText = "1";
+        timeDisplay.innerText = "60";
+        
+        // Volta para o menu principal
+        document.getElementById('game-over').style.display = 'none';
+        document.getElementById('game-container').style.display = 'none';
+        document.getElementById('main-menu').style.display = 'flex';
+        document.getElementById('main-menu').classList.remove('fade-out');
+        document.body.classList.remove('slow-mode');
+    }
+
+    function handleShoot(e) {
+        if (active && state === 'swing') {
+            state = 'launch';
+            if(e.cancelable) e.preventDefault();
+        }
     }
 
     function showRanking(e) {
@@ -216,19 +254,17 @@
                 let chance = Math.random();
                 let k = 'PEIXE';
                 
-                // PRIORIDADE 1: Lógica de Emergência (Sol garantido se estiver quase morrendo)
                 if (timeLeft < 15 && Math.random() < 0.35) {
                     k = 'BONUS';
                 } 
                 else {
-                    // Distribuição por Nível (Harmonizada)
                     if (level >= 12) {
-                        if (chance < 0.15) k = 'BONUS';       // Mantém o sol aparecendo
-                        else if (chance < 0.25) k = 'SLOW';   // Ampulheta
-                        else if (chance < 0.50) k = 'RARO';   // Muitos peixes raros pra pontuar
+                        if (chance < 0.15) k = 'BONUS';
+                        else if (chance < 0.25) k = 'SLOW';
+                        else if (chance < 0.50) k = 'RARO';
                         else if (chance < 0.70) k = 'PROIBIDO';
                         else if (chance < 0.85) k = 'RADIOATIVO';
-                        else k = 'PEIXE'; // Garante que pelo menos 15% ainda seja peixe comum
+                        else k = 'PEIXE';
                     } 
                     else if (level >= 6) {
                         if (chance < 0.15) k = 'BONUS';
@@ -244,7 +280,6 @@
                     }
                 }
                 
-                // Tubarão é um bônus de pontuação, aparece de vez em quando
                 if(level > 2 && k === 'PEIXE' && Math.random() > 0.85) k = 'TUBARAO';
 
                 const t = types[k];
@@ -256,7 +291,7 @@
                     type: k, 
                     x: window.innerWidth + (Math.random() * 150), 
                     y: 50 + Math.random() * (window.innerHeight - 350), 
-                    speed: t.s + (Math.min(level, 20) * 0.1), // Velocidade sobe mais devagar
+                    speed: t.s + (Math.min(level, 20) * 0.1), 
                     pts: t.pts, 
                     w: t.w,
                     time: t.t
@@ -265,21 +300,18 @@
                 items.push(item);
             }
         }
-        
-        // Spawn constante para não deixar o mar vazio
         setTimeout(spawn, Math.max(900, 1800 - (level * 50)));
     }
 
     function update() {
         if(!active) return;
         
+        // Movimento Peixes (Usando transform3d para fluidez)
         for (let i = items.length - 1; i >= 0; i--) {
             const it = items[i];
             if(it === caught) continue;
-            
             it.x -= it.speed * slowMoFactor;
             it.el.style.transform = `translate3d(${it.x}px, ${it.y + Math.sin(it.x*0.02)*8}px, 0)`;
-            
             if(it.x < -150) {
                 it.el.remove();
                 items.splice(i, 1);
@@ -294,7 +326,6 @@
             len += 22;
             line.style.height = len + 'px';
             const hRect = hook.getBoundingClientRect();
-            
             for(let it of items) {
                 const iRect = it.el.getBoundingClientRect();
                 if(hRect.left < iRect.right && hRect.right > iRect.left && hRect.top < iRect.bottom && hRect.bottom > iRect.top) {
@@ -308,7 +339,7 @@
             line.style.height = len + 'px';
             if(caught) {
                 caught.el.style.left = '50%'; caught.el.style.top = '100%';
-                caught.el.style.transform = 'translate(-50%, -10px)';
+                caught.el.style.transform = 'translate3d(-50%, -10px, 0)';
                 hook.appendChild(caught.el);
             }
             if(len <= 65) {
@@ -317,22 +348,15 @@
                         timeLeft += caught.time;
                         createPopup(caught.time > 0 ? `+${caught.time}s` : `${caught.time}s`, caught.time > 0 ? "var(--success)" : "var(--danger)");
                     }
-                    
                     if(caught.type === 'SLOW') { 
                         slowMoFactor = 0.3; 
                         document.body.classList.add('slow-mode');
-                        createPopup("TEMPO LENTO!", "var(--gold)");
-                        setTimeout(() => {
-                            slowMoFactor = 1;
-                            document.body.classList.remove('slow-mode');
-                        }, 5000); 
+                        setTimeout(() => { slowMoFactor = 1; document.body.classList.remove('slow-mode'); }, 5000); 
                     }
-                    
                     score += caught.pts; 
                     if(caught.type !== 'BONUS' && caught.type !== 'PROIBIDO' && caught.type !== 'RADIOATIVO') {
                         createPopup(caught.pts > 0 ? "+"+caught.pts : caught.pts, caught.pts > 0 ? "var(--ocean-blue)" : "var(--danger)"); 
                     }
-                    
                     level = Math.max(1, Math.floor(score / 200) + 1);
                     lvlDisplay.innerText = level;
                     ptsDisplay.innerText = score;
@@ -346,20 +370,18 @@
         requestAnimationFrame(update);
     }
 
-    function shoot() { if(state === 'swing' && active) state = 'launch'; }
-
     function createPopup(txt, color) {
         const p = document.createElement('div');
         p.className = 'floating-text';
         p.innerText = txt; p.style.color = color;
         p.style.left = '50%'; p.style.top = '150px';
         document.body.appendChild(p);
-        setTimeout(() => p.remove(), 1000);
+        setTimeout(() => p.remove(), 800);
     }
 
     function startTimer() {
-        const t = setInterval(() => {
-            if(!active) { clearInterval(t); return; }
+        timerInterval = setInterval(() => {
+            if(!active) return;
             timeLeft--;
             if(timeLeft < 0) timeLeft = 0;
             timeDisplay.innerText = timeLeft;
@@ -369,8 +391,7 @@
                 document.getElementById('final-score').innerText = score;
                 document.getElementById('game-over').style.display = 'flex';
                 document.getElementById('game-over').classList.add('fade-in');
-                document.body.classList.remove('slow-mode');
-                clearInterval(t);
+                clearInterval(timerInterval);
             }
         }, 1000);
     }
