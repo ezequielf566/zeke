@@ -163,7 +163,7 @@
         'TUBARAO': { ico: '🦈', pts: 150, w: 5, s: 0.8 },
         'SAPATO': { ico: '👞', pts: -10, w: 2, s: 1.2 },
         'LATA': { ico: '🥫', pts: -15, w: 1.5, s: 1.5 },
-        'BONUS': { ico: '✨', pts: 20, w: 0.5, s: 2.2 },
+        'BONUS': { ico: '✨', pts: 15, w: 0.5, s: 2.2 }, // Pontos de bônus reduzidos para balancear
         'SLOW': { ico: '⌛️', pts: 5, w: 0.5, s: 2.5 }
     };
 
@@ -211,19 +211,20 @@
                 let chance = Math.random();
                 let k = 'PEIXE';
                 
-                // AJUSTE: Níveis 20+ sustentabilidade (Chance de Bônus Tempo fixa em 25%)
+                // SISTEMA DE TETOS: Se tempo > 90s, reduz chance de BONUS drasticamente
+                let bonusChance = timeLeft > 90 ? 0.02 : 0.18;
+
                 if (level >= 20) {
-                    if (chance < 0.25) k = 'BONUS'; 
-                    else if (chance < 0.35) k = 'SLOW';
-                    else if (chance < 0.50) k = 'RARO';
-                    else if (chance > 0.70) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+                    if (chance < bonusChance) k = 'BONUS'; 
+                    else if (chance < bonusChance + 0.10) k = 'SLOW';
+                    else if (chance < 0.55) k = 'RARO';
+                    else if (chance > 0.75) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
                 }
-                // AJUSTE: Nível 15+ Poluição alta
                 else if (level >= 15) {
-                    if (chance < 0.10) k = 'BONUS';
-                    else if (chance < 0.20) k = 'SLOW';
-                    else if (chance < 0.35) k = 'RARO';
-                    else if (chance > 0.65) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+                    if (chance < bonusChance) k = 'BONUS';
+                    else if (chance < bonusChance + 0.10) k = 'SLOW';
+                    else if (chance < 0.40) k = 'RARO';
+                    else if (chance > 0.70) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
                 }
                 else if(level >= 10) {
                     if(chance < 0.15) k = 'BONUS';
@@ -232,7 +233,7 @@
                     else if(chance > 0.85) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
                 } else {
                     if(chance < 0.20) k = 'RARO';
-                    else if(chance > 0.90) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+                    else if(chance > 0.92) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
                 }
                 
                 if(level > 2 && k === 'PEIXE' && Math.random() > 0.8) k = 'TUBARAO';
@@ -246,7 +247,7 @@
                     type: k, 
                     x: window.innerWidth + (Math.random() * 150), 
                     y: 50 + Math.random() * (window.innerHeight - 350), 
-                    speed: t.s + (Math.min(level, 20) * 0.12), 
+                    speed: t.s + (Math.min(level, 25) * 0.12), 
                     pts: t.pts, 
                     w: t.w 
                 };
@@ -276,7 +277,7 @@
         }
 
         if(state === 'swing') {
-            angle += (1.4 + (Math.min(level, 12) * 0.1)) * dir * slowMoFactor;
+            angle += (1.4 + (Math.min(level, 15) * 0.1)) * dir * slowMoFactor;
             if(Math.abs(angle) > 65) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } else if(state === 'launch') {
@@ -302,7 +303,10 @@
             }
             if(len <= 65) {
                 if(caught) {
-                    if(caught.type === 'BONUS') { timeLeft += 10; createPopup("+10s", "var(--success)"); }
+                    if(caught.type === 'BONUS') { 
+                        timeLeft += 10; 
+                        createPopup("+10s", "var(--success)"); 
+                    }
                     else if(caught.type === 'SLOW') { 
                         slowMoFactor = 0.3; 
                         document.body.classList.add('slow-mode');
@@ -313,6 +317,11 @@
                         }, 5000); 
                     }
                     else { 
+                        // AJUSTE: Nível 15+ lixo tira tempo
+                        if(level >= 15 && (caught.type === 'SAPATO' || caught.type === 'LATA')) {
+                            timeLeft -= 2;
+                            createPopup("-2s", "var(--danger)");
+                        }
                         score += caught.pts; 
                         createPopup(caught.pts > 0 ? "+"+caught.pts : caught.pts, caught.pts > 0 ? "var(--ocean-blue)" : "var(--danger)"); 
                     }
