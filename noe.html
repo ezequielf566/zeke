@@ -3,199 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>A Saga de José - Mobile Ready</title>
+    <title>A Saga de José</title>
     <style>
-        :root { --gold: #f1c40f; --neon-green: #2ecc71; --glow: #f1c40f; --red: #ff4757; }
+        :root { --gold: #f1c40f; --neon-green: #2ecc71; --red: #ff4757; }
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; background: #000; font-family: 'Georgia', serif;
-            user-select: none; -webkit-user-select: none; 
-            /* Previne zoom e atrasos no toque */
-            touch-action: none; 
+            user-select: none; -webkit-user-select: none; touch-action: none; 
         }
         #game-container {
             width: 100vw; height: 100vh;
             background: url('fundo.jpg') center/cover no-repeat;
             position: relative; overflow: hidden;
-            transition: filter 1.2s linear;
             display: none;
         }
         
-        /* MENU INICIAL */
+        /* MENU */
         #main-menu {
             width: 100vw; height: 100vh;
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo.jpg') center/cover;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             position: absolute; z-index: 500; text-align: center;
         }
-        #menu-logo { width: 150px; margin-bottom: 15px; filter: drop-shadow(0 0 15px var(--gold)); }
-        .menu-group { display: flex; flex-direction: column; gap: 10px; width: 280px; }
         .menu-btn {
             padding: 15px; border-radius: 50px; border: 2px solid var(--gold);
             background: rgba(0,0,0,0.8); color: white; font-weight: bold; cursor: pointer;
-            transition: 0.3s; font-size: 16px;
-            /* Melhora o toque no mobile */
-            -webkit-tap-highlight-color: transparent;
+            margin: 5px; width: 200px; font-size: 16px;
         }
-        .menu-btn:active { transform: scale(0.95); background: var(--gold); color: black; }
-        .btn-survival { border-color: var(--neon-green); }
 
-        /* UI JOGO */
-        #ui-header { position: absolute; top: 10px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 100; }
-        #hud { width: 95%; display: flex; justify-content: space-between; align-items: center; }
-        .hud-item {
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-            padding: 5px 10px; border-radius: 8px; border: 1px solid var(--gold);
-            color: white; font-weight: bold; font-size: 12px; min-width: 60px; text-align: center;
-        }
+        /* UI */
+        #ui-header { position: absolute; top: 10px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 100; pointer-events: none; }
+        #hud { width: 90%; display: flex; justify-content: space-between; pointer-events: none; }
+        .hud-item { background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 8px; color: white; border: 1px solid var(--gold); }
         
-        /* Botão Pausa Ajustado para Mobile */
         #pause-btn {
             position: absolute; top: 70px; right: 20px; width: 50px; height: 50px;
             background: rgba(0,0,0,0.7); border: 2px solid white; color: white;
             border-radius: 50%; font-weight: bold; cursor: pointer; z-index: 110;
-            display: flex; align-items: center; justify-content: center;
-            -webkit-tap-highlight-color: transparent;
         }
 
-        #progress-wrapper { width: 85%; height: 10px; background: rgba(0,0,0,0.7); border-radius: 50px; border: 1px solid rgba(255,255,255,0.3); position: relative; margin-top: 10px; }
-        #progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #1e8449, #f1c40f); border-radius: 50px; }
-        #walker-container { position: absolute; left: 0%; top: 50%; transform: translate(-50%, -50%); width: 30px; height: 30px; }
+        #progress-wrapper { width: 80%; height: 10px; background: rgba(0,0,0,0.5); border-radius: 10px; margin-top: 10px; position: relative; }
+        #progress-fill { height: 100%; width: 0%; background: var(--gold); border-radius: 10px; }
 
-        #player { width: 100px; height: 100px; position: absolute; bottom: 120px; left: 10%; z-index: 50; pointer-events: none; }
-        #arca-final { position: absolute; bottom: 60px; right: -1000px; width: 500px; z-index: 40; transition: right 4s ease-out; }
+        #player { width: 100px; height: 100px; position: absolute; bottom: 120px; left: 10%; z-index: 50; }
         #chao { position: absolute; bottom: 0; width: 100%; height: 120px; background: linear-gradient(to bottom, #1e3d1a, #2c1e14); z-index: 10; }
 
-        .rock-glow {
-            background: var(--gold) !important;
-            filter: drop-shadow(0 0 15px var(--gold));
-            box-shadow: 0 0 30px var(--gold), inset 0 0 10px #fff !important;
-        }
-
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; flex-direction: column; text-align: center; z-index: 1000; background: rgba(0,0,0,0.85); color: white; }
-        #story-msg { position: absolute; top: 25%; width: 100%; text-align: center; color: white; font-size: 20px; font-weight: bold; text-shadow: 2px 2px 5px #000; opacity: 0; z-index: 150; pointer-events: none; }
-        #story-msg.active { opacity: 1; }
+        .rock-glow { filter: drop-shadow(0 0 15px var(--gold)); background: var(--gold) !important; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 1000; background: rgba(0,0,0,0.8); color: white; }
     </style>
 </head>
-<body onclick="handleGlobalClick(event)" ontouchstart="handleGlobalTouch(event)">
+<body onmousedown="handleInput(event)" ontouchstart="handleInput(event)">
 
 <div id="main-menu">
-    <img src="animal.gif" id="menu-logo">
-    <h1 style="color: var(--gold); margin: 0 0 20px 0; font-size: 28px;">A SAGA DE JOSÉ</h1>
-    <div class="menu-group">
-        <p style="color: white; margin: 0; font-size: 12px;">MODO JORNADA</p>
-        <button class="menu-btn" onclick="startGame('jornada', 'normal')">NORMAL</button>
-        <button class="menu-btn" onclick="startGame('jornada', 'medio')">MÉDIO</button>
-        <button class="menu-btn" onclick="startGame('jornada', 'dificil')">DIFÍCIL</button>
-        <p style="color: white; margin: 10px 0 0 0; font-size: 12px;">DESAFIO ETERNO</p>
-        <button class="menu-btn btn-survival" onclick="startGame('sobrevivencia')">PONTUAÇÃO</button>
-    </div>
+    <h1 style="color: var(--gold);">A SAGA DE JOSÉ</h1>
+    <button class="menu-btn" onclick="startGame('jornada', 'normal')">NORMAL</button>
+    <button class="menu-btn" onclick="startGame('jornada', 'dificil')">DIFÍCIL</button>
+    <button class="menu-btn" style="border-color: var(--neon-green)" onclick="startGame('sobrevivencia')">SOBREVIVÊNCIA</button>
 </div>
 
 <div id="game-container">
     <button id="pause-btn" onclick="event.stopPropagation(); togglePause();">||</button>
-    <canvas id="chuva" style="position: absolute; top:0; left:0; z-index:20; pointer-events:none;"></canvas>
     
     <div id="ui-header">
         <div id="hud">
-            <div id="vidas" class="hud-item">❤❤❤</div>
-            <div id="score-live" class="hud-item" style="color: var(--gold);">0</div>
-            <div id="timer" class="hud-item">00:00</div>
+            <div id="vidas">❤❤❤</div>
+            <div id="score-live">0</div>
+            <div id="timer">00:00</div>
         </div>
-        <div id="progress-wrapper">
-            <div id="progress-fill"></div>
-            <div id="walker-container"><img src="animal.gif" style="width: 100%;"></div>
-        </div>
+        <div id="progress-wrapper"><div id="progress-fill"></div></div>
     </div>
 
-    <div id="story-msg"></div>
-    <div id="player"><img src="animal.gif" style="width:100%;"></div>
-    <img src="arca.png" id="arca-final">
+    <div id="player"><img src="animal.gif" style="width:100%; pointer-events: none;"></div>
     <div id="chao"></div>
 
-    <div id="win-screen" class="overlay">
-        <h1 style="color: var(--gold);">MISSÃO CUMPRIDA!</h1>
-        <div id="final-score" style="font-size: 30px; margin: 20px;">0</div>
-        <button class="menu-btn" onclick="location.reload()">VOLTAR AO MENU</button>
-    </div>
-
     <div id="lose-screen" class="overlay">
-        <h1 style="color: var(--red);">FIM DA JORNADA</h1>
-        <button class="menu-btn" onclick="location.reload()">TENTAR NOVAMENTE</button>
+        <h1 style="color: var(--red);">FIM DE JOGO</h1>
+        <button class="menu-btn" onclick="location.reload()">RECOMEÇAR</button>
     </div>
 </div>
 
 <script>
-    const canvas = document.getElementById('chuva'), ctx = canvas.getContext('2d');
     const player = document.getElementById('player'), container = document.getElementById('game-container');
-    const progressFill = document.getElementById('progress-fill'), walkerIcon = document.getElementById('walker-container');
-    const scoreLive = document.getElementById('score-live'), timerDisplay = document.getElementById('timer'), storyMsg = document.getElementById('story-msg');
-    
-    let gameActive = false, isPaused = false, vidas = 3, scoreBase = 0;
-    let playerY = 0, velocityY = 0, jumps = 0, gravity = 1.3;
-    let gameMode = 'jornada', difficulty = 'normal';
-    let timeElapsed = 0, totalDuration = 150; 
-    let currentBaseSpeed = 12, brightnessVal = 1;
-
-    const frases = [
-        { p: 1, t: "A aventura começou! Leve o José até a Arca." },
-        { p: 15, t: "Sem perder tempo! Cada salto te leva mais perto." },
-        { p: 35, t: "Continue firme. A Arca está cada vez mais perto." },
-        { p: 55, t: "A noite caiu… falta pouco para chegar!" },
-        { p: 75, t: "Já dá pra ver a Arca! Não desista agora!" },
-        { p: 92, t: "ÚLTIMA RAMPA! ENTRE NA ARCA!" }
-    ];
+    let gameActive = false, isPaused = false, vidas = 3, score = 0;
+    let playerY = 0, velocityY = 0, jumps = 0, gravity = 1.1; // Gravidade original
+    let currentSpeed = 10, timeElapsed = 0;
 
     function startGame(mode, diff) {
-        event.stopPropagation(); // Evita que o clique do botão dispare o pulo no frame 1
-        gameMode = mode;
-        difficulty = diff;
+        event.stopPropagation();
         document.getElementById('main-menu').style.display = 'none';
         container.style.display = 'block';
         gameActive = true;
+        if(diff === 'dificil') currentSpeed = 15;
         
-        if(mode === 'jornada') {
-            if(diff === 'medio') { totalDuration = 120; currentBaseSpeed = 15; }
-            if(diff === 'dificil') { totalDuration = 100; currentBaseSpeed = 18; }
-        } else {
-            timerDisplay.innerText = "∞";
-        }
-        
+        requestAnimationFrame(update);
         spawnObstacle();
-        update();
-        startTimer();
-    }
-
-    function startTimer() {
+        
         setInterval(() => {
-            if(!gameActive || isPaused) return;
-            timeElapsed++;
-            scoreBase += 10;
-            scoreLive.innerText = scoreBase;
-            
-            let percent = (timeElapsed / totalDuration) * 100;
-            
-            if(gameMode === 'sobrevivencia') {
-                if(percent >= 100) { timeElapsed = 0; percent = 0; }
-                currentBaseSpeed += 0.05;
-            } else {
-                currentBaseSpeed += 0.02;
-                frases.forEach(f => { if(Math.floor(percent) === f.p) showStory(f.t); });
-                if(timeElapsed >= totalDuration) winGame();
-            }
-
-            progressFill.style.width = percent + "%";
-            walkerIcon.style.left = percent + "%";
-
-            let brightnessFactor = Math.abs((percent - 50) / 50); 
-            brightnessVal = 0.35 + (brightnessFactor * 0.65);
-            container.style.filter = `brightness(${brightnessVal})`;
-
-            if(gameMode === 'jornada') {
-                let left = Math.max(0, totalDuration - timeElapsed);
-                timerDisplay.innerText = `${Math.floor(left/60)}:${(left%60).toString().padStart(2,'0')}`;
+            if(gameActive && !isPaused) {
+                timeElapsed++;
+                score += 10;
+                document.getElementById('score-live').innerText = score;
+                let p = (timeElapsed / 150) * 100;
+                document.getElementById('progress-fill').style.width = p + "%";
+                currentSpeed += 0.03;
             }
         }, 1000);
+    }
+
+    function handleInput(e) {
+        // Se clicar em botão, não pula
+        if (e.target.tagName === 'BUTTON') return;
+        if (gameActive && !isPaused && jumps < 2) {
+            velocityY = 18; // Força do pulo
+            jumps++;
+        }
     }
 
     function togglePause() {
@@ -203,114 +124,56 @@
         document.getElementById('pause-btn').innerText = isPaused ? "▶" : "||";
     }
 
-    function showStory(txt) {
-        storyMsg.innerText = txt;
-        storyMsg.classList.add('active');
-        setTimeout(() => storyMsg.classList.remove('active'), 3000);
-    }
-
     function update() {
         if(!gameActive) return;
         if(!isPaused) {
-            playerY += velocityY; velocityY -= gravity;
-            if (playerY <= 0) { playerY = 0; velocityY = 0; jumps = 0; }
-            player.style.bottom = (120 + playerY) + 'px';
-            drawRain();
+            playerY += velocityY;
+            velocityY -= gravity;
+
+            if(playerY <= 0) {
+                playerY = 0;
+                velocityY = 0;
+                jumps = 0;
+            }
+            player.style.bottom = (120 + playerY) + "px";
         }
         requestAnimationFrame(update);
     }
 
     function spawnObstacle() {
-        if(!gameActive || isPaused) {
-             setTimeout(spawnObstacle, 500);
-             return;
-        }
-        
-        const rock = document.createElement('div');
-        let speed = currentBaseSpeed + (Math.random() * 2);
-        rock.style.cssText = `position:absolute; bottom:120px; width:50px; height:50px; background:#333; border-radius:10px; right:-100px; z-index:30;`;
-        container.appendChild(rock);
+        if(!gameActive) return;
+        if(!isPaused) {
+            const rock = document.createElement('div');
+            rock.style.cssText = `position:absolute; bottom:120px; width:45px; height:45px; background:#444; border-radius:8px; right:-50px;`;
+            container.appendChild(rock);
 
-        let pos = -100;
-        let moveInterval = setInterval(() => {
-            if(!gameActive) { rock.remove(); clearInterval(moveInterval); return; }
-            if(!isPaused) {
-                if(brightnessVal < 0.6) rock.classList.add('rock-glow');
-                pos += speed;
-                rock.style.right = pos + 'px';
+            let pos = -50;
+            let move = setInterval(() => {
+                if(!gameActive) { rock.remove(); clearInterval(move); return; }
+                if(!isPaused) {
+                    pos += currentSpeed;
+                    rock.style.right = pos + "px";
 
-                let pRect = player.getBoundingClientRect(), rRect = rock.getBoundingClientRect();
-                if (pRect.left+30 < rRect.right && pRect.right-30 > rRect.left && pRect.bottom > rRect.top+20) {
-                    vidas--;
-                    document.getElementById('vidas').innerText = "❤".repeat(Math.max(0, vidas));
-                    rock.remove(); clearInterval(moveInterval);
-                    if(vidas <= 0) gameOver();
+                    let pR = player.getBoundingClientRect(), rR = rock.getBoundingClientRect();
+                    // Colisão precisa
+                    if(pR.left < rR.right - 10 && pR.right > rR.left + 10 && pR.bottom > rR.top + 10) {
+                        vidas--;
+                        document.getElementById('vidas').innerText = "❤".repeat(vidas);
+                        rock.remove(); clearInterval(move);
+                        if(vidas <= 0) { gameActive = false; document.getElementById('lose-screen').style.display = 'flex'; }
+                    }
+                    if(pos > window.innerWidth + 50) { rock.remove(); clearInterval(move); }
                 }
-                if(pos > window.innerWidth + 150) { rock.remove(); clearInterval(moveInterval); }
-            }
-        }, 16);
-
-        let next = gameMode === 'sobrevivencia' ? Math.max(400, 1200 - scoreBase/100) : (difficulty === 'dificil' ? 700 : 1000);
-        setTimeout(spawnObstacle, next);
-    }
-
-    function winGame() {
-        gameActive = false;
-        document.getElementById('arca-final').style.right = "50px";
-        setTimeout(() => {
-            document.getElementById('win-screen').style.display = 'flex';
-            document.getElementById('final-score').innerText = `PONTOS: ${scoreBase}`;
-        }, 3000);
-    }
-
-    function gameOver() {
-        gameActive = false;
-        document.getElementById('lose-screen').style.display = 'flex';
-    }
-
-    // Chuva
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    let gotas = [];
-    for(let i=0; i<60; i++) gotas.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, v:Math.random()*10+10});
-    function drawRain() {
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.strokeStyle = `rgba(255,255,255,${0.2 + (1 - brightnessVal)})`;
-        gotas.forEach(g => {
-            ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.lineTo(g.x, g.y+15); ctx.stroke();
-            g.y += g.v; if(g.y > canvas.height) g.y = -20;
-        });
-    }
-
-    // CONTROLES GLOBAIS (Pulo)
-    function executeJump() {
-        if(gameActive && !isPaused && jumps < 2) { 
-            velocityY = (jumps === 0) ? 20 : 16; 
-            jumps++; 
+            }, 16);
         }
+        setTimeout(spawnObstacle, 1000 + Math.random() * 1000);
     }
 
-    // Captura Toque na tela toda (exceto botões)
-    function handleGlobalTouch(e) {
-        if(e.target.tagName !== 'BUTTON') {
-            executeJump();
-        }
-    }
-
-    // Captura Clique na tela toda (exceto botões)
-    function handleGlobalClick(e) {
-        if(e.target.tagName !== 'BUTTON') {
-            executeJump();
-        }
-    }
-
-    // Captura Teclado (Enter, Espaço, Seta Cima)
     window.addEventListener('keydown', (e) => {
-        if(['Space', 'Enter', 'ArrowUp'].includes(e.code)) {
-            e.preventDefault();
-            executeJump();
+        if(e.code === 'Space' || e.code === 'Enter' || e.code === 'ArrowUp') {
+            handleInput(e);
         }
     });
-
 </script>
 </body>
 </html>
