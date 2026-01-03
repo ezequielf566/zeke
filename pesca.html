@@ -211,35 +211,45 @@
         if(!active) return;
         
         if(items.length < MAX_ITEMS) {
-            const batchSize = level < 10 ? 3 : 2;
+            const batchSize = level < 10 ? 2 : 1; 
             for(let i=0; i < batchSize; i++) {
                 let chance = Math.random();
                 let k = 'PEIXE';
                 
-                let bonusChance = timeLeft < 15 ? 0.40 : 0.15;
+                // Limitador: Conta quantos lixos perigosos existem na tela
+                const dangerCount = items.filter(it => it.type === 'PROIBIDO' || it.type === 'RADIOATIVO').length;
+                
+                let bonusChance = timeLeft < 15 ? 0.35 : 0.12;
 
                 if (chance < bonusChance) {
                     k = 'BONUS';
                 } else {
-                    // Dificuldade escala com o nível
+                    // EQUILÍBRIO DE NÍVEL
                     if (level >= 15) {
-                        // Níveis altos: Muito mais lixo perigoso
-                        if (chance < 0.40) k = 'PROIBIDO';
-                        else if (chance < 0.65) k = 'RADIOATIVO';
-                        else if (chance < 0.80) k = 'RARO';
-                        else k = 'LATA';
+                        // Limitamos a 3 lixos perigosos simultâneos para não sufocar o jogador
+                        if (dangerCount < 3) {
+                            if (chance < 0.30) k = 'PROIBIDO';
+                            else if (chance < 0.45) k = 'RADIOATIVO';
+                            else if (chance < 0.70) k = 'RARO';
+                            else k = 'PEIXE';
+                        } else {
+                            // Se já tem muito lixo, força peixes
+                            k = chance > 0.6 ? 'RARO' : 'PEIXE';
+                        }
                     } else if (level >= 8) {
-                        if (chance < 0.15) k = 'PROIBIDO';
+                        if (dangerCount < 2 && chance < 0.15) k = 'PROIBIDO';
                         else if (chance < 0.25) k = 'SLOW';
                         else if (chance < 0.50) k = 'RARO';
                         else k = 'PEIXE';
                     } else {
-                        if (chance < 0.20) k = 'RARO';
-                        else if (chance > 0.85) k = 'SAPATO';
+                        if (chance < 0.25) k = 'RARO';
+                        else if (chance > 0.90) k = 'SAPATO';
+                        else k = 'PEIXE';
                     }
                 }
                 
-                if(level > 2 && k === 'PEIXE' && Math.random() > 0.85) k = 'TUBARAO';
+                // Tubarão raro
+                if(level > 3 && k === 'PEIXE' && Math.random() > 0.88) k = 'TUBARAO';
 
                 const t = types[k];
                 const el = document.createElement('div');
@@ -250,7 +260,7 @@
                     type: k, 
                     x: window.innerWidth + (Math.random() * 150), 
                     y: 50 + Math.random() * (window.innerHeight - 350), 
-                    speed: t.s + (Math.min(level, 25) * 0.12), 
+                    speed: t.s + (Math.min(level, 25) * 0.15), 
                     pts: t.pts, 
                     w: t.w,
                     time: t.t
@@ -260,8 +270,9 @@
             }
         }
         
-        let nextSpawn = 2000 - (level * 100);
-        setTimeout(spawn, Math.max(800, nextSpawn));
+        // Spawn mais cadenciado para evitar amontoamento
+        let nextSpawn = 2200 - (level * 80);
+        setTimeout(spawn, Math.max(900, nextSpawn));
     }
 
     function update() {
@@ -307,7 +318,6 @@
             }
             if(len <= 65) {
                 if(caught) {
-                    // Lógica de tempo (Bônus ou Punição)
                     if(caught.time !== 0) {
                         timeLeft += caught.time;
                         createPopup(caught.time > 0 ? `+${caught.time}s` : `${caught.time}s`, caught.time > 0 ? "var(--success)" : "var(--danger)");
