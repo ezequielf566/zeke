@@ -3,109 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pescador de Milagres</title>
+    <title>Pescador de Milagres Pro</title>
     <style>
         :root {
             --gold: #f1c40f;
             --success: #2ecc71;
             --danger: #e74c3c;
             --blue: #3498db;
+            --glass: rgba(0, 0, 0, 0.85);
         }
 
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #87CEEB; 
+            overflow: hidden; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #001f3f; 
             user-select: none; touch-action: manipulation;
         }
 
-        #game-container { position: relative; width: 100%; height: 100%; overflow: hidden; contain: layout style; }
+        #game-container { position: relative; width: 100%; height: 100%; overflow: hidden; display: none; }
 
-        #sky {
-            position: absolute; top: 0; width: 100%; height: 120px;
-            background: url('ceu.jpg') no-repeat center bottom;
-            background-size: cover;
-            border-bottom: 2px solid rgba(255,255,255,0.3);
+        /* Estilo dos Menus */
+        .screen {
+            position: fixed; inset: 0; z-index: 3000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('mar.jpg');
+            background-size: cover; text-align: center; color: white;
         }
 
-        #sea {
-            position: absolute; top: 120px; width: 100%; height: calc(100% - 120px);
-            background: url('mar.jpg') no-repeat center top;
-            background-size: cover;
-            overflow: hidden;
+        .menu-box {
+            background: var(--glass); padding: 40px; border-radius: 30px;
+            border: 3px solid var(--gold); box-shadow: 0 0 20px rgba(241, 196, 15, 0.3);
+            width: 80%; max-width: 400px;
         }
 
-        #hud {
-            position: absolute; top: 15px; width: 100%;
-            display: flex; justify-content: center; gap: 10px; z-index: 200;
+        button {
+            width: 100%; padding: 15px; margin: 10px 0; font-size: 18px; font-weight: bold;
+            text-transform: uppercase; border-radius: 50px; border: none; cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
         }
+
+        .btn-start { background: var(--gold); color: #000; }
+        .btn-rank { background: transparent; border: 2px solid var(--gold); color: var(--gold); }
+        button:active { transform: scale(0.95); }
+
+        /* Elementos do Jogo */
+        #sky { position: absolute; top: 0; width: 100%; height: 120px; background: #87CEEB; border-bottom: 2px solid rgba(255,255,255,0.3); }
+        #sea { position: absolute; top: 120px; width: 100%; height: calc(100% - 120px); background: #005073; overflow: hidden; }
+
+        #hud { position: absolute; top: 15px; width: 100%; display: flex; justify-content: center; gap: 10px; z-index: 200; }
         .stat {
-            background: rgba(0,0,0,0.85); border: 2px solid var(--gold);
+            background: var(--glass); border: 2px solid var(--gold);
             padding: 8px 12px; border-radius: 15px; color: white;
-            font-weight: bold; font-size: 14px; min-width: 95px; text-align: center;
-            white-space: nowrap;
+            font-weight: bold; font-size: 14px; min-width: 90px; text-align: center;
         }
 
-        #boat-container {
-            position: absolute; top: 55px; left: 50%;
-            width: 140px; z-index: 100; transform: translateX(-50%);
-            animation: boatRock 4s ease-in-out infinite;
-            will-change: transform;
-        }
-        @keyframes boatRock {
-            0%, 100% { transform: translateX(-50%) rotate(-2deg); }
-            50% { transform: translateX(-48%) rotate(2deg); }
-        }
-        #boat-img { width: 100%; height: auto; display: block; }
-
-        #line {
-            position: absolute; top: 90%; left: 50%; 
-            width: 2px; height: 60px; background: #fff;
-            transform-origin: top center; z-index: 90; 
-            will-change: transform, height;
-        }
-
+        #boat-container { position: absolute; top: 55px; left: 50%; width: 140px; z-index: 100; transform: translateX(-50%); animation: boatRock 4s ease-in-out infinite; }
+        @keyframes boatRock { 0%, 100% { transform: translateX(-50%) rotate(-2deg); } 50% { transform: translateX(-48%) rotate(2deg); } }
+        
+        #line { position: absolute; top: 90%; left: 50%; width: 2px; height: 60px; background: #fff; transform-origin: top center; z-index: 90; }
         #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; }
 
-        #mission-alert {
-            position: fixed; inset: 0; z-index: 1500;
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-        }
-        #mission-box {
-            background: #000; border: 4px solid var(--gold);
-            padding: 30px; border-radius: 25px; text-align: center; color: white;
-            animation: missionPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes missionPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .item { 
-            position: absolute; z-index: 40; pointer-events: none; font-size: 52px;
-            will-change: transform; 
-            transform: translate3d(0,0,0);
-        }
-        .shark-size { font-size: 85px !important; }
-
-        .floating-text {
-            position: absolute; font-weight: 900; font-size: 30px;
-            pointer-events: none; z-index: 500; animation: floatUp 1s forwards;
-            text-shadow: 2px 2px 0px #000;
-        }
+        .item { position: absolute; z-index: 40; pointer-events: none; font-size: 52px; }
+        .floating-text { position: absolute; font-weight: 900; font-size: 30px; pointer-events: none; z-index: 500; animation: floatUp 1s forwards; text-shadow: 2px 2px 0px #000; }
         @keyframes floatUp { 0% { transform: translate3d(-50%, 0, 0); opacity: 1; } 100% { transform: translate3d(-50%, -100px, 0); opacity: 0; } }
 
-        .overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            color: white; z-index: 2000; text-align: center;
-        }
-        
-        .slow-mo-active #sea {
-            filter: hue-rotate(45deg) saturate(1.5);
-            transition: filter 0.5s;
+        /* Tabela de Ranking */
+        #ranking-list { list-style: none; padding: 0; margin: 20px 0; }
+        #ranking-list li { 
+            background: rgba(255,255,255,0.1); margin: 5px 0; padding: 10px; 
+            border-radius: 10px; display: flex; justify-content: space-between;
         }
     </style>
 </head>
 <body onclick="shoot()">
+
+    <div id="main-menu" class="screen">
+        <div class="menu-box">
+            <h1 style="color:var(--gold); margin-bottom: 30px;">PESCADOR DE MILAGRES</h1>
+            <button class="btn-start" onclick="startGame()">Iniciar Pesca</button>
+            <button class="btn-rank" onclick="showRanking()">Ranking Top 5</button>
+        </div>
+    </div>
+
+    <div id="ranking-screen" class="screen" style="display: none;">
+        <div class="menu-box">
+            <h2 style="color:var(--gold)">MELHORES PESCADORES</h2>
+            <ul id="ranking-list"></ul>
+            <button class="btn-rank" onclick="hideRanking()">Voltar</button>
+        </div>
+    </div>
 
     <div id="game-container">
         <div id="sky"></div>
@@ -115,25 +101,20 @@
             <div class="stat">TEMPO: <span id="time">60</span>s</div>
         </div>
         <div id="boat-container">
-            <img src="barco.png" id="boat-img" alt="Barco">
+            <div style="font-size: 80px;">⛵</div>
             <div id="line"><div id="hook">🪝</div></div>
         </div>
         <div id="sea"><div id="container"></div></div>
     </div>
 
-    <div id="mission-alert">
-        <div id="mission-box">
-            <h2 style="color:var(--gold); margin:0;">DESAFIO ATIVADO</h2>
-            <h1 id="mission-title">---</h1>
-            <p id="mission-reward" style="color:var(--success); font-size: 20px;"></p>
-            <small style="color: #888;">Relógio pausado...</small>
+    <div id="game-over" class="screen" style="display: none;">
+        <div class="menu-box">
+            <h1 style="color:var(--danger)">FIM DA PESCA!</h1>
+            <p>Sua pontuação total:</p>
+            <h2 id="final-score" style="font-size: 50px; color: var(--gold); margin: 10px 0;">0</h2>
+            <button class="btn-start" onclick="restartGame()">Tentar Novamente</button>
+            <button class="btn-rank" onclick="location.reload()">Menu Inicial</button>
         </div>
-    </div>
-
-    <div id="game-over" class="overlay">
-        <h1 style="color:var(--gold); font-size: 45px;">FIM DA PESCARIA!</h1>
-        <h2 id="final-score" style="font-size: 60px; margin: 10px 0;">0</h2>
-        <button style="padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer; background: var(--gold); border: none; border-radius: 50px;" onclick="window.location.href='pesca.html'">RECOMEÇAR</button>
     </div>
 
 <script>
@@ -144,180 +125,141 @@
     const ptsDisplay = document.getElementById('pts');
     const timeDisplay = document.getElementById('time');
     
-    let score = 0, maxScoreReached = 0, level = 1, timeLeft = 60, active = true, isPaused = false;
+    let score = 0, level = 1, timeLeft = 60, active = false, isPaused = false;
     let state = 'swing', angle = 0, dir = 1, len = 60, caught = null;
     let items = [];
-    let currentMission = null, missionProgress = 0, inMissionMode = false;
-    let missionTriggeredOnce = false;
     let slowMoFactor = 1;
 
     const types = {
-        'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 1.5, name: 'Peixinhos' },
-        'RARO': { ico: '🐠', pts: 50, w: 0.8, s: 2.2, name: 'Peixes Raros' },
-        'TUBARAO': { ico: '🦈', pts: 150, w: 5, s: 0.8, name: 'Tubarões' },
-        'SAPATO': { ico: '👞', pts: -10, w: 2, s: 1.2, name: 'Sapatos' },
-        'LATA': { ico: '🥫', pts: -15, w: 1.5, s: 1.5, name: 'Latas' },
-        'BONUS': { ico: '✨', pts: 20, w: 0.5, s: 2.2, name: 'Estrelas' },
-        'SLOW': { ico: '⌛️', pts: 5, w: 0.5, s: 2.5, name: 'Tempo Lento' }
+        'PEIXE': { ico: '🐟', pts: 10, w: 1, s: 1.5 },
+        'RARO': { ico: '🐠', pts: 50, w: 0.8, s: 2.2 },
+        'TUBARAO': { ico: '🦈', pts: 150, w: 5, s: 0.8 },
+        'SAPATO': { ico: '👞', pts: -10, w: 2, s: 1.2 },
+        'LATA': { ico: '🥫', pts: -15, w: 1.5, s: 1.5 },
+        'BONUS': { ico: '✨', pts: 20, w: 0.5, s: 2.2 },
+        'SLOW': { ico: '⌛️', pts: 5, w: 0.5, s: 2.5 }
     };
 
-    // NOVA FUNÇÃO: Limita a exibição do score no HUD para 4 dígitos
-    function updateScoreDisplay() {
-        let strScore = score.toString();
-        if(strScore.length > 4) {
-            ptsDisplay.innerText = strScore.substring(0, 4);
-        } else {
-            ptsDisplay.innerText = score;
-        }
+    function startGame() {
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        active = true;
+        spawn();
+        update();
+        startTimer();
     }
 
-    function showMission() {
-        if(!active || inMissionMode || state !== 'swing' || timeLeft >= 50) return;
-        isPaused = true; inMissionMode = true; missionTriggeredOnce = true;
-        const missionList = [
-            { target: 'PEIXE', qty: 3 + Math.floor(level/2), bonus: 15 },
-            { target: 'RARO', qty: 2, bonus: 20 }
-        ];
-        currentMission = missionList[Math.floor(Math.random() * missionList.length)];
-        missionProgress = 0;
-        const alert = document.getElementById('mission-alert');
-        document.getElementById('mission-title').innerText = `Capture ${currentMission.qty} ${types[currentMission.target].name}`;
-        document.getElementById('mission-reward').innerText = `BÔNUS: +${currentMission.bonus}s`;
-        alert.style.display = 'flex';
-        setTimeout(() => { alert.style.display = 'none'; isPaused = false; }, 3500);
+    function restartGame() {
+        location.reload();
+    }
+
+    function showRanking() {
+        const list = document.getElementById('ranking-list');
+        const scores = JSON.parse(localStorage.getItem('fishing_rank') || '[]');
+        list.innerHTML = scores.length ? '' : '<li>Nenhuma pontuação ainda</li>';
+        scores.forEach((s, i) => {
+            list.innerHTML += `<li><span>#${i+1}</span> <strong>${s} pts</strong></li>`;
+        });
+        document.getElementById('ranking-screen').style.display = 'flex';
+    }
+
+    function hideRanking() { document.getElementById('ranking-screen').style.display = 'none'; }
+
+    function saveScore(finalScore) {
+        let scores = JSON.parse(localStorage.getItem('fishing_rank') || '[]');
+        scores.push(finalScore);
+        scores.sort((a, b) => b - a);
+        scores = scores.slice(0, 5); // Mantém apenas o top 5
+        localStorage.setItem('fishing_rank', JSON.stringify(scores));
+    }
+
+    function updateScoreDisplay() {
+        let s = score.toString();
+        ptsDisplay.innerText = s.length > 4 ? s.substring(0, 4) : s;
     }
 
     function spawn() {
-        if(!active || isPaused) { setTimeout(spawn, 1000); return; }
+        if(!active) return;
         const qty = 3 + Math.min(level, 6); 
         for(let i=0; i<qty; i++) {
             let chance = Math.random();
             let k = 'PEIXE';
-            let effectiveLevel = Math.min(level, 15);
-            let trashChance = 0.05 + (effectiveLevel * 0.028); 
-            
             let bonusThreshold = Math.max(0.015, 0.05 - (level * 0.0005));
 
             if(chance < bonusThreshold) k = 'BONUS';
-            else if(level >= 10 && chance < (bonusThreshold + 0.07)) k = 'SLOW';
-            else if(chance < (bonusThreshold + 0.15)) k = 'RARO';
-            else if(chance > (1 - trashChance)) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
-            else k = 'PEIXE';
+            else if(level >= 5 && chance < 0.12) k = 'SLOW';
+            else if(chance < 0.25) k = 'RARO';
+            else if(chance > 0.8) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
             
             if(level > 2 && k === 'PEIXE' && Math.random() > 0.9) k = 'TUBARAO';
 
             const t = types[k];
             const el = document.createElement('div');
-            el.className = 'item' + (k === 'BONUS' || k === 'SLOW' ? ' bonus-glow' : '');
-            if(k === 'TUBARAO') el.classList.add('shark-size');
+            el.className = 'item';
             el.innerHTML = t.ico;
-            
-            const startX = window.innerWidth + (Math.random() * 600);
-            const startY = 50 + Math.random() * (window.innerHeight - 380);
-            
-            const item = {
-                el: el, type: k, x: startX, y: startY,
-                speed: t.s + (level * 0.12), pts: t.pts, w: t.w
-            };
-            el.style.transform = `translate3d(${item.x}px, ${item.y}px, 0)`;
+            const item = { el: el, type: k, x: window.innerWidth + 100, y: 150 + Math.random() * (window.innerHeight - 300), speed: t.s + (level * 0.1), pts: t.pts, w: t.w };
             container.appendChild(el);
             items.push(item);
         }
-        setTimeout(spawn, Math.max(1200, 3000 - (level * 150)));
-    }
-
-    function activateSlowMo() {
-        slowMoFactor = 0.3;
-        document.body.classList.add('slow-mo-active');
-        createPopup("SLOW MOTION!", "#3498db");
-        setTimeout(() => {
-            slowMoFactor = 1;
-            document.body.classList.remove('slow-mo-active');
-        }, 5000);
+        setTimeout(spawn, 3000 - Math.min(1500, level * 100));
     }
 
     function update() {
-        if(!active || isPaused) { requestAnimationFrame(update); return; }
-        if(!missionTriggeredOnce && timeLeft < 50) showMission();
+        if(!active) return;
 
-        for (let i = items.length - 1; i >= 0; i--) {
-            let it = items[i];
-            if(it === caught) continue;
-            it.x -= (it.speed * slowMoFactor);
-            const waveY = it.y + (Math.sin(it.x * 0.02) * 8);
-            it.el.style.transform = `translate3d(${it.x}px, ${waveY}px, 0)`;
-            if(it.x < -150) { it.el.remove(); items.splice(i, 1); }
-        }
+        items.forEach((it, i) => {
+            if(it === caught) return;
+            it.x -= it.speed * slowMoFactor;
+            it.el.style.transform = `translate3d(${it.x}px, ${it.y + Math.sin(it.x*0.02)*10}px, 0)`;
+            if(it.x < -100) { it.el.remove(); items.splice(i, 1); }
+        });
 
         if(state === 'swing') {
-            let swingSpeed = Math.min(4.5, 1.1 + (level * 0.08)); 
-            angle += (swingSpeed * dir) * slowMoFactor;
-            if(angle > 60) { angle = 60; dir = -1; }
-            if(angle < -60) { angle = -60; dir = 1; }
+            angle += (1.5 + (level * 0.1)) * dir * slowMoFactor;
+            if(Math.abs(angle) > 60) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
-        } 
-        else if(state === 'launch') {
-            let launchSpeed = Math.min(25, 13 + (level * 0.5));
-            len += launchSpeed;
+        } else if(state === 'launch') {
+            len += 15;
             line.style.height = len + 'px';
             const hRect = hook.getBoundingClientRect();
-            for(let it of items) {
+            items.forEach(it => {
                 const iRect = it.el.getBoundingClientRect();
                 if(hRect.left < iRect.right && hRect.right > iRect.left && hRect.top < iRect.bottom && hRect.bottom > iRect.top) {
-                    caught = it; state = 'back'; break;
+                    caught = it; state = 'back';
                 }
-            }
-            if(len > window.innerHeight - 180) state = 'back';
-        } 
-        else if(state === 'back') {
-            let sb = 22; if(caught) sb /= caught.w;
-            len -= sb; line.style.height = len + 'px';
+            });
+            if(len > window.innerHeight - 150) state = 'back';
+        } else if(state === 'back') {
+            len -= 20 / (caught ? caught.w : 1);
+            line.style.height = len + 'px';
             if(caught) {
-                caught.el.style.transform = `translate3d(-50%, -15px, 0)`;
                 caught.el.style.left = '50%'; caught.el.style.top = '100%';
+                caught.el.style.transform = 'translate(-50%, -10px)';
                 hook.appendChild(caught.el);
             }
             if(len <= 60) {
                 if(caught) {
-                    if(caught.type === 'BONUS') { timeLeft += 10; createPopup("+10s", "#f1c40f"); }
-                    else if(caught.type === 'SLOW') { activateSlowMo(); }
-                    else {
-                        score += caught.pts;
-                        createPopup(caught.pts > 0 ? "+"+caught.pts : caught.pts, caught.pts > 0 ? "#fff" : "#e74c3c");
-                    }
-                    if(inMissionMode && caught.type === currentMission.target) {
-                        missionProgress++;
-                        if(missionProgress >= currentMission.qty) {
-                            timeLeft += currentMission.bonus; inMissionMode = false;
-                            createPopup("MISSÃO OK! +"+currentMission.bonus+"s", "#2ecc71");
-                        }
-                    }
-                    if(score > maxScoreReached) maxScoreReached = score;
-                    let targetLevel = Math.floor(maxScoreReached / 100) + 1;
-                    if(targetLevel > level) {
-                        level = targetLevel;
-                        lvlDisplay.innerText = level;
-                        createPopup("NÍVEL " + level, "#f1c40f");
-                    }
-                    updateScoreDisplay(); // Chama a função formatada
+                    if(caught.type === 'BONUS') timeLeft += 10;
+                    else if(caught.type === 'SLOW') { slowMoFactor = 0.3; setTimeout(()=>slowMoFactor=1, 5000); }
+                    else score += caught.pts;
+                    
+                    level = Math.floor(score / 200) + 1;
+                    lvlDisplay.innerText = level;
+                    updateScoreDisplay();
                     caught.el.remove();
-                    items = items.filter(i => i !== caught);
                     caught = null;
                 } else {
-                    let penalty = 10 + (level * 2);
-                    score = Math.max(0, score - penalty);
-                    updateScoreDisplay(); // Chama a função formatada
-                    let popupMsg = `-${penalty}`;
-                    if(level >= 50) { timeLeft = Math.max(0, timeLeft - 3); popupMsg += " | -3s"; }
-                    createPopup(popupMsg, "#e74c3c");
+                    // PENALIDADE DE 10 SEGUNDOS POR ERRAR O GANCHO
+                    timeLeft = Math.max(0, timeLeft - 10);
+                    createPopup("-10s", "var(--danger)");
                 }
-                len = 60; state = 'swing';
+                state = 'swing';
             }
         }
         requestAnimationFrame(update);
     }
 
-    function shoot() { if(state === 'swing' && active && !isPaused) state = 'launch'; }
+    function shoot() { if(state === 'swing' && active) state = 'launch'; }
 
     function createPopup(txt, color) {
         const p = document.createElement('div');
@@ -328,21 +270,19 @@
         setTimeout(() => p.remove(), 1000);
     }
 
-    setInterval(() => {
-        if(!active || isPaused) return;
-        timeLeft--;
-        timeDisplay.innerText = timeLeft;
-        if(timeLeft <= 0) {
-            active = false;
-            // AQUI: Mostra o score REAL completo no Game Over
-            document.getElementById('final-score').innerText = score;
-            document.getElementById('game-over').style.display = 'flex';
-        }
-    }, 1000);
-
-    spawn();
-    update();
-    setInterval(showMission, Math.min(15000, 10000 + (level * 100))); 
+    function startTimer() {
+        const t = setInterval(() => {
+            if(!active) { clearInterval(t); return; }
+            timeLeft--;
+            timeDisplay.innerText = timeLeft;
+            if(timeLeft <= 0) {
+                active = false;
+                saveScore(score);
+                document.getElementById('final-score').innerText = score;
+                document.getElementById('game-over').style.display = 'flex';
+            }
+        }, 1000);
+    }
 </script>
 </body>
 </html>
