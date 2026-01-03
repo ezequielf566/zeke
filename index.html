@@ -9,22 +9,22 @@
         :root {
             --primary-blue: #3a86ff;
             --light-blue: #e0f2fe;
-            --snow-white: #f8faff; /* Branco Neve */
-            --soft-gold: #ffcf33;
+            --snow-white: #f8faff; /* Fundo Branco Neve */
+            --app-green: #2ecc71; /* Verde Profissional e Vibrante */
             --text-dark: #2d3436;
             --shadow: 0 10px 25px rgba(58, 134, 255, 0.15);
         }
 
         * { 
             box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; /* Remove brilho de clique no celular */
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             margin: 0; 
             padding: 0;
             background-color: var(--snow-white);
-            /* Gradiente suave nas bordas para dar profundidade */
+            /* Bordas azuladas suaves para profundidade */
             background-image: radial-gradient(circle at 50% 50%, var(--snow-white) 70%, var(--light-blue) 100%);
             font-family: 'Quicksand', sans-serif;
             color: var(--text-dark);
@@ -56,18 +56,16 @@
             font-weight: 500;
         }
 
-        /* GRID ESTILO APP - Uma coluna no celular, grid no tablet */
         .game-grid {
             display: flex;
             flex-direction: column;
             gap: 25px;
             width: 100%;
-            max-width: 500px; /* Largura máxima de um celular moderno */
+            max-width: 500px; 
             padding: 20px;
             margin-bottom: 50px;
         }
 
-        /* CARD ESTILO APP */
         .card {
             background: #ffffff;
             border-radius: 30px;
@@ -82,7 +80,6 @@
             transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* Efeito de clique de aplicativo */
         .card:active {
             transform: scale(0.96);
         }
@@ -102,7 +99,7 @@
 
         .info { 
             padding: 20px; 
-            text-align: left; /* Alinhamento mais profissional */
+            text-align: left;
             background: white;
             border-top: 4px solid var(--light-blue);
         }
@@ -120,7 +117,6 @@
             line-height: 1.4;
         }
         
-        /* Badge minimalista */
         .status-badge {
             position: absolute; 
             top: 15px; 
@@ -133,10 +129,10 @@
             backdrop-filter: blur(5px);
             color: var(--primary-blue);
             z-index: 2;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             text-transform: uppercase;
         }
 
+        /* TODOS OS BOTÕES VERDES AQUI */
         .play-btn {
             display: flex;
             align-items: center;
@@ -144,12 +140,14 @@
             width: 100%;
             padding: 14px; 
             border-radius: 18px;
-            background: var(--primary-blue); 
+            background: var(--app-green); 
             color: #ffffff;
             font-weight: 700; 
             font-size: 1rem;
             transition: 0.3s;
-            box-shadow: 0 6px 15px rgba(58, 134, 255, 0.3);
+            box-shadow: 0 6px 15px rgba(46, 204, 113, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         footer { 
@@ -160,7 +158,6 @@
             text-align: center;
         }
 
-        /* Ajuste para telas maiores (Tablet/Desktop) */
         @media (min-width: 768px) {
             .game-grid {
                 display: grid;
@@ -174,13 +171,13 @@
 
     <header>
         <h1>Jornada Kids</h1>
-        <p>Embarque em uma jornada de fé e diversão!</p>
+        <p>Descubra o amor de Deus brincando!</p>
     </header>
 
     <div class="game-grid">
         
         <a href="noe.html" class="card">
-            <span class="status-badge">Explorar</span>
+            <span class="status-badge">Aberto</span>
             <div class="cover">
                 <img src="capa.png" alt="José e a Arca">
             </div>
@@ -192,26 +189,26 @@
         </a>
 
         <a href="pesca.html" class="card">
-            <span class="status-badge">Explorar</span>
+            <span class="status-badge">Aberto</span>
             <div class="cover">
                 <img src="capa2.png" alt="Maré de Sorte">
             </div>
             <div class="info">
                 <h2>Maré de Sorte</h2>
                 <p>Navegue com fé e descubra as maravilhas do mar.</p>
-                <div class="play-btn" style="background: #00b894; box-shadow: 0 6px 15px rgba(0, 184, 148, 0.3);">JOGAR AGORA</div>
+                <div class="play-btn">JOGAR AGORA</div>
             </div>
         </a>
 
         <a href="mana.html" class="card">
-            <span class="status-badge">Explorar</span>
+            <span class="status-badge">Aberto</span>
             <div class="cover">
                 <img src="capa3.png" alt="Chuva de Bênçãos">
             </div>
             <div class="info">
                 <h2>Chuva de Bênçãos</h2>
                 <p>Receba as bênçãos do céu em um desafio cheio de alegria.</p>
-                <div class="play-btn" style="background: var(--soft-gold); color: #856404; box-shadow: 0 6px 15px rgba(255, 207, 51, 0.3);">JOGAR AGORA</div>
+                <div class="play-btn">JOGAR AGORA</div>
             </div>
         </a>
 
