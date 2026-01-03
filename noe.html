@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>A Saga de José - Corrigido</title>
+    <title>A Saga de José - Equilibrado</title>
     <style>
-        :root { --gold: #f1c40f; --neon-green: #2ecc71; --glow: #f1c40f; --red: #ff4757; }
+        :root { --gold: #f1c40f; --neon-green: #2ecc71; --red: #ff4757; }
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; background: #000; font-family: 'Georgia', serif;
@@ -16,9 +16,7 @@
             width: 100vw; height: 100vh;
             background: url('fundo.jpg') center/cover no-repeat;
             position: relative; overflow: hidden;
-            transition: filter 1.2s linear;
-            display: none;
-            touch-action: none;
+            display: none; touch-action: none;
         }
         
         #main-menu {
@@ -27,53 +25,55 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             position: absolute; z-index: 500; text-align: center;
         }
-        #menu-logo { width: 180px; margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--gold)); }
-        .menu-group { display: flex; flex-direction: column; gap: 12px; width: 280px; }
+        #menu-logo { width: 150px; margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--gold)); }
+        .menu-group { display: flex; flex-direction: column; gap: 10px; width: 250px; }
 
         .menu-btn {
-            padding: 15px; border-radius: 50px; border: 2px solid var(--gold);
+            padding: 12px; border-radius: 50px; border: 2px solid var(--gold);
             background: rgba(0,0,0,0.8); color: white; font-weight: bold; cursor: pointer;
-            transition: 0.3s; font-size: 16px;
+            transition: 0.2s; font-size: 14px;
         }
         .menu-btn:hover { background: var(--gold); color: black; }
+        .btn-survival { border-color: var(--neon-green); }
 
         #ui-header { position: absolute; top: 15px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 100; pointer-events: none; }
         #hud { width: 90%; display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
         .hud-item {
             background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
             padding: 8px 15px; border-radius: 8px; border: 1px solid var(--gold);
-            color: white; font-weight: bold; font-size: 14px; min-width: 80px; text-align: center;
+            color: white; font-weight: bold; font-size: 13px; min-width: 70px; text-align: center;
         }
 
         #pause-btn {
-            position: absolute; top: 80px; right: 5%; width: 45px; height: 45px;
+            position: absolute; top: 75px; right: 5%; width: 45px; height: 45px;
             background: rgba(0,0,0,0.7); border: 2px solid white; color: white;
-            border-radius: 50%; font-weight: bold; cursor: pointer; z-index: 200;
+            border-radius: 50%; font-weight: bold; cursor: pointer; z-index: 110;
         }
 
-        #progress-wrapper { width: 80%; height: 12px; background: rgba(0,0,0,0.7); border-radius: 50px; border: 1px solid rgba(255,255,255,0.3); position: relative; margin-top: 10px; }
+        #progress-wrapper { width: 80%; height: 10px; background: rgba(0,0,0,0.7); border-radius: 50px; border: 1px solid rgba(255,255,255,0.3); position: relative; margin-top: 10px; }
         #progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #1e8449, #f1c40f); border-radius: 50px; }
-        #walker-container { position: absolute; left: 0%; top: 50%; transform: translate(-50%, -50%); width: 35px; height: 35px; }
+        #walker-container { position: absolute; left: 0%; top: 50%; transform: translate(-50%, -50%); width: 30px; height: 30px; }
 
-        #player { width: 100px; height: 100px; position: absolute; bottom: 120px; left: 12%; z-index: 50; pointer-events: none; }
-        #chao { position: absolute; bottom: 0; width: 100%; height: 120px; background: linear-gradient(to bottom, #1e3d1a, #2c1e14); z-index: 10; }
+        #player { width: 100px; height: 100px; position: absolute; left: 12%; z-index: 50; pointer-events: none; }
+        #chao { position: absolute; bottom: 0; width: 100%; height: 100px; background: linear-gradient(to bottom, #1e3d1a, #2c1e14); z-index: 10; }
 
         .rock { position: absolute; width: 50px; height: 50px; background: #333; border-radius: 10px; z-index: 30; }
         .rock-glow { box-shadow: 0 0 20px var(--gold); background: var(--gold) !important; }
 
         #jump-btn {
-            position: absolute; right: 5%; bottom: 140px; z-index: 200;
+            position: absolute; right: 5%; bottom: 120px; z-index: 120;
             width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--gold);
-            background: rgba(0,0,0,0.6); color: white; font-weight: bold;
+            background: rgba(0,0,0,0.6); color: white; font-weight: 800;
             display: none; touch-action: none;
         }
 
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 1000; background: rgba(0,0,0,0.9); color: white; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 1000; background: rgba(0,0,0,0.85); color: white; }
 
         @media (max-height: 500px) {
-            #player { width: 70px; height: 70px; bottom: 60px; }
+            #player { width: 70px; height: 70px; }
             #chao { height: 60px; }
-            #jump-btn { bottom: 20px; width: 60px; height: 60px; }
+            #jump-btn { bottom: 70px; width: 70px; height: 70px; }
+            .menu-group { flex-direction: row; flex-wrap: wrap; width: 90%; }
         }
     </style>
 </head>
@@ -81,23 +81,25 @@
 
 <div id="main-menu">
     <img src="animal.gif" id="menu-logo">
-    <h1 style="color: var(--gold);">A SAGA DE JOSÉ</h1>
+    <h1 style="color: var(--gold); margin-bottom: 20px;">A SAGA DE JOSÉ</h1>
     <div class="menu-group">
-        <button class="menu-btn" onclick="startGame('jornada', 'normal')">JOGAR</button>
-        <button class="menu-btn" onclick="startGame('sobrevivencia')">PONTUAÇÃO</button>
+        <button class="menu-btn" onclick="startGame('jornada', 'normal')">NORMAL</button>
+        <button class="menu-btn" onclick="startGame('jornada', 'medio')">MÉDIO</button>
+        <button class="menu-btn" onclick="startGame('jornada', 'dificil')">DIFÍCIL</button>
+        <button class="menu-btn btn-survival" onclick="startGame('sobrevivencia')">PONTUAÇÃO</button>
     </div>
 </div>
 
 <div id="game-container">
     <button id="pause-btn" onclick="togglePause(event)">||</button>
-    <button id="jump-btn">PULO</button>
+    <button id="jump-btn">PULAR</button>
     <canvas id="chuva" style="position: absolute; top:0; left:0; z-index:20; pointer-events:none;"></canvas>
     
     <div id="ui-header">
         <div id="hud">
-            <div id="vidas" class="hud-item">❤❤❤</div>
-            <div id="score-live" class="hud-item">0m</div>
-            <div id="timer" class="hud-item">00:00</div>
+            <div id="vidas-display" class="hud-item">❤❤❤</div>
+            <div id="dist-display" class="hud-item" style="color: var(--gold);">0m</div>
+            <div id="timer-display" class="hud-item">00:00</div>
         </div>
         <div id="progress-wrapper">
             <div id="progress-fill"></div>
@@ -105,13 +107,12 @@
         </div>
     </div>
 
-    <div id="story-msg" style="position:absolute; top:30%; width:100%; text-align:center; color:white; font-size:20px; z-index:100; pointer-events:none;"></div>
     <div id="player"><img src="animal.gif" style="width:100%;"></div>
     <div id="chao"></div>
 
     <div id="lose-screen" class="overlay">
-        <h1 style="color: var(--red);">FIM DE JOGO</h1>
-        <button class="menu-btn" onclick="location.reload()">RECOMEÇAR</button>
+        <h1 style="color: var(--red);">FIM DA JORNADA</h1>
+        <button class="menu-btn" onclick="location.reload()">TENTAR NOVAMENTE</button>
     </div>
 </div>
 
@@ -123,145 +124,132 @@
     let gameActive = false, isPaused = false, vidas = 3;
     let playerY = 0, velocityY = 0, jumps = 0, gravity = 0.8;
     let obstacles = [];
-    let speed = 8, distance = 0, timeElapsed = 0;
-    let lastObstacleTime = 0;
+    let speed = 8, distance = 0, timeElapsed = 0, totalDuration = 150;
+    let gameMode = 'jornada', lastObstacleTime = 0;
 
     const isMobile = 'ontouchstart' in window;
     if (isMobile) jumpBtn.style.display = "block";
 
-    function startGame(mode) {
+    function startGame(mode, diff) {
+        gameMode = mode;
+        if(diff === 'medio') { speed = 11; totalDuration = 120; }
+        if(diff === 'dificil') { speed = 14; totalDuration = 90; }
+        
         document.getElementById('main-menu').style.display = 'none';
         container.style.display = 'block';
         gameActive = true;
         resizeCanvas();
         requestAnimationFrame(update);
-        setInterval(gameTick, 1000);
+        setInterval(secondTick, 1000);
     }
 
-    function gameTick() {
+    function secondTick() {
         if(!gameActive || isPaused) return;
         timeElapsed++;
-        distance += Math.floor(speed);
-        document.getElementById('score-live').innerText = distance + "m";
         
-        let percent = Math.min((timeElapsed / 150) * 100, 100);
+        if(gameMode === 'jornada') {
+            let remain = Math.max(0, totalDuration - timeElapsed);
+            document.getElementById('timer-display').innerText = 
+                `${Math.floor(remain/60)}:${(remain%60).toString().padStart(2,'0')}`;
+            if(timeElapsed >= totalDuration) alert("Você chegou na Arca!");
+        } else {
+            document.getElementById('timer-display').innerText = "∞";
+        }
+
+        let percent = Math.min((timeElapsed / totalDuration) * 100, 100);
         document.getElementById('progress-fill').style.width = percent + "%";
         document.getElementById('walker-container').style.left = percent + "%";
-        
-        speed += 0.05; // Aceleração gradual
     }
 
     function togglePause(e) {
-        if(e) e.stopPropagation();
+        e.stopPropagation();
         isPaused = !isPaused;
         document.getElementById('pause-btn').innerText = isPaused ? "▶" : "||";
     }
 
-    function jump() {
+    function handleJump() {
         if(!gameActive || isPaused || jumps >= 2) return;
-        velocityY = 15;
+        velocityY = 16;
         jumps++;
     }
 
-    // Loop Principal (Física e Movimento)
     function update(timestamp) {
         if(!gameActive) return;
 
         if(!isPaused) {
-            // Física do Jogador
+            // Movimento Jogador
             velocityY -= gravity;
             playerY += velocityY;
-
-            if (playerY <= 0) {
-                playerY = 0;
-                velocityY = 0;
-                jumps = 0;
-            }
+            if (playerY <= 0) { playerY = 0; velocityY = 0; jumps = 0; }
 
             const hChao = document.getElementById('chao').offsetHeight;
             player.style.bottom = (hChao + playerY) + 'px';
 
-            // Gerar Obstáculos
-            if (timestamp - lastObstacleTime > 1500 - (speed * 10)) {
-                createObstacle();
+            // Distância
+            distance += (speed / 10);
+            document.getElementById('dist-display').innerText = Math.floor(distance) + "m";
+
+            // Obstáculos
+            if (timestamp - lastObstacleTime > (2000 - speed * 50)) {
+                spawnObstacle();
                 lastObstacleTime = timestamp;
             }
-
-            // Mover Obstáculos e Checar Colisão
             moveObstacles();
             drawRain();
         }
-
         requestAnimationFrame(update);
     }
 
-    function createObstacle() {
+    function spawnObstacle() {
         const obs = document.createElement('div');
         obs.classList.add('rock');
-        if (speed > 12) obs.classList.add('rock-glow');
+        if(speed > 12) obs.classList.add('rock-glow');
         obs.style.right = '-60px';
         obs.style.bottom = document.getElementById('chao').offsetHeight + 'px';
         container.appendChild(obs);
-        obstacles.push({ element: obs, x: -60 });
+        obstacles.push({ el: obs, x: -60 });
     }
 
     function moveObstacles() {
-        for (let i = obstacles.length - 1; i >= 0; i--) {
+        for(let i = obstacles.length - 1; i >= 0; i--) {
             let o = obstacles[i];
             o.x += speed;
-            o.element.style.right = o.x + 'px';
+            o.el.style.right = o.x + 'px';
 
-            // Colisão
             let pRect = player.getBoundingClientRect();
-            let oRect = o.element.getBoundingClientRect();
+            let oRect = o.el.getBoundingClientRect();
 
-            if (pRect.right > oRect.left + 10 && pRect.left < oRect.right - 10 && pRect.bottom > oRect.top + 10) {
-                o.element.remove();
+            if (pRect.right > oRect.left + 15 && pRect.left < oRect.right - 15 && pRect.bottom > oRect.top + 15) {
+                o.el.remove();
                 obstacles.splice(i, 1);
                 vidas--;
-                document.getElementById('vidas').innerText = "❤".repeat(vidas);
-                if(vidas <= 0) endGame();
+                document.getElementById('vidas-display').innerText = "❤".repeat(vidas);
+                if(vidas <= 0) { gameActive = false; document.getElementById('lose-screen').style.display = 'flex'; }
                 continue;
             }
 
-            if (o.x > window.innerWidth + 100) {
-                o.element.remove();
-                obstacles.splice(i, 1);
-            }
+            if (o.x > window.innerWidth + 100) { o.el.remove(); obstacles.splice(i, 1); }
         }
     }
 
-    function endGame() {
-        gameActive = false;
-        document.getElementById('lose-screen').style.display = 'flex';
-    }
-
-    // Input Events Corrigidos
+    // Controles
     container.addEventListener('touchstart', (e) => {
-        if(e.target.id === 'pause-btn' || e.target.id === 'jump-btn') return;
-        jump();
-    }, {passive: true});
-
-    jumpBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        jump();
-    }, {passive: false});
-
-    window.addEventListener('keydown', (e) => {
-        if(e.code === 'Space') jump();
+        if(e.target.tagName !== 'BUTTON') handleJump();
     });
+    jumpBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault(); e.stopPropagation(); handleJump();
+    });
+    window.addEventListener('keydown', (e) => { if(e.code === 'Space') handleJump(); });
 
-    // Chuva e Canvas
     function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; resetRain(); }
     let gotas = [];
     function resetRain() {
         gotas = [];
-        for(let i=0; i<50; i++) gotas.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, v: Math.random()*5+5});
+        for(let i=0; i<40; i++) gotas.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, v: Math.random()*5+5});
     }
     function drawRain() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
         gotas.forEach(g => {
             ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.lineTo(g.x, g.y+10); ctx.stroke();
             g.y += g.v; if(g.y > canvas.height) g.y = -10;
