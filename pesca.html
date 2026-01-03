@@ -211,45 +211,41 @@
         if(!active) return;
         
         if(items.length < MAX_ITEMS) {
-            const batchSize = level < 10 ? 2 : 1; 
+            const batchSize = 2; 
             for(let i=0; i < batchSize; i++) {
                 let chance = Math.random();
                 let k = 'PEIXE';
                 
-                // Limitador: Conta quantos lixos perigosos existem na tela
-                const dangerCount = items.filter(it => it.type === 'PROIBIDO' || it.type === 'RADIOATIVO').length;
-                
-                let bonusChance = timeLeft < 15 ? 0.35 : 0.12;
-
-                if (chance < bonusChance) {
+                // PRIORIDADE 1: Lógica de Emergência (Sol garantido se estiver quase morrendo)
+                if (timeLeft < 15 && Math.random() < 0.35) {
                     k = 'BONUS';
-                } else {
-                    // EQUILÍBRIO DE NÍVEL
-                    if (level >= 15) {
-                        // Limitamos a 3 lixos perigosos simultâneos para não sufocar o jogador
-                        if (dangerCount < 3) {
-                            if (chance < 0.30) k = 'PROIBIDO';
-                            else if (chance < 0.45) k = 'RADIOATIVO';
-                            else if (chance < 0.70) k = 'RARO';
-                            else k = 'PEIXE';
-                        } else {
-                            // Se já tem muito lixo, força peixes
-                            k = chance > 0.6 ? 'RARO' : 'PEIXE';
-                        }
-                    } else if (level >= 8) {
-                        if (dangerCount < 2 && chance < 0.15) k = 'PROIBIDO';
-                        else if (chance < 0.25) k = 'SLOW';
-                        else if (chance < 0.50) k = 'RARO';
+                } 
+                else {
+                    // Distribuição por Nível (Harmonizada)
+                    if (level >= 12) {
+                        if (chance < 0.15) k = 'BONUS';       // Mantém o sol aparecendo
+                        else if (chance < 0.25) k = 'SLOW';   // Ampulheta
+                        else if (chance < 0.50) k = 'RARO';   // Muitos peixes raros pra pontuar
+                        else if (chance < 0.70) k = 'PROIBIDO';
+                        else if (chance < 0.85) k = 'RADIOATIVO';
+                        else k = 'PEIXE'; // Garante que pelo menos 15% ainda seja peixe comum
+                    } 
+                    else if (level >= 6) {
+                        if (chance < 0.15) k = 'BONUS';
+                        else if (chance < 0.35) k = 'RARO';
+                        else if (chance < 0.50) k = 'PROIBIDO';
                         else k = 'PEIXE';
-                    } else {
-                        if (chance < 0.25) k = 'RARO';
+                    } 
+                    else {
+                        if (chance < 0.12) k = 'BONUS';
+                        else if (chance < 0.30) k = 'RARO';
                         else if (chance > 0.90) k = 'SAPATO';
                         else k = 'PEIXE';
                     }
                 }
                 
-                // Tubarão raro
-                if(level > 3 && k === 'PEIXE' && Math.random() > 0.88) k = 'TUBARAO';
+                // Tubarão é um bônus de pontuação, aparece de vez em quando
+                if(level > 2 && k === 'PEIXE' && Math.random() > 0.85) k = 'TUBARAO';
 
                 const t = types[k];
                 const el = document.createElement('div');
@@ -260,7 +256,7 @@
                     type: k, 
                     x: window.innerWidth + (Math.random() * 150), 
                     y: 50 + Math.random() * (window.innerHeight - 350), 
-                    speed: t.s + (Math.min(level, 25) * 0.15), 
+                    speed: t.s + (Math.min(level, 20) * 0.1), // Velocidade sobe mais devagar
                     pts: t.pts, 
                     w: t.w,
                     time: t.t
@@ -270,9 +266,8 @@
             }
         }
         
-        // Spawn mais cadenciado para evitar amontoamento
-        let nextSpawn = 2200 - (level * 80);
-        setTimeout(spawn, Math.max(900, nextSpawn));
+        // Spawn constante para não deixar o mar vazio
+        setTimeout(spawn, Math.max(900, 1800 - (level * 50)));
     }
 
     function update() {
@@ -334,7 +329,7 @@
                     }
                     
                     score += caught.pts; 
-                    if(caught.type !== 'BONUS') {
+                    if(caught.type !== 'BONUS' && caught.type !== 'PROIBIDO' && caught.type !== 'RADIOATIVO') {
                         createPopup(caught.pts > 0 ? "+"+caught.pts : caught.pts, caught.pts > 0 ? "var(--ocean-blue)" : "var(--danger)"); 
                     }
                     
