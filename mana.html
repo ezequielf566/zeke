@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Maná: Fluxo Perfeito</title>
+    <style>
+        :root { --gold: #f1c40f; }
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; touch-action: none; user-select: none; }
+        
+        #world { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+        .dia { background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%); }
+        .tarde { background: linear-gradient(to bottom, #fa709a 0%, #fee140 100%); }
+        .noite { background: linear-gradient(to bottom, #09203f 0%, #537895 100%); }
+
+        #clouds-origin {
+            position: absolute; top: 0; width: 100%; height: 120px;
+            background: rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px);
+            border-bottom: 4px solid rgba(255,255,255,0.5); z-index: 10;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: bold; font-size: 18px;
+        }
+
+        #ground { position: absolute; bottom: 0; width: 100%; height: 60px; background: #2d1e12; border-top: 6px solid #4a3728; z-index: 20; }
+
+        #player {
+            position: absolute; bottom: 60px; width: 80px; height: 80px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 70px; z-index: 25; will-change: left;
+            transition: transform 0.1s;
+        }
+
+        .entity { 
+            position: absolute; font-size: 50px; z-index: 15; 
+            will-change: transform; pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
+            width: 60px; height: 60px;
+        }
+
+        #ui-container {
+            position: absolute; top: 140px; width: 100%; display: flex; 
+            justify-content: space-between; box-sizing: border-box; padding: 0 20px; z-index: 30;
+        }
+
+        .glass-card {
+            background: rgba(0,0,0,0.7); padding: 12px; border-radius: 12px;
+            color: white; border: 1px solid rgba(255,255,255,0.2); min-width: 100px;
+        }
+
+        #challenge-box { border: 2px solid var(--gold); text-align: right; }
+
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; z-index: 100; color: white; text-align: center;
+        }
+        
+        .btn { padding: 15px 40px; font-size: 20px; cursor: pointer; border-radius: 50px; border: none; background: var(--gold); font-weight: bold; }
+
+        .collect-effect { animation: collect 0.3s ease-out; }
+        @keyframes collect { 0% { transform: scale(1); filter: brightness(2); } 100% { transform: scale(1.5); filter: brightness(1); opacity: 0; } }
+    </style>
+</head>
+<body class="dia">
+
+    <div id="world" class="dia">
+        <div id="clouds-origin">☁️ CAMADA CELESTIAL ☁️</div>
+
+        <div id="ui-container">
+            <div class="glass-card">
+                <b id="lvl-tag" style="color: var(--gold);">FASE 1</b><br>
+                Total: <span id="cur-mana">0/15</span>
+            </div>
+            <div class="glass-card" id="challenge-box">
+                <small>DESAFIO</small><br>
+                <span id="target-count">3</span>x <span id="target-emoji" style="font-size: 24px;">🍉</span><br>
+                <b>Combo: <span id="challenge-progress">0</span></b>
+            </div>
+        </div>
+
+        <div id="player">🏋️</div>
+        <div id="ground"></div>
+    </div>
+
+    <div id="screen-start" class="overlay">
+        <h1 style="font-size: 50px; color: var(--gold);">MANÁ</h1>
+        <p>Pegue apenas as frutas pedidas!</p>
+        <button class="btn" onclick="startGame()">INICIAR</button>
+    </div>
+
+    <div id="screen-win" class="overlay" style="display:none;">
+        <h1 style="color: var(--gold);">FASE CONCLUÍDA!</h1>
+        <button class="btn" onclick="nextLevel()">PRÓXIMA FASE</button>
+    </div>
+
+    <script>
+        const world = document.getElementById('world');
+        const player = document.getElementById('player');
+        const foodPool = ['🍎','🍉','🍍','🍇','🍓','🥥','🍑','🍒'];
+        const junkPool = ['🗑️','⚓','💣','🧱'];
+
+        let game = {
+            active: false,
+            level: 1,
+            mana: 0,
+            playerX: window.innerWidth / 2,
+            moveDir: 0,
+            playerSpeed: 22,
+            items: [],
+            lastSpawn: 0,
+            spawnRate: 380,
+            itemSpeed: 8.5,
+            targetEmoji: '',
+            targetGoal: 3,
+            currentSequence: 0,
+            challengeComplete: false
+        };
+
+        function setChallenge() {
+            game.targetEmoji = foodPool[Math.floor(Math.random() * foodPool.length)];
+            game.targetGoal = 2 + Math.floor(game.level / 1.5);
+            game.currentSequence = 0;
+            game.challengeComplete = false;
+            updateUI();
+        }
+
+        function startGame() {
+            document.getElementById('screen-start').style.display = 'none';
+            game.active = true;
+            setChallenge();
+            requestAnimationFrame(gameLoop);
+        }
+
+        const handleInput = (x) => game.moveDir = x < window.innerWidth / 2 ? -1 : 1;
+        window.addEventListener('touchstart', (e) => handleInput(e.touches[0].clientX));
+        window.addEventListener('mousedown', (e) => handleInput(e.clientX));
+        window.addEventListener('touchend', () => game.moveDir = 0);
+        window.addEventListener('mouseup', () => game.moveDir = 0);
+
+        function gameLoop(timestamp) {
+            if (!game.active) return;
+
+            // Movimento Jogador
+            game.playerX += game.moveDir * game.playerSpeed;
+            game.playerX = Math.max(40, Math.min(window.innerWidth - 40, game.playerX));
+            player.style.left = game.playerX + 'px';
+            player.style.transform = `translateX(-50%) scaleX(${game.moveDir < 0 ? -1 : 1})`;
+
+            // Spawn
+            if (timestamp - game.lastSpawn > game.spawnRate) {
+                spawnItem();
+                game.lastSpawn = timestamp;
+            }
+
+            updateItems();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function spawnItem() {
+            const isJunk = Math.random() > 0.88;
+            const emoji = isJunk ? junkPool[Math.floor(Math.random() * junkPool.length)] : foodPool[Math.floor(Math.random() * foodPool.length)];
+            
+            const element = document.createElement('div');
+            element.className = 'entity';
+            element.innerText = emoji;
+            const startX = Math.random() * (window.innerWidth - 60);
+            element.style.left = startX + 'px';
+            
+            const itemObj = {
+                el: element,
+                x: startX,
+                y: -50,
+                emoji: emoji,
+                isJunk: isJunk
+            };
+            
+            world.appendChild(element);
+            game.items.push(itemObj);
+        }
+
+        function updateItems() {
+            for (let i = game.items.length - 1; i >= 0; i--) {
+                const item = game.items[i];
+                item.y += game.itemSpeed;
+                item.el.style.transform = `translateY(${item.y}px)`;
+
+                // Colisão Melhorada (Baseada no centro dos objetos)
+                const playerCenter = game.playerX;
+                const itemCenter = item.x + 30;
+
+                if (item.y > window.innerHeight - 150 && item.y < window.innerHeight - 60) {
+                    if (Math.abs(playerCenter - itemCenter) < 55) {
+                        handleCollect(item);
+                        destroyItem(i);
+                        continue;
+                    }
+                }
+
+                // Saiu da tela (Agora não pune se cair no chão)
+                if (item.y > window.innerHeight) {
+                    destroyItem(i);
+                }
+            }
+        }
+
+        function handleCollect(item) {
+            if (item.isJunk) {
+                game.currentSequence = 0; // Tocou lixo reseta
+            } else {
+                game.mana++;
+                if (item.emoji === game.targetEmoji) {
+                    game.currentSequence++;
+                    if (game.currentSequence >= game.targetGoal) game.challengeComplete = true;
+                } else {
+                    game.currentSequence = 0; // Tocou fruta errada reseta
+                }
+                checkWin();
+            }
+            updateUI();
+        }
+
+        function destroyItem(index) {
+            if(game.items[index] && game.items[index].el) {
+                game.items[index].el.remove();
+            }
+            game.items.splice(index, 1);
+        }
+
+        function updateUI() {
+            const mGoal = 10 + (game.level * 5);
+            document.getElementById('cur-mana').innerText = `${game.mana}/${mGoal}`;
+            document.getElementById('target-count').innerText = game.targetGoal;
+            document.getElementById('target-emoji').innerText = game.targetEmoji;
+            document.getElementById('challenge-progress').innerText = game.currentSequence;
+            document.getElementById('lvl-tag').innerText = `FASE ${game.level}`;
+            
+            const box = document.getElementById('challenge-box');
+            box.style.borderColor = game.challengeComplete ? "#2ecc71" : "var(--gold)";
+            box.style.background = game.challengeComplete ? "rgba(46, 204, 113, 0.2)" : "rgba(0,0,0,0.7)";
+        }
+
+        function checkWin() {
+            const mGoal = 10 + (game.level * 5);
+            if (game.mana >= mGoal && game.challengeComplete) {
+                game.active = false;
+                document.getElementById('screen-win').style.display = 'flex';
+            }
+        }
+
+        function nextLevel() {
+            game.level++;
+            game.mana = 0;
+            game.itemSpeed += 0.4;
+            game.spawnRate = Math.max(180, game.spawnRate - 20);
+            
+            if (game.level <= 5) world.className = 'dia';
+            else if (game.level <= 10) world.className = 'tarde';
+            else world.className = 'noite';
+
+            game.items.forEach(item => item.el.remove());
+            game.items = [];
+
+            document.getElementById('screen-win').style.display = 'none';
+            setChallenge();
+            game.active = true;
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
