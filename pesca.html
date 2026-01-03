@@ -211,12 +211,19 @@
                 let chance = Math.random();
                 let k = 'PEIXE';
                 
-                // AJUSTE: Nível 15+ o mar fica muito mais poluído
-                if (level >= 15) {
+                // AJUSTE: Níveis 20+ sustentabilidade (Chance de Bônus Tempo fixa em 25%)
+                if (level >= 20) {
+                    if (chance < 0.25) k = 'BONUS'; 
+                    else if (chance < 0.35) k = 'SLOW';
+                    else if (chance < 0.50) k = 'RARO';
+                    else if (chance > 0.70) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
+                }
+                // AJUSTE: Nível 15+ Poluição alta
+                else if (level >= 15) {
                     if (chance < 0.10) k = 'BONUS';
                     else if (chance < 0.20) k = 'SLOW';
                     else if (chance < 0.35) k = 'RARO';
-                    else if (chance > 0.65) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA'; // Aumentado de 15% para 35% de chance de lixo
+                    else if (chance > 0.65) k = Math.random() > 0.5 ? 'SAPATO' : 'LATA';
                 }
                 else if(level >= 10) {
                     if(chance < 0.15) k = 'BONUS';
