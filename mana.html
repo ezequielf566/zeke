@@ -27,14 +27,6 @@
             overflow: hidden; 
         }
 
-        #clouds-origin {
-            position: absolute; top: 0; width: 100%; height: 60px;
-            z-index: 10;
-            display: flex; align-items: center; justify-content: center;
-            color: #fff; font-weight: bold; letter-spacing: 4px; font-size: 16px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
         #ground { 
             position: absolute; bottom: 0; width: 100%; height: 80px; 
             background-image: url('manachao.png');
@@ -42,11 +34,11 @@
             z-index: 20; 
         }
 
-        /* AVATAR: Aumentado para 95px para ter destaque */
+        /* AVATAR: Aumentado para 130px para ser impossível não notar a diferença */
         #player {
             position: absolute; 
             bottom: 80px; 
-            width: 120px; height: 120px; 
+            width: 130px; height: 130px; 
             background-image: url('avatarmana.png');
             background-size: contain;
             background-repeat: no-repeat;
@@ -54,14 +46,15 @@
             z-index: 25; 
             will-change: left;
             transform: translateX(-50%);
+            /* Debug: retire o comentário abaixo se quiser ver a caixa do boneco */
+            /* border: 1px solid red; */
         }
 
-        /* ENTIDADES: Emojis reduzidos para 32px para parecerem menores que o boneco */
         .entity { 
-            position: absolute; font-size: 32px; z-index: 15; 
+            position: absolute; font-size: 35px; z-index: 15; 
             will-change: transform; pointer-events: none;
             display: flex; align-items: center; justify-content: center;
-            width: 50px; height: 50px;
+            width: 60px; height: 60px;
         }
 
         #ui-container {
@@ -84,15 +77,12 @@
             padding: 20px;
         }
         
-        .btn { padding: 15px 40px; font-size: 20px; cursor: pointer; border-radius: 50px; border: none; background: var(--gold); font-weight: bold; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: transform 0.2s; }
-        .btn:active { transform: scale(0.95); }
+        .btn { padding: 15px 40px; font-size: 20px; cursor: pointer; border-radius: 50px; border: none; background: var(--gold); font-weight: bold; color: #333; }
     </style>
 </head>
 <body>
 
     <div id="world">
-        <div id="clouds-origin">O MANÁ NO DESERTO</div>
-
         <div id="ui-container">
             <div class="glass-card">
                 <b id="lvl-tag" style="color: var(--gold);">DIA 1</b><br>
@@ -110,15 +100,12 @@
     </div>
 
     <div id="screen-start" class="overlay">
-        <h1 style="font-size: 48px; color: var(--gold); margin-bottom: 10px;">MANÁ</h1>
-        <p style="font-size: 18px;">Deus ouviu o clamor do Seu povo.</p>
-        <p style="font-size: 14px; opacity: 0.8; max-width: 300px;">Arraste o dedo ou toque nas laterais para colher o maná.</p><br>
+        <h1 style="color: var(--gold);">MANÁ</h1>
         <button class="btn" onclick="startGame()">COLHER PROVIMENTO</button>
     </div>
 
     <div id="screen-win" class="overlay" style="display:none;">
         <h1 style="color: var(--gold);">POVO ALIMENTADO!</h1>
-        <p>A provisão divina é fiel.</p><br>
         <button class="btn" onclick="nextLevel()">PRÓXIMO DIA</button>
     </div>
 
@@ -134,9 +121,9 @@
             mana: 0,
             playerX: window.innerWidth / 2,
             velocityX: 0,
-            acceleration: 0.45, 
-            friction: 0.84,    
-            maxSpeed: 7,      
+            acceleration: 0.5, 
+            friction: 0.85,    
+            maxSpeed: 8,      
             moveDir: 0,
             items: [],
             lastSpawn: 0,
@@ -148,6 +135,11 @@
             challengeComplete: false,
             isDragging: false
         };
+
+        // VARIÁVEIS DE TAMANHO SINCRONIZADAS COM O CSS
+        const PLAYER_WIDTH = 130; 
+        const PLAYER_HEIGHT = 130;
+        const GROUND_HEIGHT = 80;
 
         function setChallenge() {
             game.targetEmoji = foodPool[Math.floor(Math.random() * foodPool.length)];
@@ -164,59 +156,38 @@
             requestAnimationFrame(gameLoop);
         }
 
-        const startInput = (x) => {
-            game.isDragging = true;
-            handleInput(x);
-        };
-
+        // Sistema de input
+        const startInput = (x) => { game.isDragging = true; handleInput(x); };
         const handleInput = (x) => {
             if (!game.active) return;
             const dist = x - game.playerX;
-            if (Math.abs(dist) > 10) {
-                game.moveDir = dist > 0 ? 1 : -1;
-            } else {
-                game.moveDir = 0;
-            }
+            game.moveDir = Math.abs(dist) > 10 ? (dist > 0 ? 1 : -1) : 0;
         };
-
-        const stopInput = () => {
-            game.isDragging = false;
-            game.moveDir = 0;
-        };
+        const stopInput = () => { game.isDragging = false; game.moveDir = 0; };
 
         window.addEventListener('touchstart', (e) => startInput(e.touches[0].clientX));
-        window.addEventListener('touchmove', (e) => {
-            if(game.isDragging) handleInput(e.touches[0].clientX);
-        });
+        window.addEventListener('touchmove', (e) => { if(game.isDragging) handleInput(e.touches[0].clientX); });
         window.addEventListener('touchend', stopInput);
-
         window.addEventListener('mousedown', (e) => startInput(e.clientX));
-        window.addEventListener('mousemove', (e) => {
-            if(game.isDragging) handleInput(e.clientX);
-        });
+        window.addEventListener('mousemove', (e) => { if(game.isDragging) handleInput(e.clientX); });
         window.addEventListener('mouseup', stopInput);
 
         function gameLoop(timestamp) {
             if (!game.active) return;
 
-            if (game.moveDir !== 0) {
-                game.velocityX += game.moveDir * game.acceleration;
-            } else {
-                game.velocityX *= game.friction;
-            }
-
-            if (Math.abs(game.velocityX) > game.maxSpeed) {
-                game.velocityX = game.maxSpeed * Math.sign(game.velocityX);
-            }
+            // Movimento com Física
+            game.velocityX = (game.moveDir !== 0) ? 
+                Math.max(-game.maxSpeed, Math.min(game.maxSpeed, game.velocityX + game.moveDir * game.acceleration)) : 
+                game.velocityX * game.friction;
 
             game.playerX += game.velocityX;
 
-            const limit = 45; 
-            if (game.playerX < limit) { game.playerX = limit; game.velocityX = 0; }
-            if (game.playerX > window.innerWidth - limit) { game.playerX = window.innerWidth - limit; game.velocityX = 0; }
+            // Limites da tela baseados no novo tamanho
+            const margin = PLAYER_WIDTH / 2;
+            if (game.playerX < margin) { game.playerX = margin; game.velocityX = 0; }
+            if (game.playerX > window.innerWidth - margin) { game.playerX = window.innerWidth - margin; game.velocityX = 0; }
 
             player.style.left = game.playerX + 'px';
-            
             if (Math.abs(game.velocityX) > 0.5) {
                 player.style.transform = `translateX(-50%) scaleX(${game.velocityX < 0 ? -1 : 1})`;
             }
@@ -231,13 +202,12 @@
         }
 
         function spawnItem() {
-            const isJunk = Math.random() > 0.88;
+            const isJunk = Math.random() > 0.85;
             const emoji = isJunk ? junkPool[Math.floor(Math.random() * junkPool.length)] : foodPool[Math.floor(Math.random() * foodPool.length)];
-            
             const element = document.createElement('div');
             element.className = 'entity';
             element.innerText = emoji;
-            const startX = 40 + Math.random() * (window.innerWidth - 80);
+            const startX = 30 + Math.random() * (window.innerWidth - 60);
             element.style.left = startX + 'px';
             
             const itemObj = { el: element, x: startX, y: -50, emoji: emoji, isJunk: isJunk };
@@ -246,27 +216,21 @@
         }
 
         function updateItems() {
-            const groundHeight = 80;
-            const playerHeight = 95; 
             for (let i = game.items.length - 1; i >= 0; i--) {
                 const item = game.items[i];
                 item.y += game.itemSpeed;
                 item.el.style.transform = `translateY(${item.y}px)`;
 
-                const playerCenter = game.playerX;
-                const itemCenter = item.x + 25;
-
-                if (item.y > window.innerHeight - (groundHeight + playerHeight) && item.y < window.innerHeight - groundHeight) {
-                    if (Math.abs(playerCenter - itemCenter) < 55) {
+                // COLISÃO AJUSTADA PARA O BONECO DE 130px
+                const hitBoxY = window.innerHeight - (GROUND_HEIGHT + PLAYER_HEIGHT);
+                if (item.y > hitBoxY && item.y < window.innerHeight - GROUND_HEIGHT) {
+                    if (Math.abs(game.playerX - (item.x + 25)) < 60) {
                         handleCollect(item);
                         destroyItem(i);
                         continue;
                     }
                 }
-
-                if (item.y > window.innerHeight) {
-                    destroyItem(i);
-                }
+                if (item.y > window.innerHeight) destroyItem(i);
             }
         }
 
@@ -274,15 +238,13 @@
             if (item.isJunk) {
                 game.currentSequence = 0;
                 game.mana = Math.max(0, game.mana - 2);
-                world.style.filter = "brightness(0.6) sepia(1)";
-                setTimeout(() => world.style.filter = "none", 150);
             } else {
                 game.mana++;
                 if (item.emoji === game.targetEmoji) {
                     game.currentSequence++;
                     if (game.currentSequence >= game.targetGoal) game.challengeComplete = true;
                 } else {
-                    game.currentSequence = 0; 
+                    game.currentSequence = 0;
                 }
                 checkWin();
             }
@@ -290,7 +252,7 @@
         }
 
         function destroyItem(index) {
-            if(game.items[index] && game.items[index].el) game.items[index].el.remove();
+            game.items[index].el.remove();
             game.items.splice(index, 1);
         }
 
@@ -301,15 +263,11 @@
             document.getElementById('target-emoji').innerText = game.targetEmoji;
             document.getElementById('challenge-progress').innerText = game.currentSequence;
             document.getElementById('lvl-tag').innerText = `DIA ${game.level}`;
-            
-            const box = document.getElementById('challenge-box');
-            box.style.borderColor = game.challengeComplete ? "#2ecc71" : "var(--gold)";
-            box.style.background = game.challengeComplete ? "rgba(46, 204, 113, 0.4)" : "rgba(0,0,0,0.6)";
+            document.getElementById('challenge-box').style.borderColor = game.challengeComplete ? "#2ecc71" : "var(--gold)";
         }
 
         function checkWin() {
-            const mGoal = 10 + (game.level * 2);
-            if (game.mana >= mGoal && game.challengeComplete) {
+            if (game.mana >= (10 + game.level * 2) && game.challengeComplete) {
                 game.active = false;
                 document.getElementById('screen-win').style.display = 'flex';
             }
@@ -319,24 +277,14 @@
             game.level++;
             game.mana = 0;
             game.itemSpeed += 0.4;
-            game.maxSpeed += 0.5; 
-            game.spawnRate = Math.max(600, game.spawnRate - 150);
-            
+            game.spawnRate = Math.max(600, game.spawnRate - 100);
             game.items.forEach(item => item.el.remove());
             game.items = [];
-
             document.getElementById('screen-win').style.display = 'none';
             setChallenge();
             game.active = true;
             requestAnimationFrame(gameLoop);
         }
-
-        window.addEventListener('resize', () => {
-            game.playerX = window.innerWidth / 2;
-        });
     </script>
 </body>
 </html>
-
-
-
