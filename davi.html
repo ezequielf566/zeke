@@ -28,17 +28,21 @@
             max-width: 500px; max-height: 900px;
             background: #4facfe;
             overflow: hidden;
-            transition: background 1.5s ease;
+            transition: filter 1s ease, background 1.5s ease;
         }
 
-        /* Efeito de Flash do Raio */
+        /* Filtro de Noite: Reduz contraste e brilho da tela toda */
+        .night-filter {
+            filter: brightness(0.5) contrast(1.2) saturate(0.8);
+        }
+
         .lightning-flash {
-            animation: flashHit 0.2s ease-out;
+            animation: flashHit 0.15s ease-out;
         }
         @keyframes flashHit {
-            0% { background: rgba(255,255,255,0); }
-            50% { background: rgba(255,255,255,0.8); }
-            100% { background: rgba(255,255,255,0); }
+            0% { filter: brightness(1) contrast(1); }
+            50% { filter: brightness(2.5) contrast(0.5); }
+            100% { filter: brightness(0.5) contrast(1.2); }
         }
 
         canvas { width: 100%; height: 100%; display: block; }
@@ -67,10 +71,8 @@
             margin-top: 10px;
             color: white; font-weight: bold;
             padding: 8px 25px; border-radius: 20px;
-            display: none; animation: blink 0.4s infinite alternate;
+            display: none;
         }
-
-        @keyframes blink { from { opacity: 0.4; } to { opacity: 1; } }
 
         #overlay {
             position: absolute; inset: 0;
@@ -92,13 +94,12 @@
             position: absolute; font-weight: 900; font-size: 2.2rem;
             pointer-events: none; animation: floatUp 0.8s forwards;
             text-shadow: 0 0 10px rgba(0,0,0,0.8); z-index: 50;
-            text-align: center; line-height: 1;
+            text-align: center;
         }
 
         @keyframes floatUp {
             0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translate(-50%, -130px) scale(1.1); opacity: 0; }
+            100% { transform: translate(-50%, -100px) scale(1); opacity: 0; }
         }
     </style>
 </head>
@@ -127,22 +128,23 @@ const Game = {
     score: 0,
     level: 1,
     blocks: [],
+    fallingBlock: null, // Sistema de queda livre
     gameActive: false,
     cameraY: 0,
     targetCameraY: 0,
     towerLean: 0,
     weather: "clear",
     
-    swing: { angle: 0, speed: 0.015, x: 0, originShift: 0 }, 
+    swing: { angle: 0, speed: 0.02, x: 0, originShift: 0, maxSpeed: 0.045 }, 
     blockW: 140, 
     blockH: 50,
-    dropDist: 210,
+    dropDist: 250,
 
     init() {
         this.ctx = this.canvas.getContext('2d');
         this.resize();
         window.addEventListener('resize', () => this.resize());
-        this.canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); this.drop(); });
+        this.canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); this.launch(); });
         this.render();
     },
 
@@ -158,10 +160,12 @@ const Game = {
         this.targetCameraY = 0;
         this.towerLean = 0;
         this.weather = "clear";
-        this.swing.speed = 0.015;
+        this.swing.speed = 0.02;
+        this.fallingBlock = null;
         this.blocks = [{ x: Math.round(this.width/2 - 70), y: this.height - 120, w: 140 }];
         this.gameActive = true;
         document.getElementById('overlay').style.display = 'none';
+        document.getElementById('game-wrapper').classList.remove('night-filter');
         this.updateUI();
     },
 
@@ -170,12 +174,21 @@ const Game = {
         document.getElementById('level-tag').innerText = `NÍVEL ${this.level}`;
     },
 
-    drop() {
-        if(!this.gameActive) return;
+    launch() {
+        if(!this.gameActive || this.fallingBlock) return;
 
-        const dropX = Math.round(this.swing.x - this.blockW / 2);
+        // "Corte" da corda: cria o bloco que cai seco
+        this.fallingBlock = {
+            x: this.swing.x - this.blockW / 2,
+            y: (this.blocks[this.blocks.length-1].y - this.dropDist),
+            vy: 0,
+            gravity: 0.8
+        };
+    },
+
+    processLanding() {
         const lastBlock = this.blocks[this.blocks.length - 1];
-        const diff = dropX - lastBlock.x;
+        const diff = this.fallingBlock.x - lastBlock.x;
         const absDiff = Math.abs(diff);
 
         if (absDiff < this.blockW) {
@@ -184,59 +197,62 @@ const Game = {
             let color = "#fff";
 
             if (absDiff < 10) {
-                pts = 50; label = "PERFEITO!"; color = varProp('--gold-light');
-                this.towerLean *= 0.6; 
-            } else if (absDiff < 25) {
-                pts = 20; label = "BOM!"; color = varProp('--gold-main');
+                pts = 50; label = "PERFEITO!"; color = "#FFF176";
+                this.towerLean *= 0.5; 
+            } else if (absDiff < 30) {
+                pts = 20; label = "BOM!"; color = "#FFD700";
             } else {
-                label = "INSTÁVEL"; color = varProp('--gold-dark');
-                if(Math.abs(this.towerLean) > 8) {
-                    pts = -15; label = "MUITO TORTO!"; color = "#ff4444";
-                } else {
-                    pts = 5;
-                }
+                label = "INSTÁVEL"; color = "#B8860B";
+                pts = Math.abs(this.towerLean) > 8 ? -15 : 5;
             }
 
             this.score += pts;
             if(this.score < 0) this.score = 0;
 
             this.showPoints(pts, label, color);
-            this.blocks.push({ x: dropX, y: lastBlock.y - this.blockH, w: this.blockW });
-            this.towerLean += (diff * 0.045); 
+            this.blocks.push({ 
+                x: this.fallingBlock.x, 
+                y: lastBlock.y - this.blockH, 
+                w: this.blockW 
+            });
+            this.towerLean += (diff * 0.05); 
 
-            const expectedLevel = Math.floor(this.score / 100) + 1;
-            if (expectedLevel > this.level) {
-                this.level = expectedLevel;
-                this.swing.speed += 0.003;
+            // Nível baseado em blocos (10 blocos por nível) para não saturar a velocidade
+            this.level = Math.floor(this.blocks.length / 10) + 1;
+            // Velocidade sobe mas TEM LIMITE
+            this.swing.speed = Math.min(0.02 + (this.level * 0.0015), this.swing.maxSpeed);
+
+            if ((this.blocks[this.blocks.length-1].y + this.targetCameraY) < this.height * 0.5) {
+                this.targetCameraY += this.blockH;
             }
-
-            const visualTop = (this.blocks[this.blocks.length-1].y) + this.targetCameraY;
-            if (visualTop < this.height * 0.5) this.targetCameraY += this.blockH;
             
             this.updateWeather();
             this.updateUI();
         } else {
-            this.gameOver("A pedra caiu!");
+            this.gameOver("A peça errou o alvo!");
         }
+        this.fallingBlock = null;
     },
 
     updateWeather() {
         const alert = document.getElementById('weather-alert');
-        const cycle = this.blocks.length % 40;
+        const wrapper = document.getElementById('game-wrapper');
+        const cycle = this.blocks.length % 50;
         
-        if (this.level >= 2 && cycle >= 25) {
+        if (cycle >= 30) {
             this.weather = "storm";
-            alert.innerText = "TEMPESTADE";
+            alert.innerText = "NOITE DE TEMPESTADE";
             alert.style.display = "block";
-            alert.style.background = "rgba(0, 0, 80, 0.9)";
-        } else if (this.level >= 1 && cycle >= 10 && cycle < 25) {
+            wrapper.classList.add('night-filter');
+        } else if (cycle >= 15) {
             this.weather = "wind";
             alert.innerText = "VENTO FORTE";
             alert.style.display = "block";
-            alert.style.background = "rgba(255, 60, 0, 0.8)";
+            wrapper.classList.remove('night-filter');
         } else {
             this.weather = "clear";
             alert.style.display = "none";
+            wrapper.classList.remove('night-filter');
         }
     },
 
@@ -244,7 +260,7 @@ const Game = {
         const el = document.createElement('div');
         el.className = 'points-float';
         el.style.left = '50%';
-        el.style.top = '45%';
+        el.style.top = '40%';
         el.style.color = color;
         el.innerText = pts >= 0 ? `${label}\n+${pts}` : `${label}\n${pts}`;
         document.getElementById('game-wrapper').appendChild(el);
@@ -255,7 +271,7 @@ const Game = {
         this.gameActive = false;
         document.getElementById('overlay').style.display = 'flex';
         document.getElementById('overlay').innerHTML = `
-            <h1 style="color:var(--gold-main)">FIM DE OBRA</h1>
+            <h1 style="color:var(--gold-main)">FALHA NA ESTRUTURA</h1>
             <p>${msg}</p>
             <p>PONTOS: ${this.score}</p>
             <button onclick="Game.start()">RECOMEÇAR</button>
@@ -265,17 +281,12 @@ const Game = {
     drawBlock(b, isGhost = false) {
         const ctx = this.ctx;
         ctx.save();
-        if(isGhost) ctx.globalAlpha = 0.8;
-
-        // Profundidade
-        ctx.fillStyle = "rgba(0,0,0,0.3)";
-        ctx.fillRect(b.x + 6, b.y + 6, this.blockW, this.blockH);
+        if(isGhost) ctx.globalAlpha = 0.6;
 
         let grad = ctx.createLinearGradient(b.x, b.y, b.x + this.blockW, b.y + this.blockH);
         grad.addColorStop(0, "#B8860B");
         grad.addColorStop(0.3, "#FFD700");
         grad.addColorStop(0.5, "#FFF176");
-        grad.addColorStop(0.7, "#FFD700");
         grad.addColorStop(1, "#5c4000");
         
         ctx.fillStyle = grad;
@@ -283,31 +294,17 @@ const Game = {
         ctx.lineWidth = 2;
         ctx.fillRect(b.x, b.y, this.blockW, this.blockH);
         ctx.strokeRect(b.x, b.y, this.blockW, this.blockH);
-
-        // Brilho
-        ctx.fillStyle = "rgba(255,255,255,0.4)";
-        ctx.fillRect(b.x + 5, b.y + 5, this.blockW - 10, 4);
         ctx.restore();
     },
 
     drawCorda(x1, y1, x2, y2) {
         const ctx = this.ctx;
         ctx.save();
-        // Curvatura leve pelo vento
-        const midX = (x1 + x2) / 2 + (this.weather !== "clear" ? Math.sin(Date.now()/200)*10 : 0);
-        const midY = (y1 + y2) / 2;
-
         ctx.beginPath();
         ctx.moveTo(x1, y1);
-        ctx.quadraticCurveTo(midX, midY, x2, y2);
-        
+        ctx.lineTo(x2, y2);
         ctx.strokeStyle = "#3e2723";
-        ctx.lineWidth = 5;
-        ctx.stroke();
-        
-        ctx.strokeStyle = "#8d6e63";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 4;
         ctx.stroke();
         ctx.restore();
     },
@@ -317,34 +314,27 @@ const Game = {
         const time = Date.now();
         this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
 
-        // --- BACKGROUND E FILTROS ---
+        // Fundo
         let bg = "#4facfe";
-        if (this.weather === "wind") bg = "#3498db";
-        if (this.weather === "storm") bg = "#0d0d1a";
-        document.getElementById('game-wrapper').style.background = bg;
-        
-        ctx.clearRect(0,0,this.width, this.height);
+        if (this.weather === "storm") bg = "#050510";
+        else if (this.weather === "wind") bg = "#3498db";
         ctx.fillStyle = bg;
         ctx.fillRect(0,0,this.width, this.height);
 
-        // Efeito de Chuva e Raios
+        // Chuva e Raios
         if (this.weather === "storm") {
-            if (Math.random() > 0.985) {
-                document.getElementById('game-wrapper').classList.add('lightning-flash');
-                setTimeout(() => document.getElementById('game-wrapper').classList.remove('lightning-flash'), 200);
-            }
-            ctx.strokeStyle = "rgba(174, 194, 224, 0.4)";
-            for(let i=0; i<15; i++){
+            if (Math.random() > 0.99) document.getElementById('game-wrapper').classList.add('lightning-flash');
+            else setTimeout(()=>document.getElementById('game-wrapper').classList.remove('lightning-flash'), 100);
+            
+            ctx.strokeStyle = "rgba(255,255,255,0.2)";
+            for(let i=0; i<10; i++) {
                 let rx = Math.random()*this.width;
                 let ry = Math.random()*this.height;
-                ctx.beginPath();
-                ctx.moveTo(rx, ry);
-                ctx.lineTo(rx - 10, ry + 25);
-                ctx.stroke();
+                ctx.strokeRect(rx, ry, 1, 20);
             }
         }
 
-        // --- TORRE ---
+        // Torre
         ctx.save();
         ctx.translate(0, this.cameraY);
         const baseY = this.height - 120;
@@ -354,51 +344,47 @@ const Game = {
         ctx.translate(-baseX, -baseY);
 
         ctx.fillStyle = "#1b110a";
-        ctx.fillRect(-this.width, baseY + 50, this.width * 3, 500);
+        ctx.fillRect(-this.width, baseY + 50, this.width * 3, 1000);
         this.blocks.forEach(b => this.drawBlock(b));
+        
+        // Renderizar bloco caindo
+        if(this.fallingBlock) {
+            this.fallingBlock.vy += this.fallingBlock.gravity;
+            this.fallingBlock.y += this.fallingBlock.vy;
+            this.drawBlock(this.fallingBlock);
+
+            // Checar colisão com o topo da torre
+            const targetY = this.blocks[this.blocks.length-1].y;
+            if(this.fallingBlock.y >= targetY - this.blockH) {
+                this.processLanding();
+            }
+        }
         ctx.restore();
 
-        // --- PÊNDULO E FÍSICA DE CLIMA ---
-        if (this.gameActive) {
+        // Pêndulo (Apenas se não estiver caindo)
+        if (this.gameActive && !this.fallingBlock) {
             this.swing.angle += this.swing.speed;
-            
-            // O Vento agora desloca a origem do cabo (Atrapalha a precisão real)
-            let windX = 0;
-            if (this.weather === "wind") windX = Math.sin(time/600) * 50;
-            if (this.weather === "storm") windX = Math.sin(time/400) * 90 + Math.cos(time/1000) * 30;
-            
+            let windX = (this.weather !== "clear") ? Math.sin(time/500) * (this.weather === "storm" ? 80 : 40) : 0;
             this.swing.originShift += (windX - this.swing.originShift) * 0.05;
 
-            const range = this.width * 0.38;
             const originX = this.width / 2 + this.swing.originShift;
-            this.swing.x = originX + Math.sin(this.swing.angle) * range;
-            
+            this.swing.x = originX + Math.sin(this.swing.angle) * (this.width * 0.35);
             const swingY = this.blocks[this.blocks.length-1].y - this.dropDist;
 
             this.drawCorda(this.width/2, -50, this.swing.x, swingY + this.cameraY);
             
             ctx.save();
             ctx.translate(0, this.cameraY);
-            this.drawBlock({ x: Math.round(this.swing.x - this.blockW/2), y: swingY }, true);
+            this.drawBlock({ x: this.swing.x - this.blockW/2, y: swingY }, true);
             ctx.restore();
         }
 
-        // Filtro de Noite (Vignette)
-        if (this.weather === "storm") {
-            let v = ctx.createRadialGradient(this.width/2, this.height/2, 100, this.width/2, this.height/2, this.width);
-            v.addColorStop(0, "rgba(0,0,0,0)");
-            v.addColorStop(1, "rgba(0,0,0,0.7)");
-            ctx.fillStyle = v;
-            ctx.fillRect(0,0,this.width,this.height);
-        }
-
-        if (Math.abs(this.towerLean) > 18 && this.gameActive) this.gameOver("A torre desabou!");
+        if (Math.abs(this.towerLean) > 18 && this.gameActive) this.gameOver("A torre inclinou demais!");
 
         requestAnimationFrame(() => this.render());
     }
 };
 
-function varProp(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
 Game.init();
 </script>
 </body>
