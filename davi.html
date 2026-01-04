@@ -31,9 +31,8 @@
             transition: filter 1s ease, background 1.5s ease;
         }
 
-        /* Filtro de Noite: Reduz contraste e brilho da tela toda */
         .night-filter {
-            filter: brightness(0.5) contrast(1.2) saturate(0.8);
+            filter: brightness(0.4) contrast(1.3) saturate(0.7);
         }
 
         .lightning-flash {
@@ -42,7 +41,7 @@
         @keyframes flashHit {
             0% { filter: brightness(1) contrast(1); }
             50% { filter: brightness(2.5) contrast(0.5); }
-            100% { filter: brightness(0.5) contrast(1.2); }
+            100% { filter: brightness(0.4) contrast(1.3); }
         }
 
         canvas { width: 100%; height: 100%; display: block; }
@@ -54,24 +53,32 @@
             pointer-events: none; z-index: 20;
         }
 
+        /* Limitador do Placar */
         #score-card {
             background: rgba(0,0,0,0.85);
             color: var(--gold-main);
-            padding: 10px 30px;
+            padding: 10px 20px;
             border-radius: 15px;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 900;
             border: 2px solid var(--gold-main);
             text-align: center;
+            min-width: 120px;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        #level-tag { font-size: 0.9rem; display: block; color: white; margin-bottom: 5px; }
+        #level-tag { font-size: 0.8rem; display: block; color: white; margin-bottom: 5px; }
 
         #weather-alert {
             margin-top: 10px;
             color: white; font-weight: bold;
             padding: 8px 25px; border-radius: 20px;
             display: none;
+            text-transform: uppercase;
+            font-size: 0.9rem;
         }
 
         #overlay {
@@ -91,7 +98,7 @@
         }
 
         .points-float {
-            position: absolute; font-weight: 900; font-size: 2.2rem;
+            position: absolute; font-weight: 900; font-size: 1.8rem;
             pointer-events: none; animation: floatUp 0.8s forwards;
             text-shadow: 0 0 10px rgba(0,0,0,0.8); z-index: 50;
             text-align: center;
@@ -99,7 +106,7 @@
 
         @keyframes floatUp {
             0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
-            100% { transform: translate(-50%, -100px) scale(1); opacity: 0; }
+            100% { transform: translate(-50%, -80px) scale(1); opacity: 0; }
         }
     </style>
 </head>
@@ -115,8 +122,8 @@
         <div id="weather-alert">VENTO FORTE</div>
     </div>
     <div id="overlay">
-        <h1 style="color: var(--gold-main); font-size: 2.8rem;">TEMPLO REAL</h1>
-        <p>A precisão é o seu único guia.</p>
+        <h1 style="color: var(--gold-main); font-size: 2.5rem;">TEMPLO REAL</h1>
+        <p>Construa o pilar da eternidade.</p>
         <button onclick="Game.start()">INICIAR OBRA</button>
     </div>
 </div>
@@ -128,17 +135,17 @@ const Game = {
     score: 0,
     level: 1,
     blocks: [],
-    fallingBlock: null, // Sistema de queda livre
+    fallingBlock: null,
     gameActive: false,
     cameraY: 0,
     targetCameraY: 0,
     towerLean: 0,
     weather: "clear",
     
-    swing: { angle: 0, speed: 0.02, x: 0, originShift: 0, maxSpeed: 0.045 }, 
+    swing: { angle: 0, speed: 0.02, x: 0, originShift: 0, maxSpeed: 0.042 }, 
     blockW: 140, 
     blockH: 50,
-    dropDist: 250,
+    dropDist: 260,
 
     init() {
         this.ctx = this.canvas.getContext('2d');
@@ -170,19 +177,18 @@ const Game = {
     },
 
     updateUI() {
-        document.getElementById('score').innerText = this.score;
+        document.getElementById('score').innerText = Math.floor(this.score);
         document.getElementById('level-tag').innerText = `NÍVEL ${this.level}`;
     },
 
     launch() {
         if(!this.gameActive || this.fallingBlock) return;
 
-        // "Corte" da corda: cria o bloco que cai seco
         this.fallingBlock = {
             x: this.swing.x - this.blockW / 2,
             y: (this.blocks[this.blocks.length-1].y - this.dropDist),
             vy: 0,
-            gravity: 0.8
+            gravity: 0.9 // Queda um pouco mais seca/rápida
         };
     },
 
@@ -196,31 +202,32 @@ const Game = {
             let label = "";
             let color = "#fff";
 
-            if (absDiff < 10) {
-                pts = 50; label = "PERFEITO!"; color = "#FFF176";
+            // EQUILÍBRIO DE PONTUAÇÃO (Valores reduzidos)
+            if (absDiff < 8) {
+                pts = 15; label = "PERFEITO!"; color = "#FFF176";
                 this.towerLean *= 0.5; 
-            } else if (absDiff < 30) {
-                pts = 20; label = "BOM!"; color = "#FFD700";
+            } else if (absDiff < 25) {
+                pts = 5; label = "BOM!"; color = "#FFD700";
             } else {
                 label = "INSTÁVEL"; color = "#B8860B";
-                pts = Math.abs(this.towerLean) > 8 ? -15 : 5;
+                pts = Math.abs(this.towerLean) > 8 ? -10 : 2;
             }
 
             this.score += pts;
             if(this.score < 0) this.score = 0;
 
             this.showPoints(pts, label, color);
+            
+            // Ajusta posição final para ficar cravado no topo
             this.blocks.push({ 
                 x: this.fallingBlock.x, 
                 y: lastBlock.y - this.blockH, 
                 w: this.blockW 
             });
+            
             this.towerLean += (diff * 0.05); 
-
-            // Nível baseado em blocos (10 blocos por nível) para não saturar a velocidade
             this.level = Math.floor(this.blocks.length / 10) + 1;
-            // Velocidade sobe mas TEM LIMITE
-            this.swing.speed = Math.min(0.02 + (this.level * 0.0015), this.swing.maxSpeed);
+            this.swing.speed = Math.min(0.02 + (this.level * 0.0012), this.swing.maxSpeed);
 
             if ((this.blocks[this.blocks.length-1].y + this.targetCameraY) < this.height * 0.5) {
                 this.targetCameraY += this.blockH;
@@ -229,7 +236,7 @@ const Game = {
             this.updateWeather();
             this.updateUI();
         } else {
-            this.gameOver("A peça errou o alvo!");
+            this.gameOver("A peça caiu no abismo!");
         }
         this.fallingBlock = null;
     },
@@ -239,15 +246,17 @@ const Game = {
         const wrapper = document.getElementById('game-wrapper');
         const cycle = this.blocks.length % 50;
         
-        if (cycle >= 30) {
+        if (cycle >= 35) {
             this.weather = "storm";
-            alert.innerText = "NOITE DE TEMPESTADE";
+            alert.innerText = "Tempestade";
             alert.style.display = "block";
+            alert.style.background = "rgba(0,0,50,0.6)";
             wrapper.classList.add('night-filter');
         } else if (cycle >= 15) {
             this.weather = "wind";
-            alert.innerText = "VENTO FORTE";
+            alert.innerText = "Vento Forte";
             alert.style.display = "block";
+            alert.style.background = "rgba(200,0,0,0.6)";
             wrapper.classList.remove('night-filter');
         } else {
             this.weather = "clear";
@@ -271,9 +280,9 @@ const Game = {
         this.gameActive = false;
         document.getElementById('overlay').style.display = 'flex';
         document.getElementById('overlay').innerHTML = `
-            <h1 style="color:var(--gold-main)">FALHA NA ESTRUTURA</h1>
+            <h1 style="color:var(--gold-main)">OBRA INTERROMPIDA</h1>
             <p>${msg}</p>
-            <p>PONTOS: ${this.score}</p>
+            <p>PONTOS: ${Math.floor(this.score)} | NÍVEL: ${this.level}</p>
             <button onclick="Game.start()">RECOMEÇAR</button>
         `;
     },
@@ -281,7 +290,7 @@ const Game = {
     drawBlock(b, isGhost = false) {
         const ctx = this.ctx;
         ctx.save();
-        if(isGhost) ctx.globalAlpha = 0.6;
+        if(isGhost) ctx.globalAlpha = 0.5;
 
         let grad = ctx.createLinearGradient(b.x, b.y, b.x + this.blockW, b.y + this.blockH);
         grad.addColorStop(0, "#B8860B");
@@ -304,7 +313,7 @@ const Game = {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.strokeStyle = "#3e2723";
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 3;
         ctx.stroke();
         ctx.restore();
     },
@@ -314,27 +323,27 @@ const Game = {
         const time = Date.now();
         this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
 
-        // Fundo
         let bg = "#4facfe";
         if (this.weather === "storm") bg = "#050510";
         else if (this.weather === "wind") bg = "#3498db";
         ctx.fillStyle = bg;
         ctx.fillRect(0,0,this.width, this.height);
 
-        // Chuva e Raios
         if (this.weather === "storm") {
-            if (Math.random() > 0.99) document.getElementById('game-wrapper').classList.add('lightning-flash');
+            if (Math.random() > 0.992) document.getElementById('game-wrapper').classList.add('lightning-flash');
             else setTimeout(()=>document.getElementById('game-wrapper').classList.remove('lightning-flash'), 100);
             
-            ctx.strokeStyle = "rgba(255,255,255,0.2)";
-            for(let i=0; i<10; i++) {
+            ctx.strokeStyle = "rgba(255,255,255,0.15)";
+            for(let i=0; i<8; i++) {
                 let rx = Math.random()*this.width;
                 let ry = Math.random()*this.height;
-                ctx.strokeRect(rx, ry, 1, 20);
+                ctx.beginPath();
+                ctx.moveTo(rx, ry);
+                ctx.lineTo(rx - 5, ry + 15);
+                ctx.stroke();
             }
         }
 
-        // Torre
         ctx.save();
         ctx.translate(0, this.cameraY);
         const baseY = this.height - 120;
@@ -347,24 +356,22 @@ const Game = {
         ctx.fillRect(-this.width, baseY + 50, this.width * 3, 1000);
         this.blocks.forEach(b => this.drawBlock(b));
         
-        // Renderizar bloco caindo
         if(this.fallingBlock) {
             this.fallingBlock.vy += this.fallingBlock.gravity;
             this.fallingBlock.y += this.fallingBlock.vy;
             this.drawBlock(this.fallingBlock);
 
-            // Checar colisão com o topo da torre
-            const targetY = this.blocks[this.blocks.length-1].y;
-            if(this.fallingBlock.y >= targetY - this.blockH) {
+            const targetY = this.blocks[this.blocks.length-1].y - this.blockH;
+            if(this.fallingBlock.y >= targetY) {
+                this.fallingBlock.y = targetY; // Fixa no topo exato
                 this.processLanding();
             }
         }
         ctx.restore();
 
-        // Pêndulo (Apenas se não estiver caindo)
         if (this.gameActive && !this.fallingBlock) {
             this.swing.angle += this.swing.speed;
-            let windX = (this.weather !== "clear") ? Math.sin(time/500) * (this.weather === "storm" ? 80 : 40) : 0;
+            let windX = (this.weather !== "clear") ? Math.sin(time/500) * (this.weather === "storm" ? 75 : 40) : 0;
             this.swing.originShift += (windX - this.swing.originShift) * 0.05;
 
             const originX = this.width / 2 + this.swing.originShift;
@@ -379,7 +386,7 @@ const Game = {
             ctx.restore();
         }
 
-        if (Math.abs(this.towerLean) > 18 && this.gameActive) this.gameOver("A torre inclinou demais!");
+        if (Math.abs(this.towerLean) > 18 && this.gameActive) this.gameOver("A torre desmoronou!");
 
         requestAnimationFrame(() => this.render());
     }
