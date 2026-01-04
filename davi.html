@@ -47,6 +47,7 @@
             font-weight: bold;
             border: 2px solid var(--gold-main);
             text-align: center;
+            min-width: 180px;
         }
 
         #overlay {
@@ -91,13 +92,13 @@
     <div id="feedback">PERFEITO!</div>
     <div class="ui-panel">
         <div id="score-card">
-            <div id="level-tag" style="font-size: 0.7rem; color: #fff; text-transform: uppercase;">NÍVEL INICIANTE</div>
+            <div id="level-tag" style="font-size: 0.7rem; color: #fff; text-transform: uppercase; margin-bottom: 5px;">NÍVEL INICIANTE</div>
             <span id="score">0</span>
         </div>
     </div>
     <div id="overlay">
         <h1 style="color: var(--gold-main); font-size: 2.2rem; margin-bottom: 10px;">TEMPLO SAGRADO</h1>
-        <p>Domine os 3 níveis de maestria.</p>
+        <p>Use a precisão para ganhar bônus de ouro!</p>
         <button onclick="Game.start()">INICIAR OBRA</button>
     </div>
 </div>
@@ -121,7 +122,8 @@ const Game = {
     
     blockW: 140,
     blockH: 45,
-    swing: { angle: 0, speed: 0.015, x: 0, y: 0, amplitude: 0.48 },
+    // Velocidade inicial reduzida para 0.012
+    swing: { angle: 0, speed: 0.012, x: 0, y: 0, amplitude: 0.48 },
 
     init() {
         this.ctx = this.canvas.getContext('2d');
@@ -149,16 +151,17 @@ const Game = {
     updateDifficulty() {
         const tag = document.getElementById('level-tag');
         if (this.score >= 900) {
-            this.swing.speed = 0.035;
+            this.swing.speed = 0.032;
             tag.innerText = "NÍVEL MESTRE";
             tag.style.color = "#FF4444";
         } else if (this.score >= 500) {
-            this.swing.speed = 0.025;
+            this.swing.speed = 0.024;
             tag.innerText = "NÍVEL MEDIANO";
             tag.style.color = "#FFD700";
         } else {
-            this.swing.speed = 0.015;
+            this.swing.speed = 0.012;
             tag.innerText = "NÍVEL INICIANTE";
+            tag.style.color = "#FFF";
         }
     },
 
@@ -193,10 +196,10 @@ const Game = {
         this.exploding = true;
         this.gameActive = false;
         
-        this.blocks.forEach((b, i) => {
+        this.blocks.forEach((b) => {
             if (!b.fixed) {
-                b.vx = (Math.random() - 0.5) * 15;
-                b.vy = (Math.random() - 1) * 10;
+                b.vx = (Math.random() - 0.5) * 20;
+                b.vy = (Math.random() - 1) * 15;
             }
         });
 
@@ -212,7 +215,37 @@ const Game = {
         const absDiff = Math.abs(diff);
 
         if (absDiff < this.blockW) {
-            this.score++;
+            let points = 0;
+
+            if (absDiff < 12) {
+                points = 10;
+                this.showFeedback("PERFEITO! +10", "#00FFCC");
+                this.badHits = 0;
+                this.towerLean *= 0.1; 
+                this.leanVelocity = 0;
+            } 
+            else if (absDiff < 40) {
+                points = 5;
+                this.showFeedback("ÓTIMO +5", "#FFD700");
+                this.badHits = 0;
+                this.leanVelocity *= 0.5;
+            }
+            else if (absDiff < 80) {
+                points = 2;
+                this.showFeedback("BOM +2", "#FFF");
+            }
+            else {
+                points = 1;
+                this.badHits++;
+                if (this.badHits >= 3) {
+                    this.showFeedback("VAI CAIR!", "#FF4444");
+                    this.leanVelocity += (diff * 0.008); 
+                } else {
+                    this.showFeedback("CUIDADO! +1", "#FFA500");
+                }
+            }
+
+            this.score += points;
             this.blocks.push({ 
                 x: this.fallingBlock.x, 
                 y: lastBlock.y - this.blockH, 
@@ -221,27 +254,6 @@ const Game = {
             });
             
             this.updateDifficulty();
-
-            if (absDiff < 12) {
-                this.showFeedback("PERFEITO!", "#00FFCC");
-                this.badHits = 0;
-                this.towerLean *= 0.1; 
-                this.leanVelocity = 0;
-            } 
-            else if (absDiff < 40) {
-                this.showFeedback("ÓTIMO", "#FFD700");
-                this.badHits = 0;
-                this.leanVelocity *= 0.5;
-            }
-            else {
-                this.badHits++;
-                if (this.badHits >= 3) {
-                    this.showFeedback("VAI CAIR!", "#FF4444");
-                    this.leanVelocity += (diff * 0.007); 
-                } else {
-                    this.showFeedback("CUIDADO!", "#FFA500");
-                }
-            }
 
             if (this.blocks.length > 5) this.targetCameraY += this.blockH;
             document.getElementById('score').innerText = this.score;
@@ -257,7 +269,7 @@ const Game = {
         overlay.innerHTML = `
             <h1 style="color:var(--gold-main)">TEMPLO ARRUINADO</h1>
             <p>${msg}</p>
-            <p style="margin-top:10px; font-size: 1.5rem;">Altura: ${this.score}</p>
+            <p style="margin-top:10px; font-size: 1.5rem;">Pontuação Final: ${this.score}</p>
             <button onclick="Game.start()">RECONSTRUIR</button>
         `;
     },
@@ -272,7 +284,7 @@ const Game = {
             ctx.translate(-pivotX, -pivotY);
         } else if (this.exploding) {
             ctx.translate(b.x + this.blockW/2, b.y + this.blockH/2);
-            ctx.rotate(index * 0.2);
+            ctx.rotate(index * 0.5);
             ctx.translate(-(b.x + this.blockW/2), -(b.y + this.blockH/2));
         }
 
@@ -303,12 +315,12 @@ const Game = {
                 this.leanVelocity += (this.towerLean * 0.0008);
             }
             
-            // Checagem de colisão com as bordas da tela
             const rad = this.towerLean * Math.PI / 180;
             const topBlock = this.blocks[this.blocks.length - 1];
             const tiltX = topBlock.x + (this.blocks.length * Math.sin(rad) * 6);
             
-            if (tiltX < 0 || tiltX + this.blockW > this.width || Math.abs(this.towerLean) > 35) {
+            // Perder se encostar nas bordas ou inclinar demais
+            if (tiltX < -20 || tiltX + this.blockW > this.width + 20 || Math.abs(this.towerLean) > 40) {
                 this.explodeTower();
             }
         }
@@ -316,7 +328,7 @@ const Game = {
         if (this.exploding) {
             this.blocks.forEach(b => {
                 if(!b.fixed) {
-                    b.vy += 0.5;
+                    b.vy += 0.6;
                     b.x += b.vx;
                     b.y += b.vy;
                 }
@@ -348,10 +360,10 @@ const Game = {
             this.swing.y = (this.blocks[this.blocks.length-1].y - 230);
 
             ctx.beginPath();
-            ctx.moveTo(this.width/2, -100);
+            ctx.moveTo(this.width/2, -150);
             ctx.lineTo(this.swing.x, this.swing.y + this.cameraY);
             ctx.strokeStyle = "#FFD700";
-            ctx.lineWidth = 4; 
+            ctx.lineWidth = 3; 
             ctx.stroke();
 
             ctx.save();
