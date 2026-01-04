@@ -47,7 +47,6 @@
             font-weight: bold;
             border: 2px solid var(--gold-main);
             text-align: center;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
         #overlay {
@@ -92,13 +91,13 @@
     <div id="feedback">PERFEITO!</div>
     <div class="ui-panel">
         <div id="score-card">
-            <div style="font-size: 0.7rem; color: #fff; text-transform: uppercase;">Altura do Templo</div>
+            <div id="level-tag" style="font-size: 0.7rem; color: #fff; text-transform: uppercase;">NÍVEL INICIANTE</div>
             <span id="score">0</span>
         </div>
     </div>
     <div id="overlay">
         <h1 style="color: var(--gold-main); font-size: 2.2rem; margin-bottom: 10px;">TEMPLO SAGRADO</h1>
-        <p>Erga a torre com equilíbrio e fé.</p>
+        <p>Domine os 3 níveis de maestria.</p>
         <button onclick="Game.start()">INICIAR OBRA</button>
     </div>
 </div>
@@ -111,6 +110,7 @@ const Game = {
     blocks: [],
     fallingBlock: null,
     gameActive: false,
+    exploding: false,
     cameraY: 0,
     targetCameraY: 0,
     feedbackEl: document.getElementById('feedback'),
@@ -121,8 +121,7 @@ const Game = {
     
     blockW: 140,
     blockH: 45,
-    // VELOCIDADE FIXA: Não aumenta mais conforme o score
-    swing: { angle: 0, speed: 0.015, x: 0, y: 0, amplitude: 0.45 },
+    swing: { angle: 0, speed: 0.015, x: 0, y: 0, amplitude: 0.48 },
 
     init() {
         this.ctx = this.canvas.getContext('2d');
@@ -130,7 +129,7 @@ const Game = {
         window.addEventListener('resize', () => this.resize());
         this.canvas.addEventListener('pointerdown', (e) => {
             e.preventDefault();
-            this.launch();
+            if(!this.exploding) this.launch();
         });
         this.render();
     },
@@ -147,6 +146,22 @@ const Game = {
         setTimeout(() => this.feedbackEl.style.display = 'none', 800);
     },
 
+    updateDifficulty() {
+        const tag = document.getElementById('level-tag');
+        if (this.score >= 900) {
+            this.swing.speed = 0.035;
+            tag.innerText = "NÍVEL MESTRE";
+            tag.style.color = "#FF4444";
+        } else if (this.score >= 500) {
+            this.swing.speed = 0.025;
+            tag.innerText = "NÍVEL MEDIANO";
+            tag.style.color = "#FFD700";
+        } else {
+            this.swing.speed = 0.015;
+            tag.innerText = "NÍVEL INICIANTE";
+        }
+    },
+
     start() {
         this.score = 0;
         this.cameraY = 0;
@@ -155,8 +170,10 @@ const Game = {
         this.leanVelocity = 0;
         this.badHits = 0;
         this.fallingBlock = null;
-        this.blocks = [{ x: this.width/2 - 70, y: this.height - 100, fixed: true }];
+        this.exploding = false;
+        this.blocks = [{ x: this.width/2 - 70, y: this.height - 100, fixed: true, vx: 0, vy: 0 }];
         this.gameActive = true;
+        this.updateDifficulty();
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('score').innerText = "0";
     },
@@ -171,10 +188,24 @@ const Game = {
         };
     },
 
+    explodeTower() {
+        if (this.exploding) return;
+        this.exploding = true;
+        this.gameActive = false;
+        
+        this.blocks.forEach((b, i) => {
+            if (!b.fixed) {
+                b.vx = (Math.random() - 0.5) * 15;
+                b.vy = (Math.random() - 1) * 10;
+            }
+        });
+
+        setTimeout(() => this.gameOver("A estrutura entrou em colapso!"), 1500);
+    },
+
     processLanding() {
         const lastBlock = this.blocks[this.blocks.length - 1];
         const rad = this.towerLean * Math.PI / 180;
-        // Compensação visual para onde o topo realmente está
         const towerTopX = lastBlock.x + (this.blocks.length * Math.sin(rad) * 6); 
         
         const diff = this.fallingBlock.x - towerTopX;
@@ -182,15 +213,22 @@ const Game = {
 
         if (absDiff < this.blockW) {
             this.score++;
-            this.blocks.push({ x: this.fallingBlock.x, y: lastBlock.y - this.blockH, fixed: false });
+            this.blocks.push({ 
+                x: this.fallingBlock.x, 
+                y: lastBlock.y - this.blockH, 
+                fixed: false,
+                vx: 0, vy: 0 
+            });
             
+            this.updateDifficulty();
+
             if (absDiff < 12) {
                 this.showFeedback("PERFEITO!", "#00FFCC");
                 this.badHits = 0;
-                this.towerLean *= 0.2; // Recuperação forte
+                this.towerLean *= 0.1; 
                 this.leanVelocity = 0;
             } 
-            else if (absDiff < 35) {
+            else if (absDiff < 40) {
                 this.showFeedback("ÓTIMO", "#FFD700");
                 this.badHits = 0;
                 this.leanVelocity *= 0.5;
@@ -198,8 +236,8 @@ const Game = {
             else {
                 this.badHits++;
                 if (this.badHits >= 3) {
-                    this.showFeedback("DESEQUILÍBRIO!", "#FF4444");
-                    this.leanVelocity += (diff * 0.005); 
+                    this.showFeedback("VAI CAIR!", "#FF4444");
+                    this.leanVelocity += (diff * 0.007); 
                 } else {
                     this.showFeedback("CUIDADO!", "#FFA500");
                 }
@@ -208,31 +246,34 @@ const Game = {
             if (this.blocks.length > 5) this.targetCameraY += this.blockH;
             document.getElementById('score').innerText = this.score;
         } else {
-            this.gameOver("O tijolo caiu fora!");
+            this.explodeTower();
         }
         this.fallingBlock = null;
     },
 
     gameOver(msg) {
-        this.gameActive = false;
         const overlay = document.getElementById('overlay');
         overlay.style.display = 'flex';
         overlay.innerHTML = `
-            <h1 style="color:var(--gold-main)">OBRA INTERROMPIDA</h1>
+            <h1 style="color:var(--gold-main)">TEMPLO ARRUINADO</h1>
             <p>${msg}</p>
             <p style="margin-top:10px; font-size: 1.5rem;">Altura: ${this.score}</p>
-            <button onclick="Game.start()">RECOMEÇAR</button>
+            <button onclick="Game.start()">RECONSTRUIR</button>
         `;
     },
 
     drawBlock(ctx, b, index) {
         ctx.save();
-        if (!b.fixed) {
+        if (!b.fixed && !this.exploding) {
             const pivotX = this.width / 2;
             const pivotY = this.height - 100;
             ctx.translate(pivotX, pivotY);
             ctx.rotate((this.towerLean * (index / this.blocks.length)) * Math.PI / 180);
             ctx.translate(-pivotX, -pivotY);
+        } else if (this.exploding) {
+            ctx.translate(b.x + this.blockW/2, b.y + this.blockH/2);
+            ctx.rotate(index * 0.2);
+            ctx.translate(-(b.x + this.blockW/2), -(b.y + this.blockH/2));
         }
 
         const grad = ctx.createLinearGradient(b.x, b.y, b.x, b.y + this.blockH);
@@ -251,20 +292,35 @@ const Game = {
     render() {
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.width, this.height);
-        this.cameraY += (this.targetCameraY - this.cameraY) * 0.08;
+        
+        if (!this.exploding) {
+            this.cameraY += (this.targetCameraY - this.cameraY) * 0.08;
+        }
 
         if (this.gameActive && this.blocks.length > 1) {
             this.towerLean += this.leanVelocity;
-            // Efeito de queda livre da torre se estiver muito inclinada
-            if (Math.abs(this.towerLean) > 2) {
-                this.leanVelocity += (this.towerLean * 0.0006);
+            if (Math.abs(this.towerLean) > 1) {
+                this.leanVelocity += (this.towerLean * 0.0008);
             }
             
+            // Checagem de colisão com as bordas da tela
             const rad = this.towerLean * Math.PI / 180;
-            const tiltX = (this.width/2) + (this.blocks.length * Math.sin(rad) * 18);
-            if (tiltX < -60 || tiltX > this.width + 60) {
-                this.gameOver("A torre tombou!");
+            const topBlock = this.blocks[this.blocks.length - 1];
+            const tiltX = topBlock.x + (this.blocks.length * Math.sin(rad) * 6);
+            
+            if (tiltX < 0 || tiltX + this.blockW > this.width || Math.abs(this.towerLean) > 35) {
+                this.explodeTower();
             }
+        }
+
+        if (this.exploding) {
+            this.blocks.forEach(b => {
+                if(!b.fixed) {
+                    b.vy += 0.5;
+                    b.x += b.vx;
+                    b.y += b.vy;
+                }
+            });
         }
 
         ctx.save();
@@ -274,15 +330,10 @@ const Game = {
         if (this.fallingBlock) {
             this.fallingBlock.vy += this.fallingBlock.gravity;
             this.fallingBlock.y += this.fallingBlock.vy;
-            
             ctx.fillStyle = "#FFD700";
-            ctx.strokeStyle = "#FFF9C4";
-            ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.roundRect(this.fallingBlock.x, this.fallingBlock.y, this.blockW, this.blockH, 4);
             ctx.fill();
-            ctx.stroke();
-
             const lastBlock = this.blocks[this.blocks.length - 1];
             if (this.fallingBlock.y >= lastBlock.y - this.blockH) {
                 this.fallingBlock.y = lastBlock.y - this.blockH;
@@ -305,16 +356,10 @@ const Game = {
 
             ctx.save();
             ctx.translate(this.swing.x - this.blockW/2, this.swing.y + this.cameraY);
-            const grad = ctx.createLinearGradient(0, 0, 0, this.blockH);
-            grad.addColorStop(0, "#FFD700");
-            grad.addColorStop(1, "#B8860B");
-            ctx.fillStyle = grad;
-            ctx.strokeStyle = "#FFF9C4";
-            ctx.lineWidth = 2;
+            ctx.fillStyle = "#FFD700";
             ctx.beginPath();
             ctx.roundRect(0, 0, this.blockW, this.blockH, 4);
             ctx.fill();
-            ctx.stroke();
             ctx.restore();
         }
 
