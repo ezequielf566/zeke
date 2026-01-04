@@ -130,7 +130,7 @@ const Game = {
     
     blockW: 140,
     blockH: 45,
-    swing: { angle: 0, speed: 0.012, x: 0, y: 100, amplitude: 0.48 }, // y fixo no topo
+    swing: { angle: 0, speed: 0.012, x: 0, y: 300, amplitude: 0.48 }, // Ajustado para descer o tijolo
 
     init() {
         this.ctx = this.canvas.getContext('2d');
@@ -214,7 +214,7 @@ const Game = {
         if (!this.gameActive || this.fallingBlock) return;
         this.fallingBlock = {
             x: this.swing.x - this.blockW / 2,
-            y: this.swing.y - this.cameraY, // Ajuste para compensar a câmera na queda
+            y: this.swing.y - this.cameraY, 
             vy: 0,
             vx: this.rainActive ? (Math.random() - 0.5) * 2 : 0,
             gravity: 1.0
@@ -298,18 +298,16 @@ const Game = {
 
         if (!this.exploding) this.cameraY += (this.targetCameraY - this.cameraY) * 0.08;
 
-        // Física do balanço - Fixado no topo
         if (this.gameActive && !this.fallingBlock) {
             let windShift = Math.sin(Date.now() * 0.002) * this.windIntensity;
             this.swing.angle += this.swing.speed + windShift;
             this.swing.x = (this.width / 2) + Math.sin(this.swing.angle) * (this.width * this.swing.amplitude);
-            // y da swing não muda mais com os blocos
         }
 
-        // Camada 1: Elementos fixos (Corda e Bloco Oscilante)
+        // Camada Fixa (Corda vindo de cima e Tijolo no centro)
         if (this.gameActive && !this.fallingBlock) {
             ctx.beginPath();
-            ctx.moveTo(this.width/2, -50); // Ponto fixo bem no topo
+            ctx.moveTo(this.width/2, -100); 
             ctx.lineTo(this.swing.x, this.swing.y);
             ctx.strokeStyle = "gold"; ctx.lineWidth = 2; ctx.stroke();
             
@@ -317,7 +315,7 @@ const Game = {
             ctx.beginPath(); ctx.roundRect(this.swing.x - this.blockW/2, this.swing.y, this.blockW, this.blockH, 4); ctx.fill();
         }
 
-        // Camada 2: Elementos afetados pela Câmera (Torre e Queda)
+        // Camada com Câmera
         ctx.save();
         ctx.translate(0, this.cameraY);
 
