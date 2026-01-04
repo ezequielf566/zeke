@@ -3,21 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Templo de Salomão: A Edificação</title>
+    <title>Templo de Salomão: Firmeza na Rocha</title>
     <style>
         :root {
             --gold: #FFD700;
-            --stone-dark: #5D4037;
-            --stone-light: #D7CCC8;
-            --ui-bg: rgba(0, 0, 0, 0.6);
+            --stone: #d7ccc8;
+            --stone-border: #8d6e63;
         }
 
-        * { box-sizing: border-box; touch-action: none; }
+        * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
         
         body {
-            margin: 0; padding: 0;
-            background: #1a1a1a;
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #111;
+            font-family: 'Segoe UI', sans-serif;
             overflow: hidden;
             display: flex; justify-content: center; align-items: center;
             height: 100vh;
@@ -25,9 +23,9 @@
 
         #game-wrapper {
             position: relative;
-            width: 100%; height: 100%;
+            width: 100vw; height: 100vh;
             max-width: 500px; max-height: 900px;
-            background: skyblue;
+            background: #87ceeb;
             overflow: hidden;
         }
 
@@ -35,76 +33,56 @@
 
         .ui-panel {
             position: absolute;
-            top: 20px; left: 0; width: 100%;
+            top: 20px; width: 100%;
             display: flex; flex-direction: column; align-items: center;
-            pointer-events: none;
+            pointer-events: none; z-index: 10;
         }
 
         #score-card {
-            background: var(--ui-bg);
+            background: rgba(0,0,0,0.7);
             color: var(--gold);
-            padding: 8px 20px;
+            padding: 10px 30px;
             border-radius: 50px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            border: 2px solid var(--gold);
-            text-shadow: 1px 1px 2px black;
-        }
-
-        #weather-info {
-            color: white;
-            margin-top: 10px;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            font-size: 2rem;
+            font-weight: 900;
+            border: 3px solid var(--gold);
         }
 
         #message-bar {
             position: absolute;
-            bottom: 40px; width: 90%; left: 5%;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 15px; border-radius: 12px;
-            text-align: center; color: var(--stone-dark);
-            font-weight: bold; border-left: 5px solid var(--gold);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            bottom: 30px; width: 85%; left: 7.5%;
+            background: white; padding: 15px; border-radius: 15px;
+            text-align: center; font-weight: bold;
+            border-bottom: 4px solid var(--gold);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            z-index: 10;
         }
 
         #overlay {
             position: absolute; inset: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
-            color: white; z-index: 100;
-            text-align: center; padding: 20px;
+            color: white; z-index: 100; text-align: center;
         }
 
         button {
-            background: var(--gold);
-            border: none; padding: 15px 40px;
-            font-size: 1.4rem; font-weight: bold;
-            border-radius: 50px; cursor: pointer;
-            margin-top: 20px; transition: transform 0.2s;
+            background: var(--gold); border: none; padding: 18px 50px;
+            font-size: 1.5rem; font-weight: bold; border-radius: 50px;
+            cursor: pointer; margin-top: 25px; box-shadow: 0 6px 0 #b8860b;
         }
-
-        button:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
 <div id="game-wrapper">
     <canvas id="canvas"></canvas>
-    
-    <div class="ui-panel">
-        <div id="score-card">PEDRAS: <span id="score">0</span></div>
-        <div id="weather-info">CÉU LIMPO</div>
-    </div>
-
-    <div id="message-bar">Prepare-se para edificar com sabedoria!</div>
-
-    <div id="overlay">
-        <h1 style="color: var(--gold); margin-bottom: 5px;">TEMPLO DE SALOMÃO</h1>
-        <p style="opacity: 0.8;">Construa a casa de Deus com firmeza.</p>
-        <button onclick="Game.start()">INICIAR OBRA</button>
+    <div class="ui-panel"><div id="score-card"><span id="score">0</span></div></div>
+    <div id="message-bar">Toque para começar a construção!</div>
+    <div id="overlay" id="startMenu">
+        <h1 style="color: var(--gold); font-size: 2.5rem;">TEMPLO REAL</h1>
+        <p>Alinhe os blocos com precisão!</p>
+        <button onclick="Game.start()">JOGAR</button>
     </div>
 </div>
 
@@ -114,101 +92,76 @@ const Game = {
     ctx: null,
     score: 0,
     blocks: [],
-    particles: [],
     gameActive: false,
     width: 0, height: 0,
     cameraY: 0,
+    targetCameraY: 0,
     
-    // Configurações de Pêndulo
-    swing: { angle: 0, speed: 0.04, range: 0, x: 0, y: 100 },
-    blockW: 120, blockH: 45,
+    // Configurações do Bloco
+    swing: { angle: 0, speed: 0.02, x: 0 },
+    blockW: 140, 
+    blockH: 45,
     
-    // Clima
-    weather: "clear", // clear, wind, night, storm
-    windForce: 0,
-    ambientAlpha: 0,
-
-    phrases: [
-        "A sabedoria edifica a casa!",
-        "Trabalhe com um coração alegre.",
-        "O fundamento deve ser firme.",
-        "Grandiosa é a obra do Senhor!",
-        "Paciência é a chave da construção.",
-        "Cada pedra conta nesta união."
-    ],
-
     init() {
         this.ctx = this.canvas.getContext('2d');
         this.resize();
         window.addEventListener('resize', () => this.resize());
-        this.canvas.addEventListener('pointerdown', () => this.drop());
+        this.canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); this.drop(); });
         this.render();
     },
 
     resize() {
         this.width = this.canvas.width = this.canvas.offsetWidth;
         this.height = this.canvas.height = this.canvas.offsetHeight;
-        this.swing.range = this.width * 0.35;
     },
 
     start() {
         this.score = 0;
-        this.blocks = [{ x: this.width/2 - 60, y: this.height - 60, w: 120, h: 45 }];
         this.cameraY = 0;
-        this.swing.speed = 0.04;
-        this.weather = "clear";
-        this.windForce = 0;
+        this.targetCameraY = 0;
+        this.swing.speed = 0.02;
+        // Bloco inicial (Base) - Corrigido para ser estático e centralizado
+        this.blocks = [{
+            x: Math.round(this.width / 2 - 70),
+            y: this.height - 100,
+            w: 140
+        }];
+        
         this.gameActive = true;
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('score').innerText = "0";
-        this.updateMessage();
-    },
-
-    updateMessage() {
-        const msg = this.phrases[Math.floor(Math.random() * this.phrases.length)];
-        document.getElementById('message-bar').innerText = msg;
     },
 
     drop() {
         if(!this.gameActive) return;
 
-        const currentX = this.swing.x - this.blockW/2;
+        // Captura a posição exata do bloco no momento do clique (arredondado para evitar trepidação)
+        const dropX = Math.round(this.swing.x - this.blockW / 2);
         const lastBlock = this.blocks[this.blocks.length - 1];
-        const diff = currentX - lastBlock.x;
+        
+        // Verifica se houve sobreposição (colisão)
+        const diff = dropX - lastBlock.x;
 
         if (Math.abs(diff) < this.blockW) {
+            // Adiciona o bloco na posição exata capturada, sem vínculo com o pêndulo
             this.blocks.push({
-                x: currentX,
+                x: dropX,
                 y: lastBlock.y - this.blockH,
-                w: this.blockW,
-                h: this.blockH
+                w: this.blockW
             });
+            
             this.score++;
             document.getElementById('score').innerText = this.score;
             
-            if (this.blocks.length > 4) this.cameraY += this.blockH;
-            
-            this.updateDifficulty();
-            this.updateMessage();
+            // Sobe a câmera conforme a pilha cresce
+            if (this.blocks.length > 3) {
+                this.targetCameraY += this.blockH;
+            }
+
+            // Aumento de velocidade muito mais controlado
+            this.swing.speed += 0.0005;
         } else {
             this.gameOver();
-        }
-    },
-
-    updateDifficulty() {
-        this.swing.speed += 0.003;
-        
-        if (this.score >= 5 && this.score < 10) {
-            this.weather = "wind";
-            this.windForce = 1.5;
-            document.getElementById('weather-info').innerText = "VENTO FORTE";
-        } else if (this.score >= 10 && this.score < 15) {
-            this.weather = "night";
-            document.getElementById('weather-info').innerText = "NOITE CALMA";
-        } else if (this.score >= 15) {
-            this.weather = "storm";
-            this.windForce = 2.5;
-            document.getElementById('weather-info').innerText = "TEMPESTADE";
         }
     },
 
@@ -216,86 +169,70 @@ const Game = {
         this.gameActive = false;
         document.getElementById('overlay').style.display = 'flex';
         document.getElementById('overlay').innerHTML = `
-            <h1 style="color:var(--gold)">OBRA CONCLUÍDA</h1>
-            <p>Sua torre alcançou ${this.score} níveis!</p>
+            <h1 style="color:var(--gold)">FIM DA OBRA</h1>
+            <p>Você empilhou ${this.score} blocos!</p>
             <button onclick="Game.start()">RECOMEÇAR</button>
         `;
     },
 
-    drawCorda(x, y) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(this.width/2, -this.cameraY);
-        this.ctx.bezierCurveTo(this.width/2, y/2, x, y/2, x, y);
-        this.ctx.strokeStyle = "#4e342e";
-        this.ctx.lineWidth = 5;
-        this.ctx.stroke();
-        // Detalhe trançado
-        this.ctx.setLineDash([4, 4]);
-        this.ctx.strokeStyle = "#6d4c41";
-        this.ctx.stroke();
-        this.ctx.setLineDash([]);
-    },
-
     render() {
         const ctx = this.ctx;
-        // Fundo Dinâmico
-        let topColor = "#87ceeb", botColor = "#e0f7fa";
-        if(this.weather === "night" || this.weather === "storm") {
-            topColor = "#1a237e"; botColor = "#000051";
-        }
         
-        const grad = ctx.createLinearGradient(0, 0, 0, this.height);
-        grad.addColorStop(0, topColor);
-        grad.addColorStop(1, botColor);
-        ctx.fillStyle = grad;
+        // Suavização da Câmera
+        this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
+
+        // Fundo
+        ctx.fillStyle = "#87ceeb";
         ctx.fillRect(0, 0, this.width, this.height);
 
         ctx.save();
         ctx.translate(0, this.cameraY);
 
-        // Desenhar Blocos
+        // Desenhar Chão
+        ctx.fillStyle = "#5d4037";
+        ctx.fillRect(0, this.height - 55, this.width, 100);
+
+        // Desenhar Pilha de Blocos (Fixos)
         this.blocks.forEach((b, i) => {
-            ctx.fillStyle = i % 5 === 0 ? "#FFD700" : "#d7ccc8";
+            const isGold = (i > 0 && i % 5 === 0);
+            ctx.fillStyle = isGold ? "#FFD700" : "#eeeeee";
             ctx.strokeStyle = "#8d6e63";
             ctx.lineWidth = 3;
-            ctx.fillRect(b.x, b.y, b.w, b.h);
-            ctx.strokeRect(b.x, b.y, b.w, b.h);
-            // Detalhe de pedra
-            ctx.fillStyle = "rgba(0,0,0,0.1)";
-            ctx.fillRect(b.x + 5, b.y + 5, 10, 10);
+            
+            // Usamos Math.round para garantir que não haja "sub-pixels" causando distorção
+            ctx.fillRect(Math.round(b.x), Math.round(b.y), this.blockW, this.blockH);
+            ctx.strokeRect(Math.round(b.x), Math.round(b.y), this.blockW, this.blockH);
+            
+            // Brilho lateral para realismo
+            ctx.fillStyle = "rgba(255,255,255,0.3)";
+            ctx.fillRect(Math.round(b.x), Math.round(b.y), 5, this.blockH);
         });
 
-        // Pêndulo
+        // Desenhar Pêndulo (Bloco em movimento)
         if (this.gameActive) {
             this.swing.angle += this.swing.speed;
-            const drift = (this.weather === "wind" || this.weather === "storm") ? Math.sin(Date.now()/500) * this.windForce * 10 : 0;
-            this.swing.x = this.width/2 + Math.sin(this.swing.angle) * this.swing.range + drift;
+            const range = this.width * 0.35;
+            this.swing.x = this.width / 2 + Math.sin(this.swing.angle) * range;
             
-            const targetY = this.blocks[this.blocks.length-1].y - 120;
-            this.drawCorda(this.swing.x, targetY);
-            
-            // Bloco Pendurado
-            ctx.fillStyle = "#f5f5f5";
-            ctx.fillRect(this.swing.x - this.blockW/2, targetY, this.blockW, this.blockH);
-            ctx.strokeRect(this.swing.x - this.blockW/2, targetY, this.blockW, this.blockH);
+            // Posição visual do bloco pendurado (150px acima do topo da torre)
+            const swingY = this.blocks[this.blocks.length - 1].y - 150;
+
+            // Corda
+            ctx.beginPath();
+            ctx.moveTo(this.width / 2, -this.cameraY - 50);
+            ctx.lineTo(this.swing.x, swingY);
+            ctx.strokeStyle = "#3e2723";
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Bloco Balançando
+            ctx.fillStyle = "#ffffff";
+            ctx.strokeStyle = "#5d4037";
+            ctx.fillRect(Math.round(this.swing.x - this.blockW / 2), Math.round(swingY), this.blockW, this.blockH);
+            ctx.strokeRect(Math.round(this.swing.x - this.blockW / 2), Math.round(swingY), this.blockW, this.blockH);
         }
 
         ctx.restore();
-
-        // Efeitos de Clima (Overlay)
-        if(this.weather === "storm") {
-            ctx.fillStyle = "rgba(255,255,255,0.1)";
-            for(let i=0; i<20; i++) ctx.fillRect(Math.random()*this.width, Math.random()*this.height, 2, 20);
-        }
-        
-        if(this.weather === "night") {
-            const radial = ctx.createRadialGradient(this.width/2, this.height/2, 50, this.width/2, this.height/2, 300);
-            radial.addColorStop(0, "transparent");
-            radial.addColorStop(1, "rgba(0,0,0,0.7)");
-            ctx.fillStyle = radial;
-            ctx.fillRect(0,0,this.width, this.height);
-        }
-
         requestAnimationFrame(() => this.render());
     }
 };
