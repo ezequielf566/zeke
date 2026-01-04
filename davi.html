@@ -29,7 +29,7 @@
             overflow: hidden;
         }
 
-        canvas { width: 100%; height: 100%; display: block; }
+        canvas { width: 100%; height: 100%; display: block; z-index: 5; }
 
         .ui-panel {
             position: absolute;
@@ -39,7 +39,7 @@
         }
 
         #score-card {
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             color: var(--gold-main);
             padding: 10px 25px;
             border-radius: 8px;
@@ -47,7 +47,6 @@
             font-weight: bold;
             border: 2px solid var(--gold-main);
             text-align: center;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
         }
 
         #overlay {
@@ -64,10 +63,7 @@
             border: none; padding: 18px 45px;
             font-size: 1.4rem; font-weight: bold; border-radius: 50px;
             cursor: pointer; margin-top: 25px; color: #3e2723;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-
-        #level-tag { font-size: 0.8rem; color: #eee; text-transform: uppercase; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -76,13 +72,13 @@
     <canvas id="canvas"></canvas>
     <div class="ui-panel">
         <div id="score-card">
-            <div id="level-tag">Altura do Templo</div>
+            <div style="font-size: 0.7rem; color: #fff; text-transform: uppercase;">Altura Alcançada</div>
             <span id="score">0</span>
         </div>
     </div>
     <div id="overlay">
-        <h1 style="color: var(--gold-main); font-size: 2.5rem; margin-bottom: 10px;">TEMPLO SAGRADO</h1>
-        <p>Erga a torre com equilíbrio e fé.</p>
+        <h1 style="color: var(--gold-main); font-size: 2.5rem;">TEMPLO SAGRADO</h1>
+        <p>Solte os blocos com precisão para manter o equilíbrio.</p>
         <button onclick="Game.start()">INICIAR OBRA</button>
     </div>
 </div>
@@ -97,19 +93,12 @@ const Game = {
     gameActive: false,
     cameraY: 0,
     targetCameraY: 0,
-    
-    // FÍSICA DE INCLINAÇÃO
-    towerLean: 0,       
-    leanVelocity: 0,    
-    
-    swing: { 
-        angle: 0, 
-        speed: 0.012, // Balanço fixo e mais devagar
-        x: 0 
-    }, 
+    towerLean: 0,
+    leanVelocity: 0,
+    swing: { angle: 0, speed: 0.015, x: 0 }, 
     blockW: 140, 
     blockH: 45,
-    dropDist: 260,
+    dropDist: 280,
 
     init() {
         this.ctx = this.canvas.getContext('2d');
@@ -134,7 +123,7 @@ const Game = {
         this.towerLean = 0;
         this.leanVelocity = 0;
         this.fallingBlock = null;
-        // Centralização absoluta do alicerce
+        // Base sólida centralizada
         this.blocks = [{ x: this.width/2 - 70, y: this.height - 80 }];
         this.gameActive = true;
         document.getElementById('overlay').style.display = 'none';
@@ -143,48 +132,36 @@ const Game = {
 
     launch() {
         if(!this.gameActive || this.fallingBlock) return;
-        
-        // O bloco solta da posição horizontal real da corda
         this.fallingBlock = {
             x: this.swing.x - this.blockW / 2,
-            y: (this.blocks[this.blocks.length-1].y - this.dropDist),
+            y: -100, // Começa do topo da tela para visibilidade
             vy: 0,
-            gravity: 0.9
+            gravity: 0.8
         };
     },
 
     processLanding() {
         const lastBlock = this.blocks[this.blocks.length - 1];
         
-        // --- CÁLCULO DE PRECISÃO (COORDENADAS RELATIVAS À TORRE) ---
-        // Convertemos a posição de queda para o sistema rotacionado da torre
-        const rad = -this.towerLean * Math.PI / 180;
-        const centerX = this.width / 2;
-        const baseY = this.height - 80;
-        
-        // Relativo ao pivot de rotação
-        const dx = (this.fallingBlock.x + this.blockW/2) - centerX;
-        const dy = this.fallingBlock.y - baseY;
-        
-        // Posição horizontal corrigida pela inclinação atual
-        const localX = (dx * Math.cos(rad) - dy * Math.sin(rad)) + centerX - this.blockW/2;
-        const diff = localX - lastBlock.x;
+        // --- DETECÇÃO DE COLISÃO SIMPLIFICADA ---
+        // Pegamos a posição X do bloco que está caindo e comparamos com o X visual do último bloco
+        // (Isso evita bugs de rotação no momento do encaixe)
+        const diff = this.fallingBlock.x - lastBlock.x;
 
         if (Math.abs(diff) < this.blockW) {
             this.score++;
-            // O bloco agora entra no array com a posição ajustada para o "mundo torto"
-            this.blocks.push({ x: localX, y: lastBlock.y - this.blockH });
+            // Adiciona o bloco na pilha usando a coordenada relativa
+            this.blocks.push({ x: this.fallingBlock.x, y: lastBlock.y - this.blockH });
             
-            // MECÂNICA DE EQUILÍBRIO GRADUAL
-            // A velocidade da inclinação aumenta conforme o erro de posicionamento
-            this.leanVelocity += (diff * 0.0045); 
+            // FÍSICA GRADUAL: O "peso" só começa a influenciar conforme erramos o centro
+            this.leanVelocity += (diff * 0.003); 
 
-            if (this.blocks.length > 4) {
+            if (this.blocks.length > 5) {
                 this.targetCameraY += this.blockH;
             }
             document.getElementById('score').innerText = this.score;
         } else {
-            this.gameOver("A pedra deslizou e caiu no abismo!");
+            this.gameOver("O bloco despencou do templo!");
         }
         this.fallingBlock = null;
     },
@@ -194,30 +171,28 @@ const Game = {
         const overlay = document.getElementById('overlay');
         overlay.style.display = 'flex';
         overlay.innerHTML = `
-            <h1 style="color:var(--gold-main)">TEMPLO CAÍDO</h1>
+            <h1 style="color:var(--gold-main)">OBRA INTERROMPIDA</h1>
             <p>${msg}</p>
-            <p style="margin-top:10px">ALTURA: ${this.score} BLOCOS</p>
+            <p style="margin-top:10px">Sua oferta chegou a ${this.score} blocos.</p>
             <button onclick="Game.start()">RECOMEÇAR</button>
         `;
     },
 
-    drawBlock(b, isGhost = false) {
+    drawBlock(b, isGhost = false, isFalling = false) {
         const ctx = this.ctx;
         ctx.save();
-        // Ghost agora é mais visível (opacidade 0.8)
         if(isGhost) ctx.globalAlpha = 0.8;
         
         let grad = ctx.createLinearGradient(b.x, b.y, b.x, b.y + this.blockH);
         grad.addColorStop(0, "#FFD700");
-        grad.addColorStop(0.5, "#FFF9C4");
         grad.addColorStop(1, "#B8860B");
         
         ctx.fillStyle = grad;
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#FFF9C4";
+        ctx.lineWidth = 2;
         
         ctx.beginPath();
-        ctx.roundRect(b.x, b.y, this.blockW, this.blockH, 4);
+        ctx.roundRect(b.x, b.y, this.blockW, this.blockH, 5);
         ctx.fill();
         ctx.stroke();
         ctx.restore();
@@ -229,7 +204,7 @@ const Game = {
 
         this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
 
-        // --- DESENHO DA TORRE ---
+        // --- 1. DESENHO DA TORRE (ROTAÇÃO) ---
         ctx.save();
         ctx.translate(0, this.cameraY);
         
@@ -238,55 +213,58 @@ const Game = {
 
         if (this.gameActive && this.blocks.length > 1) {
             this.towerLean += this.leanVelocity;
-            // Gravidade aumenta o tombo conforme inclina
-            this.leanVelocity += (this.towerLean * 0.0007); 
+            // Gravidade lateral (aumenta conforme inclina)
+            this.leanVelocity += (this.towerLean * 0.0006); 
         }
 
+        // Aplica a rotação da torre inteira
         ctx.translate(baseX, baseY);
         ctx.rotate(this.towerLean * Math.PI / 180);
         ctx.translate(-baseX, -baseY);
 
         this.blocks.forEach(b => this.drawBlock(b));
+        ctx.restore();
 
+        // --- 2. DESENHO DO BLOCO EM QUEDA (FORA DA ROTAÇÃO ATÉ TOCAR) ---
         if(this.fallingBlock) {
+            ctx.save();
+            ctx.translate(0, this.cameraY);
             this.fallingBlock.vy += this.fallingBlock.gravity;
             this.fallingBlock.y += this.fallingBlock.vy;
-            this.drawBlock(this.fallingBlock);
+            this.drawBlock(this.fallingBlock, false, true);
             
+            // Calculamos o limite de altura baseado no último bloco
             const targetY = this.blocks[this.blocks.length-1].y - this.blockH;
             if(this.fallingBlock.y >= targetY) {
                 this.fallingBlock.y = targetY;
                 this.processLanding();
             }
+            ctx.restore();
         }
-        ctx.restore();
 
-        // --- DESENHO DA CORDA (FIXA) ---
+        // --- 3. DESENHO DA CORDA E MIRA ---
         if (this.gameActive && !this.fallingBlock) {
             this.swing.angle += this.swing.speed;
-            this.swing.x = (this.width/2) + Math.sin(this.swing.angle) * (this.width * 0.38);
-            
-            const lastY = this.blocks[this.blocks.length-1].y;
-            const ghostY = lastY - this.dropDist;
+            this.swing.x = (this.width/2) + Math.sin(this.swing.angle) * (this.width * 0.4);
+            const ghostY = (this.blocks[this.blocks.length-1].y - this.dropDist);
 
-            // Corda visível
+            // Corda
             ctx.beginPath();
-            ctx.moveTo(this.width/2, -100);
+            ctx.moveTo(this.width/2, -50);
             ctx.lineTo(this.swing.x, ghostY + this.cameraY);
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
             ctx.lineWidth = 2;
             ctx.stroke();
             
-            // Bloco na corda (Ghost)
             ctx.save();
             ctx.translate(0, this.cameraY);
             this.drawBlock({ x: this.swing.x - this.blockW/2, y: ghostY }, true);
             ctx.restore();
         }
 
-        // Limite de queda por ângulo
-        if (Math.abs(this.towerLean) > 28) {
-            this.gameOver("A torre inclinou demais!");
+        // Limite de segurança da torre
+        if (Math.abs(this.towerLean) > 30) {
+            this.gameOver("A estrutura não aguentou o peso lateral!");
         }
 
         requestAnimationFrame(() => this.render());
