@@ -1,267 +1,297 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>O Templo Sagrado: A Oferta de Davi</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>O Templo Sagrado: A Oferta de Davi</title>
+    <style>
+        :root {
+            --gold-light: #FFF9C4;
+            --gold-main: #FFD700;
+            --gold-dark: #B8860B;
+        }
+        * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
+        body { background: #1a1a1a; font-family: 'Georgia', serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
 
-<style>
-:root {
-    --gold-main:#FFD700;
-    --gold-dark:#B8860B;
-}
+        #game-wrapper {
+            position: relative;
+            width: 100vw; height: 100vh;
+            max-width: 500px;
+            overflow: hidden;
+            background: url('manafundo.png') no-repeat center center;
+            background-size: cover;
+            transition: filter 2s;
+        }
 
-*{margin:0;padding:0;box-sizing:border-box;touch-action:none}
+        /* Filtros de Ambiente */
+        .night-mode { filter: brightness(0.3) contrast(1.2) blue(20%); }
+        .sepia-mode { filter: sepia(0.8) hue-rotate(-30deg) saturate(1.5); }
+        .fog-mode::after { 
+            content: ""; position: absolute; inset: 0; 
+            background: rgba(200, 200, 200, 0.2); backdrop-filter: blur(2px); pointer-events: none; 
+        }
 
-body{
-    background:#111;
-    font-family:Georgia,serif;
-    overflow:hidden;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-}
+        /* Efeito de Raio (Flash CSS) */
+        .lightning-flash {
+            animation: flash 0.2s ease-out;
+        }
+        @keyframes flash {
+            0% { background: rgba(255,255,255,0); }
+            50% { background: rgba(255,255,255,0.8); }
+            100% { background: rgba(255,255,255,0); }
+        }
 
-#game-wrapper{
-    position:relative;
-    width:100vw;
-    height:100vh;
-    max-width:520px;
-    background:url('manafundo.png') center/cover no-repeat;
-    overflow:hidden;
-}
-
-/* CAMADAS VISUAIS (ZERO CUSTO CPU) */
-#fog{
-    position:absolute;inset:0;
-    background:radial-gradient(circle,rgba(255,255,255,.15),rgba(0,0,0,.65));
-    opacity:0;transition:opacity 2s;
-    pointer-events:none;z-index:40;
-}
-.fog-active #fog{opacity:1}
-
-.lightning{
-    position:absolute;inset:0;
-    background:white;
-    opacity:0;
-    animation:lightning 7s infinite;
-    pointer-events:none;z-index:60;
-}
-@keyframes lightning{
-    0%,94%{opacity:0}
-    95%{opacity:.8}
-    100%{opacity:0}
-}
-
-.night-mode{filter:brightness(.45) saturate(.6)}
-
-canvas{position:absolute;inset:0}
-
-.ui-panel{
-    position:absolute;top:15px;width:100%;
-    text-align:center;z-index:100;pointer-events:none;
-}
-
-#score-card{
-    display:inline-block;
-    background:rgba(0,0,0,.85);
-    color:var(--gold-main);
-    padding:8px 22px;
-    border-radius:10px;
-    border:2px solid var(--gold-main);
-    font-size:1.7rem;
-}
-
-#feedback{
-    position:absolute;top:40%;width:100%;
-    text-align:center;font-size:2rem;
-    font-weight:bold;color:#fff;
-    display:none;z-index:120;
-}
-
-#overlay{
-    position:absolute;inset:0;
-    background:rgba(0,0,0,.92);
-    display:flex;flex-direction:column;
-    justify-content:center;align-items:center;
-    color:#fff;text-align:center;z-index:200;
-}
-
-button{
-    margin-top:25px;
-    padding:16px 45px;
-    border-radius:50px;
-    border:none;
-    font-size:1.4rem;
-    font-weight:bold;
-    background:linear-gradient(#FFD700,#B8860B);
-    color:#3e2723;
-}
-</style>
+        canvas { width: 100%; height: 100%; display: block; position: absolute; top:0; left:0; }
+        .ui-panel { position: absolute; top: 20px; width: 100%; display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 100; }
+        #score-card { background: rgba(0, 0, 0, 0.85); color: var(--gold-main); padding: 10px 25px; border-radius: 8px; font-size: 1.8rem; font-weight: bold; border: 2px solid var(--gold-main); text-align: center; min-width: 180px; }
+        #overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 200; text-align: center; padding: 20px; }
+        #feedback { position: absolute; top: 35%; width: 100%; text-align: center; font-size: 2.2rem; font-weight: bold; text-shadow: 0 0 15px rgba(0,0,0,1); pointer-events: none; z-index: 150; display: none; }
+        button { background: linear-gradient(to bottom, #FFD700, #B8860B); border: none; padding: 18px 45px; font-size: 1.4rem; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 25px; color: #3e2723; }
+    </style>
 </head>
-
 <body>
-
 <div id="game-wrapper">
     <canvas id="canvas"></canvas>
-    <div id="fog"></div>
-    <div class="lightning"></div>
-
     <div id="feedback">PERFEITO!</div>
-
     <div class="ui-panel">
         <div id="score-card">
-            <div id="level-tag" style="font-size:.7rem;color:#fff">DIA CLARO</div>
+            <div id="level-tag" style="font-size: 0.7rem; color: #fff; text-transform: uppercase;">CÉU LIMPO</div>
             <span id="score">0</span>
         </div>
     </div>
-
     <div id="overlay">
-        <h1 style="color:var(--gold-main)">TEMPLO SAGRADO</h1>
-        <p>Erga a obra enfrentando a natureza.</p>
-        <button onclick="Game.start()">INICIAR</button>
+        <h1 style="color: var(--gold-main); font-size: 2.2rem; margin-bottom: 10px;">TEMPLO SAGRADO</h1>
+        <button onclick="Game.start()">INICIAR OBRA</button>
     </div>
 </div>
 
 <script>
-const DPR = Math.min(2, window.devicePixelRatio || 1);
-
 const Game = {
-canvas:document.getElementById('canvas'),
-ctx:null,
-wrapper:document.getElementById('game-wrapper'),
+    canvas: document.getElementById('canvas'),
+    wrapper: document.getElementById('game-wrapper'),
+    ctx: null,
+    score: 0,
+    blocks: [],
+    particles: [], // Folhas e partículas
+    fallingBlock: null,
+    gameActive: false,
+    exploding: false,
+    cameraY: 0,
+    targetCameraY: 0,
+    
+    // Climas
+    windIntensity: 0,
+    rainActive: false,
+    nightActive: false,
+    leavesActive: false,
+    
+    towerLean: 0,
+    leanVelocity: 0,
+    blockW: 140,
+    blockH: 45,
+    swing: { angle: 0, speed: 0.012, x: 0, y: 150 }, // Y fixo no topo da tela
 
-width:0,height:0,
-cameraY:0,targetCameraY:0,
-
-blocks:[],fallingBlock:null,
-particles:[],
-
-score:0,
-gameActive:false,
-exploding:false,
-
-wind:0,rain:false,
-towerLean:0,leanV:0,
-
-blockW:130,blockH:42,
-
-swing:{angle:0,speed:.012,amp:.45,x:0,y:0},
-
-init(){
-    this.ctx=this.canvas.getContext('2d',{alpha:false});
-    this.resize();
-    window.addEventListener('resize',()=>this.resize());
-    this.canvas.addEventListener('pointerdown',()=>this.launch());
-    requestAnimationFrame(()=>this.loop());
-},
-
-resize(){
-    this.width=this.canvas.offsetWidth;
-    this.height=this.canvas.offsetHeight;
-    this.canvas.width=this.width*DPR;
-    this.canvas.height=this.height*DPR;
-    this.ctx.setTransform(DPR,0,0,DPR,0,0);
-},
-
-start(){
-    this.score=0;
-    this.blocks=[{x:this.width/2-65,y:this.height-120,fixed:true}];
-    this.cameraY=0;this.targetCameraY=0;
-    this.fallingBlock=null;
-    this.gameActive=true;
-    this.exploding=false;
-    this.wrapper.className='';
-    document.getElementById('overlay').style.display='none';
-    document.getElementById('score').innerText=0;
-},
-
-launch(){
-    if(!this.gameActive||this.fallingBlock)return;
-    this.fallingBlock={
-        x:this.swing.x-this.blockW/2,
-        y:this.swing.y+this.blockH,
-        vy:0,vx:this.wind*280,gravity:1.05
-    };
-},
-
-updateDifficulty(){
-    const tag=document.getElementById('level-tag');
-
-    if(this.score>=50){this.wind=.006;tag.innerText="VENTOS"}
-    if(this.score>=100){this.rain=true;this.spawn('leaf',120);tag.innerText="TEMPESTADE"}
-    if(this.score>=190){this.wrapper.classList.add('night-mode');tag.innerText="NOITE"}
-    if(this.score>=300){this.wrapper.classList.add('fog-active');tag.innerText="NEBLINA"}
-},
-
-spawn(type,amount){
-    for(let i=0;i<amount;i++){
-        if(this.particles.length>120)break;
-        this.particles.push({
-            x:Math.random()*this.width,
-            y:-this.cameraY+Math.random()*this.height,
-            vx:(Math.random()-.5)*2,
-            vy:Math.random()*3+1,
-            life:100+Math.random()*60,
-            type
+    init() {
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this.canvas.addEventListener('pointerdown', (e) => {
+            if(!this.exploding && this.gameActive) this.launch();
         });
-    }
-},
+        this.render();
+    },
 
-loop(){
-    const c=this.ctx;
-    c.clearRect(0,0,this.width,this.height);
+    resize() {
+        this.width = this.canvas.width = this.canvas.offsetWidth;
+        this.height = this.canvas.height = this.canvas.offsetHeight;
+    },
 
-    if(!this.exploding)
-        this.cameraY+=(this.targetCameraY-this.cameraY)*.08;
-
-    if(this.gameActive&&!this.fallingBlock){
-        this.swing.angle+=this.swing.speed+Math.sin(Date.now()*0.002)*this.wind;
-        this.swing.x=this.width/2+Math.sin(this.swing.angle)*(this.width*this.swing.amp);
-        this.swing.y=-this.cameraY+120;
-    }
-
-    c.save();
-    c.translate(0,this.cameraY);
-
-    this.blocks.forEach(b=>{
-        c.fillStyle="gold";
-        c.fillRect(b.x,b.y,this.blockW,this.blockH);
-    });
-
-    if(this.fallingBlock){
-        this.fallingBlock.vy+=this.fallingBlock.gravity;
-        this.fallingBlock.x+=this.fallingBlock.vx;
-        this.fallingBlock.y+=this.fallingBlock.vy;
-        c.fillRect(this.fallingBlock.x,this.fallingBlock.y,this.blockW,this.blockH);
-        if(this.fallingBlock.y>=this.blocks.at(-1).y-this.blockH){
-            this.blocks.push({x:this.fallingBlock.x,y:this.blocks.at(-1).y-this.blockH});
-            this.score+=5;
-            this.targetCameraY+=this.blockH;
-            document.getElementById('score').innerText=this.score;
-            this.updateDifficulty();
-            this.fallingBlock=null;
+    updateDifficulty() {
+        const tag = document.getElementById('level-tag');
+        
+        if (this.score >= 50) {
+            this.leavesActive = true; // Folhas voando
+            tag.innerText = "OUTONO SAGRADO";
         }
+        
+        if (this.score >= 100) {
+            this.rainActive = true;
+            tag.innerText = "TEMPESTADE";
+            if(Math.random() > 0.98) this.triggerLightning();
+        }
+
+        if (this.score >= 190) {
+            this.nightActive = true;
+            this.wrapper.classList.add('night-mode');
+            tag.innerText = "NOITE PROFUNDA";
+        }
+
+        if (this.score >= 300) this.wrapper.classList.add('fog-mode');
+        
+        this.swing.speed = 0.012 + (this.score * 0.00005);
+    },
+
+    triggerLightning() {
+        this.wrapper.classList.add('lightning-flash');
+        setTimeout(() => this.wrapper.classList.remove('lightning-flash'), 200);
+    },
+
+    createLeaf() {
+        if(!this.leavesActive) return;
+        this.particles.push({
+            x: -20, y: Math.random() * this.height,
+            vx: 2 + Math.random() * 4, vy: Math.random() * 2,
+            size: 5 + Math.random() * 10,
+            angle: Math.random() * Math.PI,
+            color: ['#4CAF50', '#8BC34A', '#FF9800'][Math.floor(Math.random()*3)]
+        });
+    },
+
+    start() {
+        this.score = 0;
+        this.cameraY = 0;
+        this.targetCameraY = 0;
+        this.towerLean = 0;
+        this.leanVelocity = 0;
+        this.particles = [];
+        this.rainActive = false;
+        this.leavesActive = false;
+        this.nightActive = false;
+        this.exploding = false;
+        this.wrapper.className = '';
+        // Bloco inicial posicionado em relação ao fundo
+        this.blocks = [{ x: this.width/2 - 70, y: this.height - 100, fixed: true }];
+        this.gameActive = true;
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('score').innerText = "0";
+    },
+
+    launch() {
+        if (this.fallingBlock) return;
+        this.fallingBlock = {
+            x: this.swing.x - this.blockW / 2,
+            y: this.swing.y - this.cameraY, // Ajustado pela camera
+            vy: 0, gravity: 0.8
+        };
+    },
+
+    processLanding() {
+        const lastBlock = this.blocks[this.blocks.length - 1];
+        const diff = this.fallingBlock.x - lastBlock.x;
+        
+        if (Math.abs(diff) < this.blockW) {
+            this.score += 10;
+            this.blocks.push({ x: this.fallingBlock.x, y: lastBlock.y - this.blockH });
+            
+            // A mágica da câmera: ela sobe, fazendo a torre parecer descer
+            this.targetCameraY = -(this.blocks.length - 2) * this.blockH; 
+            
+            this.updateDifficulty();
+            document.getElementById('score').innerText = this.score;
+        } else {
+            this.gameActive = false;
+            setTimeout(() => this.start(), 2000);
+        }
+        this.fallingBlock = null;
+    },
+
+    drawWeather() {
+        const ctx = this.ctx;
+        // Folhas
+        if(Math.random() > 0.95) this.createLeaf();
+        this.particles.forEach((p, i) => {
+            p.x += p.vx; p.y += p.vy; p.angle += 0.1;
+            ctx.fillStyle = p.color;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.angle);
+            ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size/2);
+            ctx.restore();
+            if(p.x > this.width) this.particles.splice(i, 1);
+        });
+
+        // Chuva 2D Estilizada
+        if (this.rainActive) {
+            ctx.strokeStyle = "rgba(174,194,224,0.4)";
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 15; i++) {
+                let x = Math.random() * this.width;
+                let y = Math.random() * this.height;
+                ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 4, y + 12); ctx.stroke();
+            }
+        }
+    },
+
+    render() {
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.width, this.height);
+        
+        this.drawWeather();
+
+        // Suavização da câmera
+        this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
+
+        // Swing (Corda e Bloco de cima) - Sempre fixo no topo da tela (UI)
+        if (this.gameActive && !this.fallingBlock) {
+            this.swing.angle += this.swing.speed;
+            this.swing.x = (this.width / 2) + Math.sin(this.swing.angle) * (this.width * 0.4);
+            
+            ctx.strokeStyle = "#8d6e63"; ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(this.width/2, -50);
+            ctx.lineTo(this.swing.x, this.swing.y);
+            ctx.stroke();
+
+            // Bloco na corda com brilho se for noite
+            this.drawBlock(this.swing.x - this.blockW/2, this.swing.y, true);
+        }
+
+        ctx.save();
+        ctx.translate(0, this.cameraY); // Move o mundo (a torre)
+
+        // Desenhar a Torre
+        this.blocks.forEach((b) => {
+            this.drawBlock(b.x, b.y, false);
+        });
+
+        // Bloco caindo
+        if (this.fallingBlock) {
+            this.fallingBlock.vy += this.fallingBlock.gravity;
+            this.fallingBlock.y += this.fallingBlock.vy;
+            this.drawBlock(this.fallingBlock.x, this.fallingBlock.y, true);
+            
+            const lastBlock = this.blocks[this.blocks.length - 1];
+            if (this.fallingBlock.y >= lastBlock.y - this.blockH) this.processLanding();
+        }
+
+        ctx.restore();
+        requestAnimationFrame(() => this.render());
+    },
+
+    drawBlock(x, y, active) {
+        const ctx = this.ctx;
+        const g = ctx.createLinearGradient(x, y, x, y + this.blockH);
+        g.addColorStop(0, "#FFD700");
+        g.addColorStop(1, "#B8860B");
+        
+        ctx.fillStyle = g;
+        
+        // Efeito de luz noturna no bloco ativo
+        if(this.nightActive && active) {
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = "rgba(255, 215, 0, 0.8)";
+        } else {
+            ctx.shadowBlur = 0;
+        }
+
+        ctx.beginPath();
+        ctx.roundRect(x, y, this.blockW, this.blockH, 5);
+        ctx.fill();
+        
+        // Detalhe de tijolo
+        ctx.strokeStyle = "rgba(0,0,0,0.1)";
+        ctx.strokeRect(x+5, y+5, this.blockW-10, this.blockH-10);
     }
-
-    if(this.gameActive&&!this.fallingBlock){
-        c.strokeStyle="gold";c.lineWidth=2;
-        c.beginPath();
-        c.moveTo(this.width/2,-200);
-        c.lineTo(this.swing.x,this.swing.y);
-        c.stroke();
-        c.shadowBlur=this.wrapper.classList.contains('night-mode')?20:0;
-        c.shadowColor="rgba(255,215,120,.9)";
-        c.fillRect(this.swing.x-this.blockW/2,this.swing.y,this.blockW,this.blockH);
-        c.shadowBlur=0;
-    }
-
-    c.restore();
-
-    this.particles=this.particles.filter(p=>p.life-- >0);
-    requestAnimationFrame(()=>this.loop());
-}
 };
 
 Game.init();
