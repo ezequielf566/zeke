@@ -22,7 +22,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Otimização de Performance para Celulares */
+        /* Otimização de Performance */
         .item, #boat-container, #line {
             will-change: transform;
             contain: layout style;
@@ -94,7 +94,21 @@
         #boat-img { width: 100%; filter: drop-shadow(0 10px 5px rgba(0,0,0,0.2)); }
 
         #line { position: absolute; top: 90%; left: 50%; width: 2px; height: 65px; background: #fff; transform-origin: top center; z-index: 90; }
-        #hook { position: absolute; bottom: -28px; left: -14px; font-size: 32px; }
+        
+        /* AJUSTE DO GANCHO PNG */
+        #hook { 
+            position: absolute; 
+            bottom: -35px; /* Ajuste para a ponta do gancho bater com a linha */
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 35px; /* Tamanho responsivo do gancho */
+            height: auto;
+        }
+        #hook img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
 
         .item { position: absolute; z-index: 40; pointer-events: none; font-size: 50px; }
         .shark-size { font-size: 85px !important; }
@@ -138,7 +152,11 @@
         </div>
         <div id="boat-container">
             <img src="barco.png" id="boat-img" alt="Barco">
-            <div id="line"><div id="hook">🪝</div></div>
+            <div id="line">
+                <div id="hook">
+                    <img src="gancho.png" alt="Anzol">
+                </div>
+            </div>
         </div>
         <div id="sea"><div id="container"></div></div>
     </div>
@@ -197,7 +215,6 @@
     }
 
     function resetGame() {
-        // Limpa o mar sem recarregar a página (Rápido!)
         active = false;
         clearInterval(timerInterval);
         items.forEach(it => it.el.remove());
@@ -205,13 +222,9 @@
         score = 0; level = 1; timeLeft = 60;
         state = 'swing'; angle = 0; len = 65; caught = null;
         slowMoFactor = 1;
-        
-        // Atualiza o HUD
         ptsDisplay.innerText = "0";
         lvlDisplay.innerText = "1";
         timeDisplay.innerText = "60";
-        
-        // Volta para o menu principal
         document.getElementById('game-over').style.display = 'none';
         document.getElementById('game-container').style.display = 'none';
         document.getElementById('main-menu').style.display = 'flex';
@@ -247,16 +260,12 @@
 
     function spawn() {
         if(!active) return;
-        
         if(items.length < MAX_ITEMS) {
             const batchSize = 2; 
             for(let i=0; i < batchSize; i++) {
                 let chance = Math.random();
                 let k = 'PEIXE';
-                
-                if (timeLeft < 15 && Math.random() < 0.35) {
-                    k = 'BONUS';
-                } 
+                if (timeLeft < 15 && Math.random() < 0.35) { k = 'BONUS'; } 
                 else {
                     if (level >= 12) {
                         if (chance < 0.15) k = 'BONUS';
@@ -279,7 +288,6 @@
                         else k = 'PEIXE';
                     }
                 }
-                
                 if(level > 2 && k === 'PEIXE' && Math.random() > 0.85) k = 'TUBARAO';
 
                 const t = types[k];
@@ -305,8 +313,6 @@
 
     function update() {
         if(!active) return;
-        
-        // Movimento Peixes (Usando transform3d para fluidez)
         for (let i = items.length - 1; i >= 0; i--) {
             const it = items[i];
             if(it === caught) continue;
