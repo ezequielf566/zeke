@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Templo de Salomão: A Edificação</title>
+    <style>
+        :root {
+            --gold: #FFD700;
+            --stone-dark: #5D4037;
+            --stone-light: #D7CCC8;
+            --ui-bg: rgba(0, 0, 0, 0.6);
+        }
+
+        * { box-sizing: border-box; touch-action: none; }
+        
+        body {
+            margin: 0; padding: 0;
+            background: #1a1a1a;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh;
+        }
+
+        #game-wrapper {
+            position: relative;
+            width: 100%; height: 100%;
+            max-width: 500px; max-height: 900px;
+            background: skyblue;
+            overflow: hidden;
+        }
+
+        canvas { width: 100%; height: 100%; display: block; }
+
+        .ui-panel {
+            position: absolute;
+            top: 20px; left: 0; width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            pointer-events: none;
+        }
+
+        #score-card {
+            background: var(--ui-bg);
+            color: var(--gold);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 2px solid var(--gold);
+            text-shadow: 1px 1px 2px black;
+        }
+
+        #weather-info {
+            color: white;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #message-bar {
+            position: absolute;
+            bottom: 40px; width: 90%; left: 5%;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px; border-radius: 12px;
+            text-align: center; color: var(--stone-dark);
+            font-weight: bold; border-left: 5px solid var(--gold);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        #overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            color: white; z-index: 100;
+            text-align: center; padding: 20px;
+        }
+
+        button {
+            background: var(--gold);
+            border: none; padding: 15px 40px;
+            font-size: 1.4rem; font-weight: bold;
+            border-radius: 50px; cursor: pointer;
+            margin-top: 20px; transition: transform 0.2s;
+        }
+
+        button:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <canvas id="canvas"></canvas>
+    
+    <div class="ui-panel">
+        <div id="score-card">PEDRAS: <span id="score">0</span></div>
+        <div id="weather-info">CÉU LIMPO</div>
+    </div>
+
+    <div id="message-bar">Prepare-se para edificar com sabedoria!</div>
+
+    <div id="overlay">
+        <h1 style="color: var(--gold); margin-bottom: 5px;">TEMPLO DE SALOMÃO</h1>
+        <p style="opacity: 0.8;">Construa a casa de Deus com firmeza.</p>
+        <button onclick="Game.start()">INICIAR OBRA</button>
+    </div>
+</div>
+
+<script>
+const Game = {
+    canvas: document.getElementById('canvas'),
+    ctx: null,
+    score: 0,
+    blocks: [],
+    particles: [],
+    gameActive: false,
+    width: 0, height: 0,
+    cameraY: 0,
+    
+    // Configurações de Pêndulo
+    swing: { angle: 0, speed: 0.04, range: 0, x: 0, y: 100 },
+    blockW: 120, blockH: 45,
+    
+    // Clima
+    weather: "clear", // clear, wind, night, storm
+    windForce: 0,
+    ambientAlpha: 0,
+
+    phrases: [
+        "A sabedoria edifica a casa!",
+        "Trabalhe com um coração alegre.",
+        "O fundamento deve ser firme.",
+        "Grandiosa é a obra do Senhor!",
+        "Paciência é a chave da construção.",
+        "Cada pedra conta nesta união."
+    ],
+
+    init() {
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this.canvas.addEventListener('pointerdown', () => this.drop());
+        this.render();
+    },
+
+    resize() {
+        this.width = this.canvas.width = this.canvas.offsetWidth;
+        this.height = this.canvas.height = this.canvas.offsetHeight;
+        this.swing.range = this.width * 0.35;
+    },
+
+    start() {
+        this.score = 0;
+        this.blocks = [{ x: this.width/2 - 60, y: this.height - 60, w: 120, h: 45 }];
+        this.cameraY = 0;
+        this.swing.speed = 0.04;
+        this.weather = "clear";
+        this.windForce = 0;
+        this.gameActive = true;
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('score').innerText = "0";
+        this.updateMessage();
+    },
+
+    updateMessage() {
+        const msg = this.phrases[Math.floor(Math.random() * this.phrases.length)];
+        document.getElementById('message-bar').innerText = msg;
+    },
+
+    drop() {
+        if(!this.gameActive) return;
+
+        const currentX = this.swing.x - this.blockW/2;
+        const lastBlock = this.blocks[this.blocks.length - 1];
+        const diff = currentX - lastBlock.x;
+
+        if (Math.abs(diff) < this.blockW) {
+            this.blocks.push({
+                x: currentX,
+                y: lastBlock.y - this.blockH,
+                w: this.blockW,
+                h: this.blockH
+            });
+            this.score++;
+            document.getElementById('score').innerText = this.score;
+            
+            if (this.blocks.length > 4) this.cameraY += this.blockH;
+            
+            this.updateDifficulty();
+            this.updateMessage();
+        } else {
+            this.gameOver();
+        }
+    },
+
+    updateDifficulty() {
+        this.swing.speed += 0.003;
+        
+        if (this.score >= 5 && this.score < 10) {
+            this.weather = "wind";
+            this.windForce = 1.5;
+            document.getElementById('weather-info').innerText = "VENTO FORTE";
+        } else if (this.score >= 10 && this.score < 15) {
+            this.weather = "night";
+            document.getElementById('weather-info').innerText = "NOITE CALMA";
+        } else if (this.score >= 15) {
+            this.weather = "storm";
+            this.windForce = 2.5;
+            document.getElementById('weather-info').innerText = "TEMPESTADE";
+        }
+    },
+
+    gameOver() {
+        this.gameActive = false;
+        document.getElementById('overlay').style.display = 'flex';
+        document.getElementById('overlay').innerHTML = `
+            <h1 style="color:var(--gold)">OBRA CONCLUÍDA</h1>
+            <p>Sua torre alcançou ${this.score} níveis!</p>
+            <button onclick="Game.start()">RECOMEÇAR</button>
+        `;
+    },
+
+    drawCorda(x, y) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.width/2, -this.cameraY);
+        this.ctx.bezierCurveTo(this.width/2, y/2, x, y/2, x, y);
+        this.ctx.strokeStyle = "#4e342e";
+        this.ctx.lineWidth = 5;
+        this.ctx.stroke();
+        // Detalhe trançado
+        this.ctx.setLineDash([4, 4]);
+        this.ctx.strokeStyle = "#6d4c41";
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+    },
+
+    render() {
+        const ctx = this.ctx;
+        // Fundo Dinâmico
+        let topColor = "#87ceeb", botColor = "#e0f7fa";
+        if(this.weather === "night" || this.weather === "storm") {
+            topColor = "#1a237e"; botColor = "#000051";
+        }
+        
+        const grad = ctx.createLinearGradient(0, 0, 0, this.height);
+        grad.addColorStop(0, topColor);
+        grad.addColorStop(1, botColor);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, this.width, this.height);
+
+        ctx.save();
+        ctx.translate(0, this.cameraY);
+
+        // Desenhar Blocos
+        this.blocks.forEach((b, i) => {
+            ctx.fillStyle = i % 5 === 0 ? "#FFD700" : "#d7ccc8";
+            ctx.strokeStyle = "#8d6e63";
+            ctx.lineWidth = 3;
+            ctx.fillRect(b.x, b.y, b.w, b.h);
+            ctx.strokeRect(b.x, b.y, b.w, b.h);
+            // Detalhe de pedra
+            ctx.fillStyle = "rgba(0,0,0,0.1)";
+            ctx.fillRect(b.x + 5, b.y + 5, 10, 10);
+        });
+
+        // Pêndulo
+        if (this.gameActive) {
+            this.swing.angle += this.swing.speed;
+            const drift = (this.weather === "wind" || this.weather === "storm") ? Math.sin(Date.now()/500) * this.windForce * 10 : 0;
+            this.swing.x = this.width/2 + Math.sin(this.swing.angle) * this.swing.range + drift;
+            
+            const targetY = this.blocks[this.blocks.length-1].y - 120;
+            this.drawCorda(this.swing.x, targetY);
+            
+            // Bloco Pendurado
+            ctx.fillStyle = "#f5f5f5";
+            ctx.fillRect(this.swing.x - this.blockW/2, targetY, this.blockW, this.blockH);
+            ctx.strokeRect(this.swing.x - this.blockW/2, targetY, this.blockW, this.blockH);
+        }
+
+        ctx.restore();
+
+        // Efeitos de Clima (Overlay)
+        if(this.weather === "storm") {
+            ctx.fillStyle = "rgba(255,255,255,0.1)";
+            for(let i=0; i<20; i++) ctx.fillRect(Math.random()*this.width, Math.random()*this.height, 2, 20);
+        }
+        
+        if(this.weather === "night") {
+            const radial = ctx.createRadialGradient(this.width/2, this.height/2, 50, this.width/2, this.height/2, 300);
+            radial.addColorStop(0, "transparent");
+            radial.addColorStop(1, "rgba(0,0,0,0.7)");
+            ctx.fillStyle = radial;
+            ctx.fillRect(0,0,this.width, this.height);
+        }
+
+        requestAnimationFrame(() => this.render());
+    }
+};
+
+Game.init();
+</script>
+</body>
+</html>
