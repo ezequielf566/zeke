@@ -325,7 +325,8 @@
         }
 
         if(state === 'swing') {
-            angle += (1.4 + (Math.min(level, 15) * 0.1)) * dir * slowMoFactor;
+            // VELOCIDADE AJUSTADA: De 1.4 para 0.9 na base para suavizar o Nível 1
+            angle += (0.9 + (Math.min(level, 15) * 0.1)) * dir * slowMoFactor;
             if(Math.abs(angle) > 65) dir *= -1;
             line.style.transform = `rotate(${angle}deg)`;
         } else if(state === 'launch') {
