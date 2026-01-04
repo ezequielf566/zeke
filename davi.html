@@ -21,7 +21,6 @@
             height: 100vh;
         }
 
-        /* FUNDO COM TRANSIÇÃO NATURAL */
         #game-wrapper {
             position: relative;
             width: 100vw; height: 100vh;
@@ -31,11 +30,11 @@
             background-repeat: no-repeat;
             background-position: center center;
             background-size: cover;
-            /* Transição suave para o fundo e filtros */
-            transition: background-image 2.5s ease-in-out, filter 2s;
+            /* Transição suave de 2 segundos */
+            transition: background-image 2s ease-in-out, filter 2s;
         }
 
-        /* Classes de Fundo - Usando IDs para garantir prioridade */
+        /* Classes de Fundo */
         #game-wrapper.bg-dia { background-image: url('manafundo.png'); }
         #game-wrapper.bg-chuva { background-image: url('chuva_fundo.png'); }
         #game-wrapper.bg-tempestade { background-image: url('tempestade_fundo.png'); }
@@ -45,24 +44,8 @@
         .sand-storm { filter: sepia(0.6) brightness(0.8); }
         .storm-flash { animation: flash 0.15s ease-out; }
 
-        /* Esconder o pré-carregamento das imagens */
-        .preload {
-            position: absolute;
-            width: 0; height: 0;
-            overflow: hidden;
-            z-index: -9999;
-            pointer-events: none;
-        }
-
-        @keyframes flash {
-            0% { filter: brightness(3); }
-            100% { filter: brightness(0.8); }
-        }
-
-        @keyframes pop {
-            0% { transform: scale(0.5); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes flash { 0% { filter: brightness(3); } 100% { filter: brightness(0.8); } }
+        @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
         canvas { width: 100%; height: 100%; display: block; position: absolute; top:0; left:0; }
 
@@ -116,13 +99,6 @@
 </head>
 <body>
 
-<div class="preload">
-    <img src="manafundo.png">
-    <img src="chuva_fundo.png">
-    <img src="tempestade_fundo.png">
-    <img src="areia_fundo.png">
-</div>
-
 <div id="game-wrapper" class="bg-dia">
     <canvas id="canvas"></canvas>
     <div id="feedback">PERFEITO!</div>
@@ -153,20 +129,12 @@ const Game = {
     cameraY: 0,
     targetCameraY: 0,
     feedbackEl: document.getElementById('feedback'),
-    
     windIntensity: 0,
-    leavesActive: false,
-    rainActive: false,
-    stormActive: false,
-    sandActive: false,
-    
-    towerLean: 0,
-    leanVelocity: 0,
-    badHits: 0,
-    
-    blockW: 140,
-    blockH: 45,
+    leavesActive: false, rainActive: false, stormActive: false, sandActive: false,
+    towerLean: 0, leanVelocity: 0, badHits: 0,
+    blockW: 140, blockH: 45,
     swing: { angle: 0, speed: 0.012, x: 0, y: 0, amplitude: 0.45 },
+    cachedImages: {}, // Guarda as imagens pré-carregadas
 
     init() {
         this.ctx = this.canvas.getContext('2d');
@@ -183,6 +151,16 @@ const Game = {
     resize() {
         this.width = this.canvas.width = this.canvas.offsetWidth;
         this.height = this.canvas.height = this.canvas.offsetHeight;
+    },
+
+    // FUNÇÃO CHAVE: Pré-carrega a imagem 20 pontos antes
+    preloadWeather(nextImg) {
+        if (!this.cachedImages[nextImg]) {
+            const img = new Image();
+            img.src = nextImg;
+            this.cachedImages[nextImg] = img;
+            console.log("Pré-carregando fundo: " + nextImg);
+        }
     },
 
     initParticles() {
@@ -213,10 +191,15 @@ const Game = {
         const tag = document.getElementById('level-tag');
         const s = this.score;
 
+        // GATILHOS DE PRÉ-CARREGAMENTO (20 pontos antes)
+        if (s >= 80 && s < 100) this.preloadWeather('chuva_fundo.png');
+        if (s >= 180 && s < 200) this.preloadWeather('tempestade_fundo.png');
+        if (s >= 280 && s < 300) this.preloadWeather('areia_fundo.png');
+        if (s >= 380 && s < 400) this.preloadWeather('manafundo.png');
+
         this.leavesActive = false; this.rainActive = false; this.stormActive = false; this.sandActive = false;
         this.windIntensity = 0;
         
-        // Remove as classes antigas
         this.wrapper.classList.remove('night-mode', 'sand-storm', 'bg-dia', 'bg-chuva', 'bg-tempestade', 'bg-areia');
 
         if (s >= 400 && s < 450) {
