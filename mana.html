@@ -42,11 +42,10 @@
             z-index: 20; 
         }
 
-        /* AJUSTE DO AVATAR PNG */
         #player {
             position: absolute; 
             bottom: 80px; 
-            width: 90px; height: 90px; /* Tamanho otimizado para celulares */
+            width: 90px; height: 90px; 
             background-image: url('avatarmana.png');
             background-size: contain;
             background-repeat: no-repeat;
@@ -111,7 +110,7 @@
     <div id="screen-start" class="overlay">
         <h1 style="font-size: 48px; color: var(--gold); margin-bottom: 10px;">MANÁ</h1>
         <p style="font-size: 18px;">Deus ouviu o clamor do Seu povo.</p>
-        <p style="font-size: 14px; opacity: 0.8; max-width: 300px;">Mova o avatar tocando nas laterais para colher o que cai do céu. Complete o combo para avançar.</p><br>
+        <p style="font-size: 14px; opacity: 0.8; max-width: 300px;">Arraste o dedo ou toque nas laterais para colher o maná. Complete o combo para avançar.</p><br>
         <button class="btn" onclick="startGame()">COLHER PROVIMENTO</button>
     </div>
 
@@ -133,9 +132,11 @@
             mana: 0,
             playerX: window.innerWidth / 2,
             velocityX: 0,
-            acceleration: 0.9, 
+            // AJUSTE: Aceleração reduzida de 0.9 para 0.45 (mais suave)
+            acceleration: 0.45, 
             friction: 0.84,    
-            maxSpeed: 11,      
+            // AJUSTE: Velocidade máxima reduzida de 11 para 7 (mais controlável)
+            maxSpeed: 7,      
             moveDir: 0,
             items: [],
             lastSpawn: 0,
@@ -144,7 +145,8 @@
             targetEmoji: '',
             targetGoal: 3,
             currentSequence: 0,
-            challengeComplete: false
+            challengeComplete: false,
+            isDragging: false
         };
 
         function setChallenge() {
@@ -162,15 +164,41 @@
             requestAnimationFrame(gameLoop);
         }
 
-        const handleInput = (x) => {
-            const screenMid = window.innerWidth / 2;
-            game.moveDir = x < screenMid ? -1 : 1;
+        // --- SISTEMA DE MOVIMENTAÇÃO (TOUCH & MOUSE) ---
+        const startInput = (x) => {
+            game.isDragging = true;
+            handleInput(x);
         };
 
-        window.addEventListener('touchstart', (e) => handleInput(e.touches[0].clientX));
-        window.addEventListener('mousedown', (e) => handleInput(e.clientX));
-        window.addEventListener('touchend', () => game.moveDir = 0);
-        window.addEventListener('mouseup', () => game.moveDir = 0);
+        const handleInput = (x) => {
+            if (!game.active) return;
+            // Lógica de Arrastar: O personagem tenta ir para onde o dedo está
+            const dist = x - game.playerX;
+            if (Math.abs(dist) > 10) {
+                game.moveDir = dist > 0 ? 1 : -1;
+            } else {
+                game.moveDir = 0;
+            }
+        };
+
+        const stopInput = () => {
+            game.isDragging = false;
+            game.moveDir = 0;
+        };
+
+        // Eventos Touch (Celular)
+        window.addEventListener('touchstart', (e) => startInput(e.touches[0].clientX));
+        window.addEventListener('touchmove', (e) => {
+            if(game.isDragging) handleInput(e.touches[0].clientX);
+        });
+        window.addEventListener('touchend', stopInput);
+
+        // Eventos Mouse (Desktop)
+        window.addEventListener('mousedown', (e) => startInput(e.clientX));
+        window.addEventListener('mousemove', (e) => {
+            if(game.isDragging) handleInput(e.clientX);
+        });
+        window.addEventListener('mouseup', stopInput);
 
         function gameLoop(timestamp) {
             if (!game.active) return;
@@ -193,7 +221,6 @@
 
             player.style.left = game.playerX + 'px';
             
-            // Inverte o PNG conforme a direção
             if (Math.abs(game.velocityX) > 0.5) {
                 player.style.transform = `translateX(-50%) scaleX(${game.velocityX < 0 ? -1 : 1})`;
             }
@@ -233,7 +260,6 @@
                 const playerCenter = game.playerX;
                 const itemCenter = item.x + 30;
 
-                // Hitbox ajustada para o PNG (mais alta)
                 if (item.y > window.innerHeight - (groundHeight + playerHeight) && item.y < window.innerHeight - groundHeight) {
                     if (Math.abs(playerCenter - itemCenter) < 50) {
                         handleCollect(item);
@@ -297,7 +323,8 @@
             game.level++;
             game.mana = 0;
             game.itemSpeed += 0.4;
-            game.maxSpeed += 0.6; 
+            // Aumenta a velocidade do player levemente a cada nível
+            game.maxSpeed += 0.5; 
             game.spawnRate = Math.max(600, game.spawnRate - 150);
             
             game.items.forEach(item => item.el.remove());
