@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Templo de Salomão: Firmeza na Rocha</title>
+    <title>Templo de Salomão: O Desafio Real</title>
     <style>
         :root {
             --gold: #FFD700;
@@ -25,7 +25,7 @@
             position: relative;
             width: 100vw; height: 100vh;
             max-width: 500px; max-height: 900px;
-            background: #87ceeb;
+            background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%);
             overflow: hidden;
         }
 
@@ -39,14 +39,29 @@
         }
 
         #score-card {
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             color: var(--gold);
             padding: 10px 30px;
             border-radius: 50px;
             font-size: 2rem;
             font-weight: 900;
             border: 3px solid var(--gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
         }
+
+        #weather-alert {
+            margin-top: 10px;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: rgba(255, 0, 0, 0.6);
+            padding: 5px 15px;
+            border-radius: 5px;
+            display: none;
+            animation: blink 0.5s infinite alternate;
+        }
+
+        @keyframes blink { from { opacity: 0.2; } to { opacity: 1; } }
 
         #message-bar {
             position: absolute;
@@ -54,7 +69,6 @@
             background: white; padding: 15px; border-radius: 15px;
             text-align: center; font-weight: bold;
             border-bottom: 4px solid var(--gold);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
             z-index: 10;
         }
 
@@ -71,18 +85,36 @@
             font-size: 1.5rem; font-weight: bold; border-radius: 50px;
             cursor: pointer; margin-top: 25px; box-shadow: 0 6px 0 #b8860b;
         }
+
+        .points-float {
+            position: absolute;
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 1.5rem;
+            pointer-events: none;
+            animation: floatUp 1s forwards;
+            text-shadow: 2px 2px 4px black;
+        }
+
+        @keyframes floatUp {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-100px); opacity: 0; }
+        }
     </style>
 </head>
 <body>
 
 <div id="game-wrapper">
     <canvas id="canvas"></canvas>
-    <div class="ui-panel"><div id="score-card"><span id="score">0</span></div></div>
-    <div id="message-bar">Toque para começar a construção!</div>
-    <div id="overlay" id="startMenu">
-        <h1 style="color: var(--gold); font-size: 2.5rem;">TEMPLO REAL</h1>
-        <p>Alinhe os blocos com precisão!</p>
-        <button onclick="Game.start()">JOGAR</button>
+    <div class="ui-panel">
+        <div id="score-card"><span id="score">0</span></div>
+        <div id="weather-alert">VENTO FORTE!</div>
+    </div>
+    <div id="message-bar">Edifique com perfeição!</div>
+    <div id="overlay">
+        <h1 style="color: var(--gold); font-size: 2.5rem;">TEMPLO DE OURO</h1>
+        <p>Se a torre inclinar, tudo cairá!</p>
+        <button onclick="Game.start()">INICIAR OBRA</button>
     </div>
 </div>
 
@@ -96,12 +128,13 @@ const Game = {
     width: 0, height: 0,
     cameraY: 0,
     targetCameraY: 0,
+    towerLean: 0, // Inclinação da torre
     
-    // Configurações do Bloco
     swing: { angle: 0, speed: 0.02, x: 0 },
     blockW: 140, 
     blockH: 45,
-    
+    weather: "clear",
+
     init() {
         this.ctx = this.canvas.getContext('2d');
         this.resize();
@@ -119,120 +152,188 @@ const Game = {
         this.score = 0;
         this.cameraY = 0;
         this.targetCameraY = 0;
-        this.swing.speed = 0.02;
-        // Bloco inicial (Base) - Corrigido para ser estático e centralizado
-        this.blocks = [{
-            x: Math.round(this.width / 2 - 70),
-            y: this.height - 100,
-            w: 140
-        }];
-        
+        this.towerLean = 0;
+        this.swing.speed = 0.025;
+        this.blocks = [{ x: this.width/2 - 70, y: this.height - 100, w: 140, lean: 0 }];
         this.gameActive = true;
+        this.weather = "clear";
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('score').innerText = "0";
+        document.getElementById('weather-alert').style.display = 'none';
     },
 
     drop() {
         if(!this.gameActive) return;
 
-        // Captura a posição exata do bloco no momento do clique (arredondado para evitar trepidação)
-        const dropX = Math.round(this.swing.x - this.blockW / 2);
+        const dropX = this.swing.x - this.blockW / 2;
         const lastBlock = this.blocks[this.blocks.length - 1];
         
-        // Verifica se houve sobreposição (colisão)
+        // Offset em relação ao centro do bloco anterior
         const diff = dropX - lastBlock.x;
 
         if (Math.abs(diff) < this.blockW) {
-            // Adiciona o bloco na posição exata capturada, sem vínculo com o pêndulo
+            // Ganho de pontos baseado na precisão
+            const points = Math.abs(diff) < 15 ? 20 : 10;
+            this.showPoints(points);
+            
             this.blocks.push({
                 x: dropX,
                 y: lastBlock.y - this.blockH,
                 w: this.blockW
             });
             
-            this.score++;
+            this.score += points;
             document.getElementById('score').innerText = this.score;
             
-            // Sobe a câmera conforme a pilha cresce
-            if (this.blocks.length > 3) {
-                this.targetCameraY += this.blockH;
-            }
+            // LÓGICA DE FÍSICA: Calcula o desequilíbrio
+            // A torre inclina conforme a média dos erros acumulados
+            this.towerLean += (diff * 0.05);
 
-            // Aumento de velocidade muito mais controlado
-            this.swing.speed += 0.0005;
+            if (this.blocks.length > 3) this.targetCameraY += this.blockH;
+            
+            this.updateWeather();
+            this.swing.speed += 0.001;
         } else {
-            this.gameOver();
+            this.gameOver("A pedra caiu fora da estrutura!");
         }
     },
 
-    gameOver() {
+    showPoints(pts) {
+        const el = document.createElement('div');
+        el.className = 'points-float';
+        el.style.left = '50%';
+        el.style.top = '40%';
+        el.innerText = `+${pts}`;
+        document.getElementById('game-wrapper').appendChild(el);
+        setTimeout(() => el.remove(), 1000);
+    },
+
+    updateWeather() {
+        const alert = document.getElementById('weather-alert');
+        if (this.score > 100 && this.score < 200) {
+            this.weather = "wind";
+            alert.innerText = "VENTO FORTE!";
+            alert.style.display = "block";
+        } else if (this.score >= 200) {
+            this.weather = "storm";
+            alert.innerText = "TEMPESTADE!";
+            alert.style.display = "block";
+        }
+    },
+
+    gameOver(reason) {
         this.gameActive = false;
         document.getElementById('overlay').style.display = 'flex';
         document.getElementById('overlay').innerHTML = `
-            <h1 style="color:var(--gold)">FIM DA OBRA</h1>
-            <p>Você empilhou ${this.score} blocos!</p>
+            <h1 style="color:var(--gold)">TORRE DESABOU</h1>
+            <p>${reason}</p>
+            <p>Pontuação: ${this.score}</p>
             <button onclick="Game.start()">RECOMEÇAR</button>
         `;
     },
 
+    drawCorda(x, y) {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(this.width/2, -500); // Origem no topo
+        ctx.lineTo(x, y);
+        
+        // Textura de corda trançada (SVG-like pattern)
+        ctx.strokeStyle = "#5d4037";
+        ctx.lineWidth = 6;
+        ctx.stroke();
+        
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = "#3e2723";
+        ctx.lineWidth = 6;
+        ctx.stroke();
+        ctx.restore();
+    },
+
+    drawBlock(b, isGold, isSwinging = false) {
+        const ctx = this.ctx;
+        const x = Math.round(b.x);
+        const y = Math.round(b.y);
+
+        ctx.save();
+        
+        // Efeito de Ouro ou Pedra
+        if (isGold) {
+            let grad = ctx.createLinearGradient(x, y, x + this.blockW, y + this.blockH);
+            grad.addColorStop(0, "#FFD700");
+            grad.addColorStop(0.5, "#FFF176");
+            grad.addColorStop(1, "#B8860B");
+            ctx.fillStyle = grad;
+        } else {
+            ctx.fillStyle = "#e0e0e0";
+        }
+
+        ctx.strokeStyle = isGold ? "#B8860B" : "#8d6e63";
+        ctx.lineWidth = 2;
+
+        // Desenha o bloco
+        ctx.fillRect(x, y, this.blockW, this.blockH);
+        ctx.strokeRect(x, y, this.blockW, this.blockH);
+
+        // Brilho/Reflexo (Textura Realista)
+        ctx.fillStyle = "rgba(255,255,255,0.4)";
+        ctx.fillRect(x + 2, y + 2, this.blockW - 4, 4); // Topo iluminado
+        ctx.fillStyle = "rgba(0,0,0,0.1)";
+        ctx.fillRect(x + 2, y + this.blockH - 6, this.blockW - 4, 4); // Sombra base
+
+        ctx.restore();
+    },
+
     render() {
         const ctx = this.ctx;
-        
-        // Suavização da Câmera
         this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
 
-        // Fundo
-        ctx.fillStyle = "#87ceeb";
+        // Fundo Climático
+        if (this.weather === "storm") ctx.fillStyle = "#2c3e50";
+        else if (this.weather === "wind") ctx.fillStyle = "#81d4fa";
+        else ctx.fillStyle = "#4facfe";
         ctx.fillRect(0, 0, this.width, this.height);
 
         ctx.save();
+        // Aplica a inclinação da torre na visualização (FÍSICA VISUAL)
+        ctx.translate(this.width/2, this.height + this.cameraY);
+        ctx.rotate(this.towerLean * Math.PI / 180);
+        ctx.translate(-this.width/2, -(this.height + this.cameraY));
+        
         ctx.translate(0, this.cameraY);
 
-        // Desenhar Chão
-        ctx.fillStyle = "#5d4037";
-        ctx.fillRect(0, this.height - 55, this.width, 100);
+        // Chão
+        ctx.fillStyle = "#3e2723";
+        ctx.fillRect(-this.width, this.height - 55, this.width*3, 200);
 
-        // Desenhar Pilha de Blocos (Fixos)
+        // Renderiza blocos da torre
         this.blocks.forEach((b, i) => {
-            const isGold = (i > 0 && i % 5 === 0);
-            ctx.fillStyle = isGold ? "#FFD700" : "#eeeeee";
-            ctx.strokeStyle = "#8d6e63";
-            ctx.lineWidth = 3;
-            
-            // Usamos Math.round para garantir que não haja "sub-pixels" causando distorção
-            ctx.fillRect(Math.round(b.x), Math.round(b.y), this.blockW, this.blockH);
-            ctx.strokeRect(Math.round(b.x), Math.round(b.y), this.blockW, this.blockH);
-            
-            // Brilho lateral para realismo
-            ctx.fillStyle = "rgba(255,255,255,0.3)";
-            ctx.fillRect(Math.round(b.x), Math.round(b.y), 5, this.blockH);
+            this.drawBlock(b, i % 5 === 0 && i !== 0);
         });
 
-        // Desenhar Pêndulo (Bloco em movimento)
-        if (this.gameActive) {
-            this.swing.angle += this.swing.speed;
-            const range = this.width * 0.35;
-            this.swing.x = this.width / 2 + Math.sin(this.swing.angle) * range;
-            
-            // Posição visual do bloco pendurado (150px acima do topo da torre)
-            const swingY = this.blocks[this.blocks.length - 1].y - 150;
-
-            // Corda
-            ctx.beginPath();
-            ctx.moveTo(this.width / 2, -this.cameraY - 50);
-            ctx.lineTo(this.swing.x, swingY);
-            ctx.strokeStyle = "#3e2723";
-            ctx.lineWidth = 4;
-            ctx.stroke();
-
-            // Bloco Balançando
-            ctx.fillStyle = "#ffffff";
-            ctx.strokeStyle = "#5d4037";
-            ctx.fillRect(Math.round(this.swing.x - this.blockW / 2), Math.round(swingY), this.blockW, this.blockH);
-            ctx.strokeRect(Math.round(this.swing.x - this.blockW / 2), Math.round(swingY), this.blockW, this.blockH);
+        // Verifica se a inclinação passou do limite (Torre caiu)
+        if (Math.abs(this.towerLean) > 15 && this.gameActive) {
+            this.gameOver("A torre ficou muito pesada para um lado!");
         }
 
         ctx.restore();
+
+        // Pêndulo (Não sofre a rotação da torre, pois está no guindaste)
+        if (this.gameActive) {
+            this.swing.angle += this.swing.speed;
+            
+            let drift = 0;
+            if (this.weather === "wind") drift = Math.sin(Date.now()/500) * 40;
+            if (this.weather === "storm") drift = Math.sin(Date.now()/300) * 70;
+
+            this.swing.x = this.width / 2 + Math.sin(this.swing.angle) * (this.width * 0.35) + drift;
+            const swingY = this.blocks[this.blocks.length - 1].y - 150;
+
+            this.drawCorda(this.swing.x, swingY);
+            this.drawBlock({ x: this.swing.x - this.blockW/2, y: swingY }, (this.blocks.length) % 5 === 0);
+        }
+
         requestAnimationFrame(() => this.render());
     }
 };
