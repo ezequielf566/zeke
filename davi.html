@@ -48,6 +48,20 @@
             border: 3px solid var(--gold-main);
         }
 
+        #weather-alert {
+            margin-top: 10px;
+            color: white;
+            font-weight: bold;
+            background: rgba(255, 0, 0, 0.7);
+            padding: 8px 25px;
+            border-radius: 20px;
+            display: none;
+            animation: blink 0.5s infinite alternate;
+            text-transform: uppercase;
+        }
+
+        @keyframes blink { from { opacity: 0.4; } to { opacity: 1; } }
+
         #overlay {
             position: absolute; inset: 0;
             background: rgba(0,0,0,0.85);
@@ -68,10 +82,11 @@
             font-weight: bold; font-size: 2rem; pointer-events: none;
             animation: floatUp 1s forwards; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             left: 50%; top: 40%;
+            z-index: 20;
         }
         @keyframes floatUp {
             from { transform: translate(-50%, 0); opacity: 1; }
-            to { transform: translate(-50%, -100px); opacity: 0; }
+            to { transform: translate(-50%, -120px); opacity: 0; }
         }
     </style>
 </head>
@@ -79,10 +94,13 @@
 
 <div id="game-wrapper">
     <canvas id="canvas"></canvas>
-    <div class="ui-panel"><div id="score-card"><span id="score">0</span></div></div>
+    <div class="ui-panel">
+        <div id="score-card"><span id="score">0</span></div>
+        <div id="weather-alert">VENTO FORTE!</div>
+    </div>
     <div id="overlay">
         <h1 style="color: var(--gold-main); font-size: 2.5rem;">TEMPLO REAL</h1>
-        <p>Assente os tijolos com precisão!</p>
+        <p>Edifique com perfeição!</p>
         <button onclick="Game.start()">JOGAR</button>
     </div>
 </div>
@@ -97,11 +115,12 @@ const Game = {
     cameraY: 0,
     targetCameraY: 0,
     towerLean: 0,
+    weather: "clear",
     
-    swing: { angle: 0, speed: 0.018, x: 0 }, 
+    swing: { angle: 0, speed: 0.016, x: 0, maxSpeed: 0.045 }, 
     blockW: 140, 
     blockH: 48,
-    dropDist: 200, // Aumentado para cair de mais longe
+    dropDist: 190, 
 
     init() {
         this.ctx = this.canvas.getContext('2d');
@@ -121,12 +140,13 @@ const Game = {
         this.cameraY = 0;
         this.targetCameraY = 0;
         this.towerLean = 0;
-        this.swing.speed = 0.018;
-        // Base fixa no chão
+        this.swing.speed = 0.016;
+        this.weather = "clear";
         this.blocks = [{ x: Math.round(this.width/2 - 70), y: this.height - 100, w: 140 }];
         this.gameActive = true;
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('score').innerText = "0";
+        document.getElementById('weather-alert').style.display = 'none';
     },
 
     drop() {
@@ -137,9 +157,13 @@ const Game = {
         const diff = dropX - lastBlock.x;
 
         if (Math.abs(diff) < this.blockW) {
-            const points = Math.abs(diff) < 15 ? 20 : 10;
+            const absDiff = Math.abs(diff);
+            const points = absDiff < 15 ? 20 : 10;
             this.showPoints(points);
             
+            // Recompensa por perfeição: Reduz um pouco a inclinação da torre
+            if(absDiff < 8) this.towerLean *= 0.8;
+
             this.blocks.push({
                 x: dropX,
                 y: lastBlock.y - this.blockH,
@@ -148,56 +172,81 @@ const Game = {
             
             this.score += points;
             document.getElementById('score').innerText = this.score;
-            this.towerLean += (diff * 0.03); // Ajuste fino da inclinação
+            this.towerLean += (diff * 0.038); 
 
-            // Só começa a subir a câmera após o 3º bloco para o chão não "pular"
-            if (this.blocks.length > 3) {
-                this.targetCameraY = (this.height * 0.6) - (this.blocks[this.blocks.length-1].y);
+            // Câmera dinâmica inteligente
+            const visualPos = (this.blocks[this.blocks.length-1].y) + this.targetCameraY;
+            if (visualPos < this.height * 0.45) {
+                this.targetCameraY += this.blockH;
             }
             
-            this.swing.speed += 0.0007;
+            this.updateWeather();
+            
+            // Aceleração gradual com limite máximo para diversão
+            if(this.swing.speed < this.swing.maxSpeed) {
+                this.swing.speed += 0.0008;
+            }
         } else {
-            this.gameOver();
+            this.gameOver("A peça caiu fora da torre!");
+        }
+    },
+
+    updateWeather() {
+        const alert = document.getElementById('weather-alert');
+        // Vento aparece em ondas (Modo diversão)
+        // A cada 10 blocos, temos um período de vento e um período de calma
+        const blockCount = this.blocks.length;
+        
+        if (blockCount >= 5 && blockCount % 15 < 7) {
+            this.weather = "wind";
+            alert.innerText = "ALERTA: VENTANIA!";
+            alert.style.display = "block";
+            alert.style.background = "rgba(255, 165, 0, 0.7)";
+        } else if (blockCount >= 20 && blockCount % 25 < 10) {
+            this.weather = "storm";
+            alert.innerText = "CUIDADO: TEMPESTADE!";
+            alert.style.display = "block";
+            alert.style.background = "rgba(255, 0, 0, 0.7)";
+        } else {
+            this.weather = "clear";
+            alert.style.display = "none";
         }
     },
 
     showPoints(pts) {
         const el = document.createElement('div');
         el.className = 'points-float';
-        el.innerText = `+${pts}`;
+        el.innerText = pts === 20 ? "PERFEITO! +20" : `+${pts}`;
+        if(pts === 20) el.style.color = varProp('--gold-light');
         document.getElementById('game-wrapper').appendChild(el);
         setTimeout(() => el.remove(), 1000);
     },
 
-    gameOver() {
+    gameOver(msg) {
         this.gameActive = false;
         document.getElementById('overlay').style.display = 'flex';
         document.getElementById('overlay').innerHTML = `
-            <h1 style="color:var(--gold-main)">FALHA NA OBRA</h1>
-            <p>Sua torre caiu!</p>
+            <h1 style="color:var(--gold-main); font-size: 2.2rem;">TORRE DESABOU!</h1>
+            <p>${msg}</p>
+            <p style="font-size: 1.5rem; margin-top:10px;">Pontos: ${this.score}</p>
             <button onclick="Game.start()">RECOMEÇAR</button>
         `;
     },
 
-    drawBlock(b, isGold = true) {
+    drawBlock(b) {
         const ctx = this.ctx;
         const x = b.x;
         const y = b.y;
-
         ctx.save();
         let grad = ctx.createLinearGradient(x, y, x, y + this.blockH);
         grad.addColorStop(0, "#FFD700");
         grad.addColorStop(0.5, "#FFF176");
         grad.addColorStop(1, "#B8860B");
-        
         ctx.fillStyle = grad;
         ctx.strokeStyle = "#5d4037";
         ctx.lineWidth = 2;
-
         ctx.fillRect(x, y, this.blockW, this.blockH);
         ctx.strokeRect(x, y, this.blockW, this.blockH);
-        
-        // Reflexo de luz para parecer metal/tijolo real
         ctx.fillStyle = "rgba(255,255,255,0.4)";
         ctx.fillRect(x + 5, y + 5, this.blockW - 10, 5);
         ctx.restore();
@@ -205,22 +254,20 @@ const Game = {
 
     render() {
         const ctx = this.ctx;
-        this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
+        this.cameraY += (this.targetCameraY - this.cameraY) * 0.08;
 
-        ctx.clearRect(0, 0, this.width, this.height);
-        
-        // Fundo Céu
-        ctx.fillStyle = "#4facfe";
+        // Fundo Climático Suave
+        if (this.weather === "storm") ctx.fillStyle = "#34495e";
+        else if (this.weather === "wind") ctx.fillStyle = "#a2e1ff";
+        else ctx.fillStyle = "#4facfe";
         ctx.fillRect(0, 0, this.width, this.height);
 
-        // --- INÍCIO DA TORRE FIXA ---
+        // --- TORRE ---
         ctx.save();
         ctx.translate(0, this.cameraY);
         
-        // Ponto de rotação fixo na base da torre (centro do primeiro bloco)
         const baseY = this.height - 100;
         const baseX = this.width / 2;
-        
         ctx.translate(baseX, baseY);
         ctx.rotate(this.towerLean * Math.PI / 180);
         ctx.translate(-baseX, -baseY);
@@ -229,45 +276,50 @@ const Game = {
         ctx.fillStyle = "#3e2723";
         ctx.fillRect(-this.width, baseY + 48, this.width * 3, 500);
 
-        // Blocos assentados (estáticos)
         this.blocks.forEach(b => this.drawBlock(b));
-        
         ctx.restore();
-        // --- FIM DA TORRE FIXA ---
 
-        // Pêndulo e Corda (não sofrem a inclinação da torre até caírem)
+        // --- PÊNDULO ---
         if (this.gameActive) {
             this.swing.angle += this.swing.speed;
-            const range = this.width * 0.35;
-            this.swing.x = this.width / 2 + Math.sin(this.swing.angle) * range;
             
-            // O bloco balança acima do último tijolo
+            let drift = 0;
+            const time = Date.now();
+            if (this.weather === "wind") drift = Math.sin(time/500) * 35;
+            if (this.weather === "storm") drift = Math.sin(time/300) * 65 + Math.cos(time/1000) * 20;
+
+            const range = this.width * 0.35;
+            this.swing.x = this.width / 2 + Math.sin(this.swing.angle) * range + drift;
+            
             const lastY = this.blocks[this.blocks.length - 1].y;
             const swingY = lastY - this.dropDist;
 
-            // Desenhar Corda (fixa no topo da tela)
             ctx.save();
             ctx.beginPath();
-            ctx.moveTo(this.width / 2, -20);
-            ctx.lineTo(this.swing.x, swingY + this.cameraY);
+            ctx.moveTo(this.width / 2, 0); 
+            ctx.lineTo(this.swing.x, (swingY + this.cameraY));
             ctx.strokeStyle = "#3e2723";
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 3;
+            ctx.setLineDash([8, 4]);
             ctx.stroke();
             ctx.restore();
 
-            // Desenhar Bloco no ar
             ctx.save();
             ctx.translate(0, this.cameraY);
             this.drawBlock({ x: Math.round(this.swing.x - this.blockW/2), y: swingY });
             ctx.restore();
         }
 
-        // Perda por inclinação excessiva
-        if (Math.abs(this.towerLean) > 15 && this.gameActive) this.gameOver();
+        // Limite de inclinação para derrota
+        if (Math.abs(this.towerLean) > 17 && this.gameActive) {
+            this.gameOver("A torre ficou muito inclinada!");
+        }
 
         requestAnimationFrame(() => this.render());
     }
 };
+
+function varProp(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
 
 Game.init();
 </script>
