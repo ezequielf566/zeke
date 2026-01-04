@@ -9,13 +9,12 @@
             --gold-light: #FFF9C4;
             --gold-main: #FFD700;
             --gold-dark: #B8860B;
-            --night-overlay: rgba(0, 0, 20, 0);
         }
 
         * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
         
         body {
-            background: #1a1a1a;
+            background: #000;
             font-family: 'Georgia', serif;
             overflow: hidden;
             display: flex; justify-content: center; align-items: center;
@@ -32,9 +31,21 @@
             transition: filter 2s, background 2s;
         }
 
-        .night-mode { filter: brightness(0.4) contrast(1.2) saturate(0.5); }
-        .sepia-mode { filter: sepia(0.8) hue-rotate(-30deg) saturate(1.5); }
-        .fog-mode { filter: blur(1px) brightness(0.8); }
+        /* Filtros de Clima */
+        .night-mode { filter: brightness(0.3) contrast(1.4) saturate(0.4) hue-rotate(200deg); }
+        .sepia-mode { filter: sepia(0.8) hue-rotate(-30deg) saturate(2) brightness(0.8); }
+        .fog-mode { filter: blur(1px) brightness(0.7) grayscale(0.3); }
+        .snow-mode { filter: brightness(1.1) saturate(0.5) blue(0.1); }
+
+        /* Efeito de Raio */
+        .lightning-flash {
+            animation: flash 0.2s ease-out;
+        }
+        @keyframes flash {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(4) white; }
+            100% { filter: brightness(1); }
+        }
 
         canvas { width: 100%; height: 100%; display: block; position: absolute; top:0; left:0; }
 
@@ -55,7 +66,6 @@
             border: 2px solid var(--gold-main);
             text-align: center;
             min-width: 180px;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
         }
 
         #overlay {
@@ -85,6 +95,11 @@
             font-size: 1.4rem; font-weight: bold; border-radius: 50px;
             cursor: pointer; margin-top: 25px; color: #3e2723;
         }
+
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -100,7 +115,7 @@
     </div>
     <div id="overlay">
         <h1 style="color: var(--gold-main); font-size: 2.2rem; margin-bottom: 10px;">TEMPLO SAGRADO</h1>
-        <p>Enfrente a natureza para erguer sua obra.</p>
+        <p>A cada 100 peças, a natureza se manifesta.</p>
         <button onclick="Game.start()">INICIAR OBRA</button>
     </div>
 </div>
@@ -112,7 +127,7 @@ const Game = {
     ctx: null,
     score: 0,
     blocks: [],
-    particles: [],
+    particles: [], // Folhas, neve, areia
     fallingBlock: null,
     gameActive: false,
     exploding: false,
@@ -121,8 +136,7 @@ const Game = {
     feedbackEl: document.getElementById('feedback'),
     
     windIntensity: 0,
-    rainActive: false,
-    nightActive: false,
+    currentWeather: 'clear', // 'clear', 'leaves', 'storm', 'night', 'snow', 'sand'
     
     towerLean: 0,
     leanVelocity: 0,
@@ -130,14 +144,13 @@ const Game = {
     
     blockW: 140,
     blockH: 45,
-    swing: { angle: 0, speed: 0.012, x: 0, y: 300, amplitude: 0.48 }, // Ajustado para descer o tijolo
+    swing: { angle: 0, speed: 0.012, x: 0, y: 300, amplitude: 0.48 },
 
     init() {
         this.ctx = this.canvas.getContext('2d');
         this.resize();
         window.addEventListener('resize', () => this.resize());
         this.canvas.addEventListener('pointerdown', (e) => {
-            e.preventDefault();
             if(!this.exploding) this.launch();
         });
         this.render();
@@ -152,43 +165,73 @@ const Game = {
         this.feedbackEl.innerText = text;
         this.feedbackEl.style.color = color;
         this.feedbackEl.style.display = 'block';
-        this.feedbackEl.style.animation = 'none';
-        this.feedbackEl.offsetHeight; 
         this.feedbackEl.style.animation = 'pop 0.5s ease-out';
         setTimeout(() => this.feedbackEl.style.display = 'none', duration);
     },
 
+    createWeatherParticles(type) {
+        this.particles = [];
+        const count = 40;
+        for(let i=0; i<count; i++) {
+            this.particles.push({
+                x: Math.random() * this.width,
+                y: Math.random() * this.height,
+                v: 1 + Math.random() * 3,
+                size: 2 + Math.random() * 5,
+                angle: Math.random() * Math.PI * 2,
+                type: type
+            });
+        }
+    },
+
     updateDifficulty() {
         const tag = document.getElementById('level-tag');
-        if (this.score === 40) this.showFeedback("O VENTO ESTÁ VINDO...", "#FFD700", 2000);
-        if (this.score >= 50) {
-            this.windIntensity = 0.005;
-            tag.innerText = "VENTOS DO SUL";
+        const milestone = Math.floor(this.score / 100);
+        const progress = this.score % 100;
+
+        // Avisos nos 90 pontos de cada ciclo
+        if (progress === 90) {
+            this.showFeedback("ALGO ESTÁ MUDANDO...", "#FFD700", 2000);
         }
-        if (this.score === 90) this.showFeedback("O CÉU ESTÁ ESCURECENDO...", "#00E5FF", 2000);
-        if (this.score >= 100) {
-            this.rainActive = true;
-            tag.innerText = "TEMPESTADE";
-            tag.style.color = "#00E5FF";
+
+        // Troca de Clima a cada 100 pontos
+        if (progress === 0 && this.score > 0) {
+            this.wrapper.className = ''; 
+            const climates = ['leaves', 'storm', 'night', 'snow', 'sand'];
+            const chosen = climates[milestone % climates.length];
+            this.currentWeather = chosen;
+
+            switch(chosen) {
+                case 'leaves':
+                    tag.innerText = "OUTONO SOPRANTE";
+                    this.windIntensity = 0.005;
+                    this.createWeatherParticles('leaf');
+                    break;
+                case 'storm':
+                    tag.innerText = "TEMPESTADE BRAVA";
+                    this.wrapper.classList.add('fog-mode');
+                    this.createWeatherParticles('rain');
+                    break;
+                case 'night':
+                    tag.innerText = "NOITE PROFUNDA";
+                    this.wrapper.classList.add('night-mode');
+                    this.createWeatherParticles('firefly');
+                    break;
+                case 'snow':
+                    tag.innerText = "INVERNO RÍGIDO";
+                    this.wrapper.classList.add('snow-mode');
+                    this.createWeatherParticles('snow');
+                    break;
+                case 'sand':
+                    tag.innerText = "AREIAS DO DESERTO";
+                    this.wrapper.classList.add('sepia-mode');
+                    this.windIntensity = 0.015;
+                    this.createWeatherParticles('sand');
+                    break;
+            }
         }
-        if (this.score === 140) this.showFeedback("O SOL SE PÕE...", "#FF5722", 2000);
-        if (this.score >= 190) {
-            this.wrapper.classList.add('night-mode');
-            tag.innerText = "NOITE PROFUNDA";
-            tag.style.color = "#9C27B0";
-        }
-        if (this.score >= 300) {
-            this.wrapper.classList.add('fog-mode');
-            tag.innerText = "NEBLINA ESPESSA";
-        }
-        if (this.score >= 700) {
-            this.wrapper.classList.add('sepia-mode');
-            tag.innerText = "TEMPESTADE DE AREIA";
-            this.windIntensity = 0.015;
-        }
-        if (this.score < 500) this.swing.speed = 0.012;
-        else if (this.score < 900) this.swing.speed = 0.024;
-        else this.swing.speed = 0.032;
+        
+        this.swing.speed = 0.012 + (milestone * 0.005);
     },
 
     start() {
@@ -199,24 +242,24 @@ const Game = {
         this.leanVelocity = 0;
         this.badHits = 0;
         this.windIntensity = 0;
-        this.rainActive = false;
-        this.exploding = false;
+        this.currentWeather = 'clear';
         this.particles = [];
+        this.exploding = false;
         this.wrapper.className = '';
         this.blocks = [{ x: this.width/2 - 70, y: this.height - 100, fixed: true, vx: 0, vy: 0 }];
         this.gameActive = true;
-        this.updateDifficulty();
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('score').innerText = "0";
+        document.getElementById('level-tag').innerText = "DIA CLARO";
     },
 
     launch() {
         if (!this.gameActive || this.fallingBlock) return;
         this.fallingBlock = {
             x: this.swing.x - this.blockW / 2,
-            y: this.swing.y - this.cameraY, 
+            y: this.swing.y - this.cameraY,
             vy: 0,
-            vx: this.rainActive ? (Math.random() - 0.5) * 2 : 0,
+            vx: (this.currentWeather === 'sand' || this.currentWeather === 'storm') ? (Math.random() - 0.5) * 3 : 0,
             gravity: 1.0
         };
     },
@@ -231,7 +274,7 @@ const Game = {
                 b.vy = (Math.random() - 1) * 20;
             }
         });
-        setTimeout(() => this.gameOver("A natureza venceu a estrutura!"), 1500);
+        setTimeout(() => this.gameOver("A estrutura sucumbiu à natureza!"), 1500);
     },
 
     processLanding() {
@@ -242,28 +285,20 @@ const Game = {
         const absDiff = Math.abs(diff);
 
         if (absDiff < this.blockW) {
-            let points = 0;
-            if (absDiff < 12) {
-                points = 10;
-                this.showFeedback("PERFEITO! +10", "#00FFCC");
-                this.towerLean *= 0.1;
-                this.leanVelocity = 0;
-            } else if (absDiff < 40) {
-                points = 5;
-                this.showFeedback("ÓTIMO +5", "#FFD700");
-                this.leanVelocity *= 0.5;
-            } else {
-                points = 2;
-                this.badHits++;
-                this.showFeedback(this.badHits >= 3 ? "VAI CAIR!" : "CUIDADO +2", "#FFA500");
-                if (this.badHits >= 3) this.leanVelocity += (diff * 0.01);
-            }
-
+            let points = (absDiff < 15) ? 10 : (absDiff < 45) ? 5 : 2;
+            if(points === 10) this.showFeedback("PERFEITO! +10", "#00FFCC");
+            
             this.score += points;
             this.blocks.push({ x: this.fallingBlock.x, y: lastBlock.y - this.blockH, fixed: false, vx: 0, vy: 0 });
             this.updateDifficulty();
             if (this.blocks.length > 5) this.targetCameraY += this.blockH;
             document.getElementById('score').innerText = this.score;
+
+            // Chance de raio na tempestade ao pousar
+            if(this.currentWeather === 'storm' && Math.random() > 0.7) {
+                this.wrapper.classList.add('lightning-flash');
+                setTimeout(() => this.wrapper.classList.remove('lightning-flash'), 200);
+            }
         } else {
             this.explodeTower();
         }
@@ -273,28 +308,50 @@ const Game = {
     gameOver(msg) {
         const overlay = document.getElementById('overlay');
         overlay.style.display = 'flex';
-        overlay.innerHTML = `<h1>OBRA INTERROMPIDA</h1><p>${msg}</p><p style="font-size:1.5rem">Fé Alcançada: ${this.score}</p><button onclick="Game.start()">RECOMEÇAR</button>`;
+        overlay.innerHTML = `<h1>OBRA INTERROMPIDA</h1><p>${msg}</p><p style="font-size:1.5rem">Fé: ${this.score}</p><button onclick="Game.start()">RECOMEÇAR</button>`;
     },
 
-    drawRain() {
-        if (!this.rainActive) return;
-        this.ctx.strokeStyle = "rgba(174,194,224,0.5)";
-        this.ctx.lineWidth = 1;
-        for (let i = 0; i < 20; i++) {
-            let x = Math.random() * this.width;
-            let y = Math.random() * this.height;
+    drawParticles() {
+        this.particles.forEach(p => {
             this.ctx.beginPath();
-            this.ctx.moveTo(x, y);
-            this.ctx.lineTo(x - 5, y + 15);
-            this.ctx.stroke();
-        }
+            if(p.type === 'leaf') {
+                this.ctx.fillStyle = "rgba(139, 195, 74, 0.6)";
+                p.x += Math.sin(p.angle) * 2;
+                p.angle += 0.05;
+            } else if(p.type === 'rain') {
+                this.ctx.strokeStyle = "rgba(174,194,224,0.5)";
+                this.ctx.moveTo(p.x, p.y);
+                this.ctx.lineTo(p.x - 2, p.y + 10);
+                this.ctx.stroke();
+            } else if(p.type === 'snow') {
+                this.ctx.fillStyle = "white";
+                this.ctx.arc(p.x, p.y, p.size/2, 0, Math.PI*2);
+                this.ctx.fill();
+            } else if(p.type === 'sand') {
+                this.ctx.fillStyle = "#EDC9AF";
+                this.ctx.fillRect(p.x, p.y, p.size, p.size);
+                p.x -= 5; // Vento de areia lateral
+            } else if(p.type === 'firefly') {
+                this.ctx.fillStyle = "rgba(255, 255, 0, 0.8)";
+                this.ctx.shadowBlur = 10;
+                this.ctx.shadowColor = "yellow";
+                this.ctx.arc(p.x, p.y, 1.5, 0, Math.PI*2);
+                this.ctx.fill();
+                this.ctx.shadowBlur = 0;
+            }
+
+            p.y += p.v;
+            if(p.y > this.height) p.y = -10;
+            if(p.x < 0) p.x = this.width;
+            if(p.x > this.width) p.x = 0;
+        });
     },
 
     render() {
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.width, this.height);
         
-        this.drawRain();
+        this.drawParticles();
 
         if (!this.exploding) this.cameraY += (this.targetCameraY - this.cameraY) * 0.08;
 
@@ -304,18 +361,29 @@ const Game = {
             this.swing.x = (this.width / 2) + Math.sin(this.swing.angle) * (this.width * this.swing.amplitude);
         }
 
-        // Camada Fixa (Corda vindo de cima e Tijolo no centro)
+        // Corda e Bloco Oscilante
         if (this.gameActive && !this.fallingBlock) {
             ctx.beginPath();
-            ctx.moveTo(this.width/2, -100); 
+            ctx.moveTo(this.width/2, -50); 
             ctx.lineTo(this.swing.x, this.swing.y);
-            ctx.strokeStyle = "gold"; ctx.lineWidth = 2; ctx.stroke();
+            
+            // Luz na corda durante a noite
+            if(this.currentWeather === 'night') {
+                ctx.strokeStyle = "rgba(255, 215, 0, 0.8)";
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = "gold";
+            } else {
+                ctx.strokeStyle = "gold";
+            }
+            
+            ctx.lineWidth = 3; 
+            ctx.stroke();
+            ctx.shadowBlur = 0;
             
             ctx.fillStyle = "gold";
             ctx.beginPath(); ctx.roundRect(this.swing.x - this.blockW/2, this.swing.y, this.blockW, this.blockH, 4); ctx.fill();
         }
 
-        // Camada com Câmera
         ctx.save();
         ctx.translate(0, this.cameraY);
 
@@ -334,8 +402,10 @@ const Game = {
             g.addColorStop(0, varName('--gold-main'));
             g.addColorStop(1, varName('--gold-dark'));
             ctx.fillStyle = g;
-            ctx.shadowBlur = this.score >= 190 ? 15 : 0;
-            ctx.shadowColor = "gold";
+            if(this.currentWeather === 'night') {
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = "gold";
+            }
             ctx.beginPath(); ctx.roundRect(b.x, b.y, this.blockW, this.blockH, 4); ctx.fill();
             ctx.restore();
         });
