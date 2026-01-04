@@ -8,7 +8,7 @@
         :root { --gold: #f1c40f; --dirt: #5d4037; --grass: #2e7d32; }
         body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; touch-action: none; user-select: none; }
         
-        #world { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+        #world { position: relative; width: 100vw; height: 100vh; overflow: hidden; transition: background 1s; }
         .dia { background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%); }
         .tarde { background: linear-gradient(to bottom, #fa709a 0%, #fee140 100%); }
         .noite { background: linear-gradient(to bottom, #09203f 0%, #537895 100%); }
@@ -21,7 +21,6 @@
             color: #fff; font-weight: bold; letter-spacing: 2px;
         }
 
-        /* CHÃO COM TEXTURA DE TERRA E GRAMA */
         #ground { 
             position: absolute; bottom: 0; width: 100%; height: 60px; 
             background-color: var(--dirt);
@@ -38,7 +37,6 @@
             position: absolute; bottom: 60px; width: 80px; height: 80px;
             display: flex; align-items: center; justify-content: center;
             font-size: 70px; z-index: 25; will-change: left;
-            transition: transform 0.1s;
         }
 
         .entity { 
@@ -94,8 +92,8 @@
 
     <div id="screen-start" class="overlay">
         <h1 style="font-size: 48px; color: var(--gold); margin-bottom: 10px;">MANÁ</h1>
-        <p style="font-size: 18px;">Colete as frutas pedidas para progredir.</p>
-        <p style="font-size: 14px; opacity: 0.8;">Cuidado: Pegar o item errado reseta seu combo!</p><br>
+        <p style="font-size: 18px;">Toque nas laterais para mover.</p>
+        <p style="font-size: 14px; opacity: 0.8;">Colete o combo de frutas para avançar!</p><br>
         <button class="btn" onclick="startGame()">INICIAR JOGO</button>
     </div>
 
@@ -116,12 +114,15 @@
             level: 1,
             mana: 0,
             playerX: window.innerWidth / 2,
+            velocityX: 0, // Velocidade atual
+            acceleration: 1.8, // Quão rápido ele ganha velocidade
+            friction: 0.85, // Atrito para parar suavemente
+            maxSpeed: 15, // Velocidade máxima equilibrada
             moveDir: 0,
-            playerSpeed: 20,
             items: [],
             lastSpawn: 0,
-            spawnRate: 1200, // MAIS LENTO (Nível 1 amigável)
-            itemSpeed: 4.0,   // QUEDA SUAVE
+            spawnRate: 1400,
+            itemSpeed: 3.5,
             targetEmoji: '',
             targetGoal: 3,
             currentSequence: 0,
@@ -143,7 +144,17 @@
             requestAnimationFrame(gameLoop);
         }
 
-        const handleInput = (x) => game.moveDir = x < window.innerWidth / 2 ? -1 : 1;
+        // Sistema de input melhorado
+        const handleInput = (x) => {
+            const screenMid = window.innerWidth / 2;
+            const deadZone = 30; // Pequena zona no meio que não move
+            if (Math.abs(x - screenMid) < deadZone) {
+                game.moveDir = 0;
+            } else {
+                game.moveDir = x < screenMid ? -1 : 1;
+            }
+        };
+
         window.addEventListener('touchstart', (e) => handleInput(e.touches[0].clientX));
         window.addEventListener('mousedown', (e) => handleInput(e.clientX));
         window.addEventListener('touchend', () => game.moveDir = 0);
@@ -152,10 +163,36 @@
         function gameLoop(timestamp) {
             if (!game.active) return;
 
-            game.playerX += game.moveDir * game.playerSpeed;
-            game.playerX = Math.max(40, Math.min(window.innerWidth - 40, game.playerX));
+            // Lógica de Movimentação Suave
+            if (game.moveDir !== 0) {
+                game.velocityX += game.moveDir * game.acceleration;
+            } else {
+                game.velocityX *= game.friction; // Desacelera quando solta
+            }
+
+            // Limitar velocidade máxima
+            if (Math.abs(game.velocityX) > game.maxSpeed) {
+                game.velocityX = game.maxSpeed * Math.sign(game.velocityX);
+            }
+
+            game.playerX += game.velocityX;
+
+            // Limites da tela
+            if (game.playerX < 40) {
+                game.playerX = 40;
+                game.velocityX = 0;
+            }
+            if (game.playerX > window.innerWidth - 40) {
+                game.playerX = window.innerWidth - 40;
+                game.velocityX = 0;
+            }
+
             player.style.left = game.playerX + 'px';
-            player.style.transform = `translateX(-50%) scaleX(${game.moveDir < 0 ? -1 : 1})`;
+            
+            // Inverter o emoji conforme a direção da velocidade
+            if (Math.abs(game.velocityX) > 0.5) {
+                player.style.transform = `translateX(-50%) scaleX(${game.velocityX < 0 ? -1 : 1})`;
+            }
 
             if (timestamp - game.lastSpawn > game.spawnRate) {
                 spawnItem();
@@ -167,7 +204,7 @@
         }
 
         function spawnItem() {
-            const isJunk = Math.random() > 0.90;
+            const isJunk = Math.random() > 0.85;
             const emoji = isJunk ? junkPool[Math.floor(Math.random() * junkPool.length)] : foodPool[Math.floor(Math.random() * foodPool.length)];
             
             const element = document.createElement('div');
@@ -190,6 +227,7 @@
                 const playerCenter = game.playerX;
                 const itemCenter = item.x + 30;
 
+                // Colisão
                 if (item.y > window.innerHeight - 150 && item.y < window.innerHeight - 60) {
                     if (Math.abs(playerCenter - itemCenter) < 55) {
                         handleCollect(item);
@@ -207,7 +245,9 @@
         function handleCollect(item) {
             if (item.isJunk) {
                 game.currentSequence = 0;
-                game.mana = Math.max(0, game.mana - 1);
+                game.mana = Math.max(0, game.mana - 2);
+                world.style.filter = "brightness(1.5) sepia(1) hue-rotate(-50deg)";
+                setTimeout(() => world.style.filter = "none", 200);
             } else {
                 game.mana++;
                 if (item.emoji === game.targetEmoji) {
@@ -236,7 +276,7 @@
             
             const box = document.getElementById('challenge-box');
             box.style.borderColor = game.challengeComplete ? "#2ecc71" : "var(--gold)";
-            box.style.background = game.challengeComplete ? "rgba(46, 204, 113, 0.2)" : "rgba(0,0,0,0.6)";
+            box.style.background = game.challengeComplete ? "rgba(46, 204, 113, 0.3)" : "rgba(0,0,0,0.6)";
         }
 
         function checkWin() {
@@ -250,13 +290,11 @@
         function nextLevel() {
             game.level++;
             game.mana = 0;
-            // Aumento de dificuldade gradual
-            game.itemSpeed += 0.5;
-            game.spawnRate = Math.max(400, game.spawnRate - 100);
+            game.itemSpeed += 0.4;
+            game.spawnRate = Math.max(500, game.spawnRate - 100);
             
-            if (game.level <= 3) world.className = 'dia';
-            else if (game.level <= 6) world.className = 'tarde';
-            else world.className = 'noite';
+            const bgClass = game.level <= 3 ? 'dia' : (game.level <= 6 ? 'tarde' : 'noite');
+            world.className = bgClass;
 
             game.items.forEach(item => item.el.remove());
             game.items = [];
