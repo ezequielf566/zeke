@@ -9,8 +9,8 @@
         :root {
             --primary-blue: #3a86ff;
             --light-blue: #e0f2fe;
-            --snow-white: #f8faff; /* Fundo Branco Neve */
-            --app-green: #2ecc71; /* Verde Profissional e Vibrante */
+            --snow-white: #f8faff;
+            --app-green: #2ecc71;
             --text-dark: #2d3436;
             --shadow: 0 10px 25px rgba(58, 134, 255, 0.15);
         }
@@ -24,7 +24,6 @@
             margin: 0; 
             padding: 0;
             background-color: var(--snow-white);
-            /* Bordas azuladas suaves para profundidade */
             background-image: radial-gradient(circle at 50% 50%, var(--snow-white) 70%, var(--light-blue) 100%);
             font-family: 'Quicksand', sans-serif;
             color: var(--text-dark);
@@ -84,18 +83,28 @@
             transform: scale(0.96);
         }
 
+        /* --- AJUSTE NAS CAPAS --- */
         .cover {
             width: 100%;
-            height: 180px;
+            /* Removemos a altura fixa de 180px */
+            height: auto; 
+            aspect-ratio: 16 / 9; /* Mantém uma proporção retangular bonita sem espremer */
             overflow: hidden;
             background: var(--light-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .cover img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            /* object-fit: contain garante que a imagem apareça INTEIRA */
+            /* object-fit: cover preencheria o espaço (pode cortar as bordas) */
+            object-fit: contain; 
+            background-color: var(--light-blue);
         }
+        /* ------------------------ */
 
         .info { 
             padding: 20px; 
@@ -132,7 +141,6 @@
             text-transform: uppercase;
         }
 
-        /* TODOS OS BOTÕES VERDES AQUI */
         .play-btn {
             display: flex;
             align-items: center;
