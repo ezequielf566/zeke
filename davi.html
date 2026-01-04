@@ -3,114 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>O Templo Sagrado: A Oferta de Davi</title>
+    <title>O Templo Sagrado</title>
     <style>
-        :root {
-            --gold-light: #FFF9C4;
-            --gold-main: #FFD700;
-            --gold-dark: #B8860B;
-        }
-
+        :root { --gold: #FFD700; --gold-d: #B8860B; }
         * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
-        
-        body {
-            background: #1a1a1a;
-            font-family: 'Georgia', serif;
-            overflow: hidden;
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh;
-        }
-
-        #game-wrapper {
-            position: relative;
-            width: 100vw; height: 100vh;
-            max-width: 500px;
-            overflow: hidden;
-            background: url('manafundo.png') no-repeat center center;
-            background-size: cover;
-            transition: filter 1.5s, background-color 1.5s;
-        }
-
-        /* Efeitos Visuais */
-        .night-mode { filter: brightness(0.8) saturate(1.2); }
-        .sand-storm { background-color: rgba(194, 178, 128, 0.4) !important; filter: sepia(0.5) brightness(0.9); }
-        .storm-flash { animation: flash 0.15s ease-out; }
-
-        @keyframes flash {
-            0% { filter: brightness(3); }
-            100% { filter: brightness(0.8); }
-        }
-
-        @keyframes pop {
-            0% { transform: scale(0.5); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        canvas { width: 100%; height: 100%; display: block; position: absolute; top:0; left:0; }
-
-        .ui-panel {
-            position: absolute;
-            top: 20px; width: 100%;
-            display: flex; flex-direction: column; align-items: center;
-            pointer-events: none; z-index: 100;
-        }
-
-        #score-card {
-            background: rgba(0, 0, 0, 0.85);
-            color: var(--gold-main);
-            padding: 10px 25px;
-            border-radius: 8px;
-            font-size: 1.8rem;
-            font-weight: bold;
-            border: 2px solid var(--gold-main);
-            text-align: center;
-            min-width: 180px;
-        }
-
-        #overlay {
-            position: absolute; inset: 0;
-            background: rgba(0,0,0,0.9);
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            color: white; z-index: 200; text-align: center;
-            padding: 20px;
-        }
-
-        #feedback {
-            position: absolute;
-            top: 35%; width: 100%;
-            text-align: center;
-            font-size: 2.2rem;
-            font-weight: bold;
-            text-shadow: 0 0 15px rgba(0,0,0,1);
-            pointer-events: none;
-            z-index: 150;
-            display: none;
-        }
-
-        button {
-            background: linear-gradient(to bottom, #FFD700, #B8860B);
-            border: none; padding: 18px 45px;
-            font-size: 1.4rem; font-weight: bold; border-radius: 50px;
-            cursor: pointer; margin-top: 25px; color: #3e2723;
-        }
+        body { background: #1a1a1a; font-family: sans-serif; overflow: hidden; height: 100vh; display: flex; justify-content: center; }
+        #game-wrapper { position: relative; width: 100vw; height: 100vh; max-width: 500px; overflow: hidden; background: #333; transition: 2s; }
+        .night-mode { filter: brightness(0.6) saturate(1.2); }
+        .sand-mode { filter: sepia(0.6) hue-rotate(-30deg) brightness(0.9); }
+        canvas { width: 100%; height: 100%; }
+        .ui { position: absolute; top: 20px; width: 100%; display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 100; }
+        #score-card { background: rgba(0,0,0,0.8); color: var(--gold); padding: 10px 20px; border-radius: 10px; border: 2px solid var(--gold); text-align: center; }
+        #feedback { position: absolute; top: 35%; width: 100%; text-align: center; font-size: 2.5rem; font-weight: bold; text-shadow: 2px 2px 10px #000; z-index: 150; display: none; }
+        #overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 200; text-align: center; }
+        button { background: linear-gradient(to bottom, var(--gold), var(--gold-d)); border: none; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
-
 <div id="game-wrapper">
     <canvas id="canvas"></canvas>
-    <div id="feedback">PERFEITO!</div>
-    <div class="ui-panel">
+    <div id="feedback"></div>
+    <div class="ui">
         <div id="score-card">
-            <div id="level-tag" style="font-size: 0.7rem; color: #fff; text-transform: uppercase;">DIA CLARO</div>
-            <span id="score">0</span>
+            <div id="level-tag" style="font-size: 0.8rem; margin-bottom: 5px;">DIA CLARO</div>
+            <span id="score" style="font-size: 2rem;">0</span>
         </div>
     </div>
     <div id="overlay">
-        <h1 style="color: var(--gold-main); font-size: 2.2rem; margin-bottom: 10px;">TEMPLO SAGRADO</h1>
-        <p>Erga o templo com fé e precisão.</p>
-        <button onclick="Game.start()">INICIAR OBRA</button>
+        <h1 style="color: var(--gold);">TEMPLO SAGRADO</h1>
+        <p>Construa com cuidado!</p>
+        <button onclick="Game.start()">INICIAR</button>
     </div>
 </div>
 
@@ -118,300 +40,148 @@
 const Game = {
     canvas: document.getElementById('canvas'),
     wrapper: document.getElementById('game-wrapper'),
-    ctx: null,
-    score: 0,
-    blocks: [],
-    particles: [],
-    fallingBlock: null,
-    gameActive: false,
-    exploding: false,
-    cameraY: 0,
-    targetCameraY: 0,
-    feedbackEl: document.getElementById('feedback'),
-    
-    // Estados Climáticos
-    windIntensity: 0,
-    leavesActive: false,
-    rainActive: false,
-    stormActive: false,
-    sandActive: false,
-    
-    towerLean: 0,
-    leanVelocity: 0,
-    badHits: 0,
-    
-    blockW: 140,
-    blockH: 45,
+    ctx: null, score: 0, blocks: [], particles: [], fallingBlock: null,
+    gameActive: false, exploding: false, cameraY: 0, targetCameraY: 0,
+    wind: 0, leaves: false, rain: false, storm: false, sand: false,
+    towerLean: 0, leanVel: 0, badHits: 0,
+    blockW: 150, blockH: 45, // Bloco um pouco maior para facilitar
     swing: { angle: 0, speed: 0.012, x: 0, y: 0, amplitude: 0.45 },
 
     init() {
         this.ctx = this.canvas.getContext('2d');
         this.resize();
         window.addEventListener('resize', () => this.resize());
-        this.canvas.addEventListener('pointerdown', (e) => {
-            e.preventDefault();
-            if(!this.exploding) this.launch();
-        });
+        this.canvas.addEventListener('pointerdown', () => { if(!this.exploding) this.launch(); });
         this.initParticles();
         this.render();
     },
-
-    resize() {
-        this.width = this.canvas.width = this.canvas.offsetWidth;
-        this.height = this.canvas.height = this.canvas.offsetHeight;
-    },
-
+    resize() { this.width = this.canvas.width = this.canvas.offsetWidth; this.height = this.canvas.height = this.canvas.offsetHeight; },
     initParticles() {
         this.particles = [];
-        for(let i=0; i<60; i++) {
-            this.particles.push({
-                x: Math.random() * this.width,
-                y: Math.random() * this.height,
-                v: 2 + Math.random() * 3,
-                size: 3 + Math.random() * 3,
-                angle: Math.random() * Math.PI * 2,
-                rotSpeed: (Math.random() - 0.5) * 0.08
-            });
-        }
+        for(let i=0; i<50; i++) this.particles.push({ x: Math.random()*500, y: Math.random()*800, v: 2+Math.random()*2, s: 3+Math.random()*3, a: Math.random()*Math.PI*2, rs: (Math.random()-0.5)*0.1 });
     },
-
-    showFeedback(text, color, duration = 1500) {
-        this.feedbackEl.innerText = text;
-        this.feedbackEl.style.color = color;
-        this.feedbackEl.style.display = 'block';
-        this.feedbackEl.style.animation = 'none';
-        this.feedbackEl.offsetHeight; 
-        this.feedbackEl.style.animation = 'pop 0.5s ease-out';
-        setTimeout(() => this.feedbackEl.style.display = 'none', duration);
+    showFeedback(txt, col) {
+        const el = document.getElementById('feedback');
+        el.innerText = txt; el.style.color = col; el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 1000);
     },
-
-    updateDifficulty() {
+    updateWeather() {
         const tag = document.getElementById('level-tag');
-        const cycle = this.score;
+        const s = this.score;
+        this.leaves = false; this.rain = false; this.storm = false; this.sand = false; this.wind = 0;
+        this.wrapper.className = '';
 
-        // Reset Geral
-        this.leavesActive = false;
-        this.rainActive = false;
-        this.stormActive = false;
-        this.sandActive = false;
-        this.windIntensity = 0;
-        this.wrapper.classList.remove('night-mode', 'sand-storm');
-
-        if (cycle >= 400) {
-            this.sandActive = true;
-            this.windIntensity = 0.012;
-            this.wrapper.classList.add('sand-storm');
-            tag.innerText = "TEMPESTADE DE AREIA";
-            tag.style.color = "#FFCC80";
-        } else if (cycle >= 300) {
-            this.stormActive = true;
-            this.rainActive = true;
-            this.windIntensity = 0.010;
-            this.wrapper.classList.add('night-mode');
-            tag.innerText = "TEMPESTADE";
-            tag.style.color = "#00E5FF";
-        } else if (cycle >= 200) {
-            this.rainActive = true;
-            tag.innerText = "CHUVA NO TEMPLO";
-            tag.style.color = "#90CAF9";
-        } else if (cycle >= 100) {
-            this.leavesActive = true;
-            this.windIntensity = 0.006;
-            tag.innerText = "VENTO E FOLHAS";
-            tag.style.color = "#A5D6A7";
+        // CICLOS MAIS LONGOS (Duração de 50 pontos cada)
+        if (s >= 400 && s < 450) {
+            this.sand = true; this.wind = 0.012; this.wrapper.classList.add('sand-mode');
+            tag.innerText = "TEMPESTADE DE AREIA"; tag.style.color = "#edc9af";
+        } else if (s >= 300 && s < 350) {
+            this.storm = true; this.rain = true; this.wind = 0.01; this.wrapper.classList.add('night-mode');
+            tag.innerText = "TEMPESTADE FORTE"; tag.style.color = "#00fbff";
+        } else if (s >= 200 && s < 250) {
+            this.rain = true; tag.innerText = "CHUVA NO TEMPLO"; tag.style.color = "#82b1ff";
+        } else if (s >= 100 && s < 150) {
+            this.leaves = true; this.wind = 0.006; tag.innerText = "VENTO E FOLHAS"; tag.style.color = "#81c784";
         } else {
-            tag.innerText = "DIA CLARO";
-            tag.style.color = "#FFF";
+            tag.innerText = "DIA CLARO"; tag.style.color = "#fff";
         }
-
-        this.swing.speed = 0.012 + (Math.floor(this.score / 150) * 0.004);
     },
-
     start() {
-        this.score = 0;
-        this.cameraY = 0;
-        this.targetCameraY = 0;
-        this.towerLean = 0;
-        this.leanVelocity = 0;
-        this.badHits = 0;
-        this.exploding = false;
-        this.blocks = [{ x: this.width/2 - 70, y: this.height - 100, fixed: true, vx: 0, vy: 0 }];
-        this.gameActive = true;
-        this.updateDifficulty();
+        this.score = 0; this.cameraY = 0; this.targetCameraY = 0; this.towerLean = 0; this.leanVel = 0; this.badHits = 0;
+        this.blocks = [{ x: this.width/2 - 75, y: this.height - 100, fixed: true }];
+        this.gameActive = true; this.exploding = false; this.updateWeather();
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('score').innerText = "0";
     },
-
     launch() {
         if (!this.gameActive || this.fallingBlock) return;
-        this.fallingBlock = {
-            x: this.swing.x - this.blockW / 2,
-            y: this.swing.y,
-            vy: 0,
-            vx: this.rainActive ? (Math.random() - 0.5) * 2 : 0, 
-            gravity: 0.9
-        };
+        this.fallingBlock = { x: this.swing.x - this.blockW/2, y: this.swing.y, vy: 0, vx: this.rain ? (Math.random()-0.5)*2 : 0, g: 0.9 };
     },
-
-    explodeTower() {
-        if (this.exploding) return;
-        this.exploding = true;
-        this.gameActive = false;
-        this.blocks.forEach(b => {
-            if (!b.fixed) {
-                b.vx = (Math.random() - 0.5) * 20;
-                b.vy = (Math.random() - 1) * 15;
-            }
-        });
-        setTimeout(() => this.gameOver("A obra precisa recomeçar!"), 1500);
-    },
-
     processLanding() {
-        const lastBlock = this.blocks[this.blocks.length - 1];
+        const last = this.blocks[this.blocks.length-1];
         const rad = this.towerLean * Math.PI / 180;
-        const towerTopX = lastBlock.x + (this.blocks.length * Math.sin(rad) * 4); 
-        const diff = this.fallingBlock.x - towerTopX;
-        const absDiff = Math.abs(diff);
+        const topX = last.x + (this.blocks.length * Math.sin(rad) * 4);
+        const diff = this.fallingBlock.x - topX;
+        const absD = Math.abs(diff);
 
-        if (absDiff < this.blockW) {
-            if (absDiff < 20) {
-                this.score += 10;
-                this.showFeedback("PERFEITO!", "#00FFCC");
-                this.towerLean *= 0.4;
-                this.leanVelocity = 0;
+        if (absD < this.blockW) {
+            if (absD < 20) {
+                this.score += 10; this.showFeedback("PERFEITO!", "#00ffcc");
+                this.towerLean *= 0.5; this.leanVel = 0; this.badHits = 0;
+            } else if (absD < 50) {
+                this.score += 5; this.showFeedback("BOM", "#ffeb3b");
             } else {
-                this.score += 5;
-                this.badHits++;
-                if (this.badHits >= 3) {
-                    this.showFeedback("CUIDADO!", "#FFA500");
-                    this.leanVelocity += (diff * 0.007);
-                } else {
-                    this.showFeedback("BOM!", "#FFD700");
-                }
+                // ERRO NA BEIRADA
+                this.score += 2; this.badHits++;
+                this.showFeedback("NA BEIRA!", "#ff9800");
+                if (this.badHits >= 3) { this.leanVel += (diff * 0.008); }
             }
-
-            this.blocks.push({ x: this.fallingBlock.x, y: lastBlock.y - this.blockH, fixed: false, vx: 0, vy: 0 });
-            this.updateDifficulty();
+            this.blocks.push({ x: this.fallingBlock.x, y: last.y - this.blockH });
+            this.updateWeather();
             if (this.blocks.length > 5) this.targetCameraY += this.blockH;
             document.getElementById('score').innerText = this.score;
         } else {
-            this.explodeTower();
+            this.exploding = true;
+            setTimeout(() => { document.getElementById('overlay').style.display = 'flex'; }, 1000);
         }
         this.fallingBlock = null;
     },
-
-    gameOver(msg) {
-        const overlay = document.getElementById('overlay');
-        overlay.style.display = 'flex';
-        overlay.innerHTML = `<h1>TEMA SAGRADO</h1><p>${msg}</p><p style="font-size:1.5rem">Score: ${this.score}</p><button onclick="Game.start()">RECOMEÇAR</button>`;
-    },
-
-    drawEnvironment() {
+    drawEnv() {
         const ctx = this.ctx;
-        if(this.stormActive && Math.random() > 0.985) {
-            this.wrapper.classList.add('storm-flash');
-            setTimeout(() => this.wrapper.classList.remove('storm-flash'), 100);
-        }
-
-        if(!this.leavesActive && !this.rainActive && !this.sandActive) return;
-
+        if (!this.leaves && !this.rain && !this.sand) return;
         this.particles.forEach(p => {
-            ctx.save();
-            if(this.sandActive) {
-                ctx.fillStyle = "rgba(210, 180, 140, 0.7)";
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.size/2, 0, Math.PI*2); ctx.fill();
-                p.x += 10 + (this.windIntensity * 150);
-                p.y += (Math.random() - 0.5) * 4;
-            } else if(this.rainActive) {
-                ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-                ctx.lineWidth = 1.5;
-                ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - 2, p.y + 12); ctx.stroke();
-                p.y += 18; p.x += (this.windIntensity * 50);
-            } else if(this.leavesActive) {
-                ctx.fillStyle = "rgba(100, 180, 100, 0.6)";
-                ctx.translate(p.x, p.y); ctx.rotate(p.angle);
-                ctx.beginPath(); ctx.ellipse(0, 0, p.size, p.size/2, 0, 0, Math.PI*2); ctx.fill();
-                p.y += p.v; p.x += (this.windIntensity * 100); p.angle += p.rotSpeed;
+            ctx.fillStyle = this.sand ? "#c2b280" : (this.rain ? "#fff" : "#4caf50");
+            ctx.globalAlpha = 0.5;
+            if (this.rain) {
+                ctx.fillRect(p.x, p.y, 2, 10); p.y += 15; p.x += (this.wind*50);
+            } else {
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.s/2, 0, 7); ctx.fill();
+                p.y += p.v; p.x += (this.wind*100);
             }
-            ctx.restore();
-
-            if(p.y > this.height) { p.y = -20; p.x = Math.random() * this.width; }
-            if(p.x > this.width) p.x = -10;
+            if(p.y > this.height) p.y = -10; if(p.x > this.width) p.x = 0;
         });
+        ctx.globalAlpha = 1;
     },
-
     render() {
-        const ctx = this.ctx;
-        ctx.clearRect(0, 0, this.width, this.height);
-        this.drawEnvironment();
-
+        const ctx = this.ctx; ctx.clearRect(0,0,this.width,this.height);
+        this.drawEnv();
         if (!this.exploding) this.cameraY += (this.targetCameraY - this.cameraY) * 0.08;
-
-        // LÓGICA DA CORDA: Fixed at Top (sempre presa no topo da tela)
         if (this.gameActive && !this.fallingBlock) {
-            let windShift = Math.sin(Date.now() * 0.002) * this.windIntensity;
-            this.swing.angle += this.swing.speed + windShift;
-            this.swing.x = (this.width / 2) + Math.sin(this.swing.angle) * (this.width * this.swing.amplitude);
-            // A corda segue o bloco do topo da torre + um espaço fixo
-            this.swing.y = (this.blocks[this.blocks.length-1].y - 200);
+            this.swing.angle += this.swing.speed + (Math.sin(Date.now()*0.002)*this.wind);
+            this.swing.x = (this.width/2) + Math.sin(this.swing.angle)*(this.width*this.swing.amplitude);
+            this.swing.y = this.blocks[this.blocks.length-1].y - 200;
         }
-
-        ctx.save();
-        ctx.translate(0, this.cameraY);
-
-        // Desenhar blocos na torre
+        ctx.save(); ctx.translate(0, this.cameraY);
+        // Corda
+        if (this.gameActive && !this.fallingBlock) {
+            ctx.strokeStyle = "rgba(255,215,0,0.9)"; ctx.lineWidth = 5;
+            ctx.beginPath(); ctx.moveTo(this.width/2, this.swing.y - 1000); ctx.lineTo(this.swing.x, this.swing.y); ctx.stroke();
+            ctx.fillStyle = "gold"; ctx.fillRect(this.swing.x - this.blockW/2, this.swing.y, this.blockW, this.blockH);
+        }
+        // Blocos
         this.blocks.forEach((b, i) => {
-            if (this.exploding && !b.fixed) {
-                b.vy += 0.6; b.x += b.vx; b.y += b.vy;
-            }
             ctx.save();
-            if (!b.fixed && !this.exploding) {
-                ctx.translate(this.width/2, this.height - 100);
-                ctx.rotate((this.towerLean * (i / this.blocks.length)) * Math.PI / 180);
-                ctx.translate(-this.width/2, -(this.height - 100));
+            if (i>0) {
+                ctx.translate(this.width/2, this.height-100); ctx.rotate((this.towerLean*(i/this.blocks.length))*Math.PI/180); ctx.translate(-this.width/2, -(this.height-100));
             }
-            const g = ctx.createLinearGradient(b.x, b.y, b.x, b.y + this.blockH);
-            g.addColorStop(0, "#FFD700"); g.addColorStop(1, "#B8860B");
-            ctx.fillStyle = g;
-            ctx.beginPath(); ctx.roundRect(b.x, b.y, this.blockW, this.blockH, 5); ctx.fill();
+            ctx.fillStyle = i===0 ? "#555" : "gold";
+            ctx.fillRect(b.x, b.y, this.blockW, this.blockH);
+            ctx.strokeStyle = "#000"; ctx.strokeRect(b.x, b.y, this.blockW, this.blockH);
             ctx.restore();
         });
-
-        // Desenhar Bloco Caindo
         if (this.fallingBlock) {
-            this.fallingBlock.vy += this.fallingBlock.gravity;
-            this.fallingBlock.y += this.fallingBlock.vy;
-            ctx.fillStyle = "gold";
-            ctx.beginPath(); ctx.roundRect(this.fallingBlock.x, this.fallingBlock.y, this.blockW, this.blockH, 5); ctx.fill();
+            this.fallingBlock.y += (this.fallingBlock.vy += this.fallingBlock.g); this.fallingBlock.x += this.fallingBlock.vx;
+            ctx.fillStyle = "gold"; ctx.fillRect(this.fallingBlock.x, this.fallingBlock.y, this.blockW, this.blockH);
             if (this.fallingBlock.y >= this.blocks[this.blocks.length-1].y - this.blockH) this.processLanding();
         }
-
-        // DESENHAR CORDA (Bem forte e presa ao topo)
-        if (this.gameActive && !this.fallingBlock) {
-            ctx.beginPath();
-            // A corda começa muito acima da câmera para parecer presa ao teto
-            ctx.moveTo(this.width/2, this.swing.y - 1000); 
-            ctx.lineTo(this.swing.x, this.swing.y);
-            ctx.strokeStyle = "rgba(218, 165, 32, 0.9)"; // Dourado escuro e sólido
-            ctx.lineWidth = 4; // Mais grossa
-            ctx.stroke();
-            
-            // Bloco preso na corda
-            ctx.fillStyle = "gold";
-            ctx.beginPath(); ctx.roundRect(this.swing.x - this.blockW/2, this.swing.y, this.blockW, this.blockH, 5); ctx.fill();
-        }
-
         ctx.restore();
-        
-        if (this.gameActive) {
-            this.towerLean += this.leanVelocity;
-            if (Math.abs(this.towerLean) > 38) this.explodeTower();
+        if (this.gameActive && !this.exploding) {
+            this.towerLean += this.leanVel;
+            if (Math.abs(this.towerLean) > 35) this.exploding = true;
         }
-
         requestAnimationFrame(() => this.render());
     }
 };
-
 Game.init();
 </script>
 </body>
