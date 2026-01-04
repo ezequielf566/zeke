@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Torre de Babel: O Desafio dos Céus</title>
+    <title>O Templo Sagrado: A Oferta de Davi</title>
     <style>
         :root {
-            --gold-light: #FFF176;
+            --gold-light: #FFF9C4;
             --gold-main: #FFD700;
             --gold-dark: #B8860B;
-            --stone: #8d6e63;
+            --holy-blue: #1565C0;
         }
 
         * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
         
         body {
             background: #000;
-            font-family: 'serif', 'Times New Roman';
+            font-family: 'Georgia', serif;
             overflow: hidden;
             display: flex; justify-content: center; align-items: center;
             height: 100vh;
@@ -26,22 +26,23 @@
             position: relative;
             width: 100vw; height: 100vh;
             max-width: 500px; max-height: 900px;
-            background: #87CEEB;
+            background: #BBDEFB;
             overflow: hidden;
-            transition: filter 1s ease, background 1.5s ease;
+            transition: filter 0.8s ease, background 1.5s ease;
         }
 
+        /* Noite equilibrada: mais clara e visível */
         .night-filter {
-            filter: brightness(0.4) contrast(1.3) saturate(0.5);
+            filter: brightness(0.65) contrast(1.1) saturate(0.9);
         }
 
         .lightning-flash {
-            animation: flashHit 0.15s ease-out;
+            animation: flashHit 0.1s ease-out;
         }
         @keyframes flashHit {
             0% { filter: brightness(1); }
-            50% { filter: brightness(3); }
-            100% { filter: brightness(0.4); }
+            50% { filter: brightness(2); }
+            100% { filter: brightness(0.65); }
         }
 
         canvas { width: 100%; height: 100%; display: block; }
@@ -54,57 +55,57 @@
         }
 
         #score-card {
-            background: rgba(40, 30, 20, 0.9);
+            background: rgba(26, 35, 126, 0.85);
             color: var(--gold-main);
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 10px 25px;
+            border-radius: 8px;
             font-size: 1.6rem;
             font-weight: bold;
-            border: 2px solid var(--gold-dark);
+            border: 2px solid var(--gold-main);
             text-align: center;
-            min-width: 140px;
+            min-width: 150px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
         }
 
-        #level-tag { font-size: 0.8rem; display: block; color: #ddd; margin-bottom: 5px; text-transform: uppercase; }
+        #level-tag { font-size: 0.85rem; display: block; color: #fff; margin-bottom: 5px; letter-spacing: 1px; }
 
         #weather-alert {
             margin-top: 10px;
-            color: #ff4444; font-weight: bold;
-            padding: 8px 25px; border-radius: 5px;
+            color: #fff; font-weight: bold;
+            padding: 8px 25px; border-radius: 20px;
             display: none;
-            text-transform: uppercase;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #ff5252;
         }
 
         #overlay {
             position: absolute; inset: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.9);
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             color: white; z-index: 100; text-align: center;
-            padding: 20px;
+            padding: 30px;
         }
 
         button {
-            background: linear-gradient(to bottom, #d4a017, #8b6508);
-            border: 2px solid #5d4037; padding: 15px 40px;
-            font-size: 1.4rem; font-weight: bold; border-radius: 4px;
-            cursor: pointer; margin-top: 25px; color: #fff;
-            text-shadow: 1px 1px 2px #000;
+            background: linear-gradient(to bottom, #FFD700, #B8860B);
+            border: none; padding: 18px 45px;
+            font-size: 1.4rem; font-weight: bold; border-radius: 50px;
+            cursor: pointer; margin-top: 25px; color: #3e2723;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         .points-float {
-            position: absolute; font-weight: 900; font-size: 2rem;
-            pointer-events: none; animation: floatUp 1s forwards;
-            text-shadow: 2px 2px 4px rgba(0,0,0,1); z-index: 50;
+            position: absolute; font-weight: 900; font-size: 2.2rem;
+            pointer-events: none; animation: floatUp 1s cubic-bezier(0,0,0.2,1) forwards;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8); z-index: 50;
             text-align: center;
-            width: 200px;
         }
 
         @keyframes floatUp {
             0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
-            20% { opacity: 1; }
-            100% { transform: translate(-50%, -120px) scale(1.2); opacity: 0; }
+            30% { opacity: 1; }
+            100% { transform: translate(-50%, -150px) scale(1.1); opacity: 0; }
         }
     </style>
 </head>
@@ -114,15 +115,15 @@
     <canvas id="canvas"></canvas>
     <div class="ui-panel">
         <div id="score-card">
-            <span id="level-tag">ERA DE NINRODE</span>
+            <span id="level-tag">TESOURO DE DAVI</span>
             <span id="score">0</span>
         </div>
-        <div id="weather-alert">IRA DIVINA</div>
+        <div id="weather-alert">VENTO FORTE</div>
     </div>
     <div id="overlay">
-        <h1 style="color: var(--gold-main); font-size: 2.2rem; margin-bottom: 10px;">TORRE DE BABEL</h1>
-        <p>Erga os tijolos até os céus e unifique as línguas antes que a confusão comece.</p>
-        <button onclick="Game.start()">CONSTRUIR TORRE</button>
+        <h1 style="color: var(--gold-main); font-size: 2.5rem; margin-bottom: 15px;">TEMPLO SAGRADO</h1>
+        <p>Prepare as pedras e o ouro puro. Davi juntou as riquezas, cabe a você erguer a fundação para a glória de Deus.</p>
+        <button onclick="Game.start()">INICIAR OBRA</button>
     </div>
 </div>
 
@@ -140,9 +141,9 @@ const Game = {
     towerLean: 0,
     weather: "clear",
     
-    swing: { angle: 0, speed: 0.015, x: 0, originShift: 0, maxSpeed: 0.045 }, 
+    swing: { angle: 0, speed: 0.016, x: 0, originShift: 0, maxSpeed: 0.045 }, 
     blockW: 140, 
-    blockH: 45,
+    blockH: 50,
     dropDist: 260,
 
     init() {
@@ -165,7 +166,7 @@ const Game = {
         this.targetCameraY = 0;
         this.towerLean = 0;
         this.weather = "clear";
-        this.swing.speed = 0.015; // Início mais lento
+        this.swing.speed = 0.016;
         this.fallingBlock = null;
         this.blocks = [{ x: Math.round(this.width/2 - 70), y: this.height - 100, w: 140 }];
         this.gameActive = true;
@@ -176,7 +177,7 @@ const Game = {
 
     updateUI() {
         document.getElementById('score').innerText = Math.floor(this.score);
-        document.getElementById('level-tag').innerText = this.level < 5 ? "ERA DE NINRODE" : "CONFUSÃO DAS LÍNGUAS";
+        document.getElementById('level-tag').innerText = "OFERTA DE ADORAÇÃO";
     },
 
     launch() {
@@ -185,7 +186,7 @@ const Game = {
             x: this.swing.x - this.blockW / 2,
             y: (this.blocks[this.blocks.length-1].y - this.dropDist),
             vy: 0,
-            gravity: 1.0
+            gravity: 0.95
         };
     },
 
@@ -199,13 +200,13 @@ const Game = {
             let label = "";
             let color = "#fff";
 
-            if (absDiff < 10) {
-                pts = 30; label = "PERFEITO!"; color = varProp('--gold-light');
-                this.towerLean *= 0.3; // Estabiliza bem no perfeito
-            } else if (absDiff < 30) {
-                pts = 10; label = "BOM!"; color = varProp('--gold-main');
+            if (absDiff < 9) {
+                pts = 35; label = "OURO PURO!"; color = "#FFF9C4";
+                this.towerLean *= 0.4; 
+            } else if (absDiff < 28) {
+                pts = 15; label = "BOM!"; color = "#FFD700";
             } else {
-                pts = 2; label = "INSTÁVEL"; color = "#ff8800";
+                pts = 5; label = "FORA DE PRUMO"; color = "#B8860B";
             }
 
             this.score += pts;
@@ -217,36 +218,36 @@ const Game = {
                 w: this.blockW 
             });
             
-            // Inclinação cresce MENOS no começo (0.01) e mais depois
-            const leanFactor = this.blocks.length < 5 ? 0.01 : 0.04;
-            this.towerLean += (diff * leanFactor); 
+            const leanMultiplier = this.blocks.length < 6 ? 0.012 : 0.045;
+            this.towerLean += (diff * leanMultiplier); 
 
-            this.level = Math.floor(this.blocks.length / 8) + 1;
-            this.swing.speed = Math.min(0.015 + (this.level * 0.002), this.swing.maxSpeed);
+            this.level = Math.floor(this.blocks.length / 10) + 1;
+            this.swing.speed = Math.min(0.016 + (this.level * 0.0018), this.swing.maxSpeed);
 
-            if ((this.blocks[this.blocks.length-1].y + this.targetCameraY) < this.height * 0.45) {
+            if ((this.blocks[this.blocks.length-1].y + this.targetCameraY) < this.height * 0.5) {
                 this.targetCameraY += this.blockH;
             }
             
             this.updateWeather();
             this.updateUI();
         } else {
-            this.gameOver("O tijolo caiu! Os céus se fecharam.");
+            this.gameOver("A pedra tropeçou. O templo exige firmeza.");
         }
         this.fallingBlock = null;
     },
 
     updateWeather() {
         const alert = document.getElementById('weather-alert');
-        const cycle = this.blocks.length % 40;
-        if (cycle >= 25) {
+        const cycle = this.blocks.length % 35; // Ciclo mais curto
+        
+        if (cycle >= 30) { // Noite dura apenas 5 blocos
             this.weather = "storm";
-            alert.innerText = "JUÍZO DIVINO";
+            alert.innerText = "PROVAÇÃO DA NOITE";
             alert.style.display = "block";
             document.getElementById('game-wrapper').classList.add('night-filter');
-        } else if (cycle >= 10) {
+        } else if (cycle >= 12) {
             this.weather = "wind";
-            alert.innerText = "VENTO DO DESERTO";
+            alert.innerText = "VENTO DO SINAI";
             alert.style.display = "block";
             document.getElementById('game-wrapper').classList.remove('night-filter');
         } else {
@@ -260,9 +261,9 @@ const Game = {
         const el = document.createElement('div');
         el.className = 'points-float';
         el.style.left = '50%';
-        el.style.top = '40%';
+        el.style.top = '35%';
         el.style.color = color;
-        el.innerHTML = `<div style="font-size:0.8rem">${label}</div>+${pts}`;
+        el.innerHTML = `<div style="font-size:0.9rem">${label}</div>+${pts}`;
         document.getElementById('game-wrapper').appendChild(el);
         setTimeout(() => el.remove(), 1000);
     },
@@ -271,10 +272,10 @@ const Game = {
         this.gameActive = false;
         document.getElementById('overlay').style.display = 'flex';
         document.getElementById('overlay').innerHTML = `
-            <h1 style="color:var(--gold-main)">TORRE INTERROMPIDA</h1>
+            <h1 style="color:var(--gold-main)">OBRA INTERROMPIDA</h1>
             <p>${msg}</p>
-            <p style="margin-top:10px">ALTURA: ${this.blocks.length} TIJOLOS</p>
-            <button onclick="Game.start()">RECOMECAR OBRA</button>
+            <p style="margin-top:15px; font-size: 1.2rem;">TESOUROS ACUMULADOS: ${Math.floor(this.score)}</p>
+            <button onclick="Game.start()">TENTAR NOVAMENTE</button>
         `;
     },
 
@@ -283,21 +284,27 @@ const Game = {
         ctx.save();
         if(isGhost) ctx.globalAlpha = 0.5;
 
-        // Estilo Tijolo de Barro/Ouro
-        let grad = ctx.createLinearGradient(b.x, b.y, b.x, b.y + this.blockH);
-        grad.addColorStop(0, "#d4a017");
-        grad.addColorStop(0.5, "#8b6508");
-        grad.addColorStop(1, "#5d4037");
+        // Ouro polido com brilho
+        let grad = ctx.createLinearGradient(b.x, b.y, b.x + this.blockW, b.y + this.blockH);
+        grad.addColorStop(0, "#FFD700");
+        grad.addColorStop(0.3, "#FFF9C4");
+        grad.addColorStop(0.5, "#FFD700");
+        grad.addColorStop(1, "#B8860B");
         
         ctx.fillStyle = grad;
-        ctx.strokeStyle = "#2e1a12";
-        ctx.lineWidth = 2;
-        ctx.fillRect(b.x, b.y, this.blockW, this.blockH);
-        ctx.strokeRect(b.x, b.y, this.blockW, this.blockH);
+        ctx.strokeStyle = "rgba(0,0,0,0.3)";
+        ctx.lineWidth = 1;
         
-        // Detalhe de textura
-        ctx.fillStyle = "rgba(255,255,255,0.1)";
-        ctx.fillRect(b.x + 2, b.y + 2, this.blockW - 4, 4);
+        // Bordas arredondadas leves
+        ctx.beginPath();
+        ctx.roundRect(b.x, b.y, this.blockW, this.blockH, 3);
+        ctx.fill();
+        ctx.stroke();
+        
+        if(!isGhost) {
+            ctx.fillStyle = "rgba(255,255,255,0.4)";
+            ctx.fillRect(b.x + 5, b.y + 4, this.blockW - 10, 3);
+        }
         ctx.restore();
     },
 
@@ -306,24 +313,21 @@ const Game = {
         const time = Date.now();
         this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
 
-        ctx.fillStyle = this.weather === "storm" ? "#1a1a2e" : (this.weather === "wind" ? "#bda385" : "#87CEEB");
+        // Fundo celestial
+        let bg = "#81D4FA";
+        if (this.weather === "storm") bg = "#1A237E";
+        else if (this.weather === "wind") bg = "#4FC3F7";
+        ctx.fillStyle = bg;
         ctx.fillRect(0,0,this.width, this.height);
-
-        // Raios
-        if (this.weather === "storm" && Math.random() > 0.99) {
-            document.getElementById('game-wrapper').classList.add('lightning-flash');
-            setTimeout(()=>document.getElementById('game-wrapper').classList.remove('lightning-flash'), 100);
-        }
 
         ctx.save();
         ctx.translate(0, this.cameraY);
         
-        // Chão/Base
+        // Base de pedra do Templo
         const baseY = this.height - 100;
-        ctx.fillStyle = "#3d2b1f";
-        ctx.fillRect(0, baseY + 45, this.width, 500);
-
-        // Aplicação da inclinação na torre inteira
+        ctx.fillStyle = "#546E7A";
+        ctx.fillRect(0, baseY + 45, this.width, 600);
+        
         const baseX = this.width / 2;
         ctx.translate(baseX, baseY);
         ctx.rotate(this.towerLean * Math.PI / 180);
@@ -344,22 +348,20 @@ const Game = {
         }
         ctx.restore();
 
-        // Pêndulo
         if (this.gameActive && !this.fallingBlock) {
             this.swing.angle += this.swing.speed;
-            let windX = (this.weather !== "clear") ? Math.sin(time/400) * 60 : 0;
+            let windX = (this.weather !== "clear") ? Math.sin(time/400) * 50 : 0;
             this.swing.originShift += (windX - this.swing.originShift) * 0.05;
 
             const originX = this.width / 2 + this.swing.originShift;
             this.swing.x = originX + Math.sin(this.swing.angle) * (this.width * 0.38);
             const swingY = this.blocks[this.blocks.length-1].y - this.dropDist;
 
-            // Corda
             ctx.beginPath();
             ctx.moveTo(this.width/2, -100);
             ctx.lineTo(this.swing.x, swingY + this.cameraY);
-            ctx.strokeStyle = "#333";
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = "rgba(0,0,0,0.4)";
+            ctx.lineWidth = 2;
             ctx.stroke();
             
             ctx.save();
@@ -368,16 +370,14 @@ const Game = {
             ctx.restore();
         }
 
-        // FÍSICA DE PERDER: Agora verifica a inclinação real mesmo se a torre estiver no topo
         if (Math.abs(this.towerLean) > 16 && this.gameActive) {
-            this.gameOver("A torre inclinou demais e desabou!");
+            this.gameOver("A fundação cedeu. Ouro perdido!");
         }
 
         requestAnimationFrame(() => this.render());
     }
 };
 
-function varProp(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
 Game.init();
 </script>
 </body>
