@@ -27,13 +27,15 @@
             width: 100vw; height: 100vh;
             max-width: 500px;
             overflow: hidden;
-            background: url('manafundo.png') no-repeat center center;
+            background-color: #1a1a1a;
+            background-repeat: no-repeat;
+            background-position: center center;
             background-size: cover;
-            /* Transição de 2 segundos para o fundo e filtros */
-            transition: background-image 2s ease-in-out, filter 2s, background-color 2s;
+            /* Transição suave para o fundo e filtros */
+            transition: background-image 2.5s ease-in-out, filter 2s;
         }
 
-        /* Classes de Fundo para os Climas */
+        /* Classes de Fundo - Usando IDs para garantir prioridade */
         #game-wrapper.bg-dia { background-image: url('manafundo.png'); }
         #game-wrapper.bg-chuva { background-image: url('chuva_fundo.png'); }
         #game-wrapper.bg-tempestade { background-image: url('tempestade_fundo.png'); }
@@ -42,6 +44,15 @@
         .night-mode { filter: brightness(0.6) saturate(1.2); }
         .sand-storm { filter: sepia(0.6) brightness(0.8); }
         .storm-flash { animation: flash 0.15s ease-out; }
+
+        /* Esconder o pré-carregamento das imagens */
+        .preload {
+            position: absolute;
+            width: 0; height: 0;
+            overflow: hidden;
+            z-index: -9999;
+            pointer-events: none;
+        }
 
         @keyframes flash {
             0% { filter: brightness(3); }
@@ -104,6 +115,13 @@
     </style>
 </head>
 <body>
+
+<div class="preload">
+    <img src="manafundo.png">
+    <img src="chuva_fundo.png">
+    <img src="tempestade_fundo.png">
+    <img src="areia_fundo.png">
+</div>
 
 <div id="game-wrapper" class="bg-dia">
     <canvas id="canvas"></canvas>
@@ -198,7 +216,7 @@ const Game = {
         this.leavesActive = false; this.rainActive = false; this.stormActive = false; this.sandActive = false;
         this.windIntensity = 0;
         
-        // Limpa classes de clima e fundo antes de aplicar a nova
+        // Remove as classes antigas
         this.wrapper.classList.remove('night-mode', 'sand-storm', 'bg-dia', 'bg-chuva', 'bg-tempestade', 'bg-areia');
 
         if (s >= 400 && s < 450) {
