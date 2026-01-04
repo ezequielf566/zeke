@@ -15,7 +15,9 @@
         * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
         
         body {
-            background: #000;
+            /* Fundo definido aqui para garantir visibilidade */
+            background: #000 url('manafundo.png') no-repeat center center;
+            background-size: cover;
             font-family: 'Georgia', serif;
             overflow: hidden;
             display: flex; justify-content: center; align-items: center;
@@ -26,9 +28,7 @@
             position: relative;
             width: 100vw; height: 100vh;
             max-width: 500px; max-height: 900px;
-            /* Fundo com a imagem solicitada */
-            background: url('manafundo.png') no-repeat center center;
-            background-size: cover;
+            background: transparent; /* Wrapper transparente para ver o fundo do body */
             overflow: hidden;
             transition: filter 0.8s ease;
         }
@@ -131,7 +131,7 @@ const Game = {
     cameraY: 0,
     targetCameraY: 0,
     towerLean: 0, 
-    leanVelocity: 0, // Velocidade da queda por gravidade
+    leanVelocity: 0, 
     weather: "clear",
     
     swing: { 
@@ -208,9 +208,8 @@ const Game = {
             this.showPoints(pts, label, color);
             this.blocks.push({ x: this.fallingBlock.x, y: lastBlock.y - this.blockH, w: this.blockW });
             
-            // Lógica de Peso: Calcula o desequilíbrio acumulado
-            // Se colocar pra esquerda (diff negativo), a velocidade de inclinação aumenta para a esquerda
-            this.leanVelocity += (diff * 0.005); 
+            // AJUSTE DE GRAVIDADE: Multiplicador aumentado para sentir o "peso" imediato
+            this.leanVelocity += (diff * 0.008); 
 
             if ((this.blocks[this.blocks.length-1].y + this.targetCameraY) < this.height * 0.5) {
                 this.targetCameraY += this.blockH;
@@ -289,7 +288,7 @@ const Game = {
         const ctx = this.ctx;
         const time = Date.now();
         
-        // Limpa a tela (se a imagem de fundo falhar, mantém uma cor sólida)
+        // AJUSTE DO FUNDO: Limpamos com transparência para o manafundo.png aparecer
         ctx.clearRect(0, 0, this.width, this.height);
 
         this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
@@ -300,19 +299,18 @@ const Game = {
         const baseY = this.height - 100;
         const baseX = this.width / 2;
 
-        // EFEITO DE GRAVIDADE ACUMULADA
+        // AJUSTE DE FÍSICA: Gravidade puxando a torre conforme ela inclina
         if (this.gameActive && this.blocks.length > 1) {
-            // A torre inclina baseada na velocidade acumulada (peso dos blocos)
             this.towerLean += this.leanVelocity;
-            // Se já estiver inclinado, a própria gravidade puxa mais (aceleração)
-            this.leanVelocity += (this.towerLean * 0.001); 
+            // Aceleração gravitacional baseada no ângulo atual
+            this.leanVelocity += (this.towerLean * 0.0015); 
         }
 
         ctx.translate(baseX, baseY);
         ctx.rotate(this.towerLean * Math.PI / 180);
         ctx.translate(-baseX, -baseY);
 
-        // Verifica se o topo da torre saiu da tela
+        // Verificação de limites
         const topBlock = this.blocks[this.blocks.length - 1];
         const rad = this.towerLean * Math.PI / 180;
         const relX = topBlock.x - baseX + this.blockW/2;
@@ -320,7 +318,7 @@ const Game = {
         const globalX = baseX + relX * Math.cos(rad) - relY * Math.sin(rad);
 
         if (this.gameActive && (globalX < 0 || globalX > this.width || Math.abs(this.towerLean) > 22)) {
-            this.gameOver("A gravidade venceu a estrutura!");
+            this.gameOver("A estrutura perdeu o equilíbrio!");
         }
 
         this.blocks.forEach(b => this.drawBlock(b));
@@ -337,7 +335,6 @@ const Game = {
         }
         ctx.restore();
 
-        // Balanço do bloco atual
         if (this.gameActive && !this.fallingBlock) {
             const tEffect = Math.sin(time / 150) * this.swing.turbulence;
             this.swing.angle += (this.swing.speed + tEffect);
@@ -349,7 +346,6 @@ const Game = {
             this.swing.x = originX + Math.sin(this.swing.angle) * (this.width * 0.35);
             const swingY = this.blocks[this.blocks.length-1].y - this.dropDist;
 
-            // Desenha a corda
             ctx.beginPath();
             ctx.moveTo(this.width/2, -100);
             ctx.lineTo(this.swing.x, swingY + this.cameraY);
