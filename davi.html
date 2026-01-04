@@ -28,7 +28,17 @@
             max-width: 500px; max-height: 900px;
             background: #4facfe;
             overflow: hidden;
-            box-shadow: 0 0 100px rgba(0,0,0,0.8);
+            transition: background 1.5s ease;
+        }
+
+        /* Efeito de Flash do Raio */
+        .lightning-flash {
+            animation: flashHit 0.2s ease-out;
+        }
+        @keyframes flashHit {
+            0% { background: rgba(255,255,255,0); }
+            50% { background: rgba(255,255,255,0.8); }
+            100% { background: rgba(255,255,255,0); }
         }
 
         canvas { width: 100%; height: 100%; display: block; }
@@ -37,7 +47,7 @@
             position: absolute;
             top: 20px; width: 100%;
             display: flex; flex-direction: column; align-items: center;
-            pointer-events: none; z-index: 10;
+            pointer-events: none; z-index: 20;
         }
 
         #score-card {
@@ -56,7 +66,6 @@
         #weather-alert {
             margin-top: 10px;
             color: white; font-weight: bold;
-            background: rgba(255, 0, 0, 0.8);
             padding: 8px 25px; border-radius: 20px;
             display: none; animation: blink 0.4s infinite alternate;
         }
@@ -80,16 +89,16 @@
         }
 
         .points-float {
-            position: absolute; font-weight: 900; font-size: 2.5rem;
+            position: absolute; font-weight: 900; font-size: 2.2rem;
             pointer-events: none; animation: floatUp 0.8s forwards;
             text-shadow: 0 0 10px rgba(0,0,0,0.8); z-index: 50;
             text-align: center; line-height: 1;
         }
 
         @keyframes floatUp {
-            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+            0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
             50% { opacity: 1; }
-            100% { transform: translate(-50%, -150px) scale(1.2); opacity: 0; }
+            100% { transform: translate(-50%, -130px) scale(1.1); opacity: 0; }
         }
     </style>
 </head>
@@ -105,7 +114,7 @@
         <div id="weather-alert">VENTO FORTE</div>
     </div>
     <div id="overlay">
-        <h1 style="color: var(--gold-main); font-size: 2.8rem; text-shadow: 2px 2px var(--gold-shadow);">TEMPLO REAL</h1>
+        <h1 style="color: var(--gold-main); font-size: 2.8rem;">TEMPLO REAL</h1>
         <p>A precisão é o seu único guia.</p>
         <button onclick="Game.start()">INICIAR OBRA</button>
     </div>
@@ -124,10 +133,10 @@ const Game = {
     towerLean: 0,
     weather: "clear",
     
-    swing: { angle: 0, speed: 0.015, x: 0 }, 
+    swing: { angle: 0, speed: 0.015, x: 0, originShift: 0 }, 
     blockW: 140, 
     blockH: 50,
-    dropDist: 200,
+    dropDist: 210,
 
     init() {
         this.ctx = this.canvas.getContext('2d');
@@ -175,35 +184,30 @@ const Game = {
             let color = "#fff";
 
             if (absDiff < 10) {
-                pts = 50; label = "PERFEITO!"; color = "#FFF176";
-                this.towerLean *= 0.5; 
+                pts = 50; label = "PERFEITO!"; color = varProp('--gold-light');
+                this.towerLean *= 0.6; 
             } else if (absDiff < 25) {
-                pts = 20; label = "BOM!"; color = "#FFD700";
+                pts = 20; label = "BOM!"; color = varProp('--gold-main');
             } else {
-                label = "INSTÁVEL"; color = "#B8860B";
-                // PENALIDADE: Se cair torto com a torre já inclinada, perde pontos
+                label = "INSTÁVEL"; color = varProp('--gold-dark');
                 if(Math.abs(this.towerLean) > 8) {
-                    pts = -15; 
-                    label = "MUITO TORTO!";
-                    color = "#ff4444";
+                    pts = -15; label = "MUITO TORTO!"; color = "#ff4444";
                 } else {
                     pts = 5;
                 }
             }
 
             this.score += pts;
-            if(this.score < 0) this.score = 0; // Não deixa score negativo
+            if(this.score < 0) this.score = 0;
 
             this.showPoints(pts, label, color);
-            
             this.blocks.push({ x: dropX, y: lastBlock.y - this.blockH, w: this.blockW });
             this.towerLean += (diff * 0.045); 
 
-            // NOVO SISTEMA DE NÍVEL: 100 EM 100 PONTOS
             const expectedLevel = Math.floor(this.score / 100) + 1;
             if (expectedLevel > this.level) {
                 this.level = expectedLevel;
-                this.swing.speed += 0.003; // Aumento de dificuldade suave
+                this.swing.speed += 0.003;
             }
 
             const visualTop = (this.blocks[this.blocks.length-1].y) + this.targetCameraY;
@@ -212,27 +216,26 @@ const Game = {
             this.updateWeather();
             this.updateUI();
         } else {
-            this.gameOver("A peça caiu no abismo!");
+            this.gameOver("A pedra caiu!");
         }
     },
 
     updateWeather() {
         const alert = document.getElementById('weather-alert');
-        // CICLOS MAIS LONGOS: Clima muda a cada 40 blocos para durar mais tempo
         const cycle = this.blocks.length % 40;
         
         if (this.level >= 2 && cycle >= 25) {
-            this.weather = "storm"; // Noite/Tempestade (Dura 15 blocos)
+            this.weather = "storm";
             alert.innerText = "TEMPESTADE";
             alert.style.display = "block";
-            alert.style.background = "rgba(0, 0, 50, 0.8)";
+            alert.style.background = "rgba(0, 0, 80, 0.9)";
         } else if (this.level >= 1 && cycle >= 10 && cycle < 25) {
-            this.weather = "wind"; // Ventania (Dura 15 blocos)
+            this.weather = "wind";
             alert.innerText = "VENTO FORTE";
             alert.style.display = "block";
-            alert.style.background = "rgba(255, 0, 0, 0.8)";
+            alert.style.background = "rgba(255, 60, 0, 0.8)";
         } else {
-            this.weather = "clear"; // Céu limpo (Dura 10 blocos)
+            this.weather = "clear";
             alert.style.display = "none";
         }
     },
@@ -241,7 +244,7 @@ const Game = {
         const el = document.createElement('div');
         el.className = 'points-float';
         el.style.left = '50%';
-        el.style.top = '40%';
+        el.style.top = '45%';
         el.style.color = color;
         el.innerText = pts >= 0 ? `${label}\n+${pts}` : `${label}\n${pts}`;
         document.getElementById('game-wrapper').appendChild(el);
@@ -252,24 +255,27 @@ const Game = {
         this.gameActive = false;
         document.getElementById('overlay').style.display = 'flex';
         document.getElementById('overlay').innerHTML = `
-            <h1 style="color:var(--gold-main)">OBRA INTERROMPIDA</h1>
+            <h1 style="color:var(--gold-main)">FIM DE OBRA</h1>
             <p>${msg}</p>
-            <p style="font-size:1.5rem">NÍVEL: ${this.level} | PONTOS: ${this.score}</p>
-            <button onclick="Game.start()">TENTAR NOVAMENTE</button>
+            <p>PONTOS: ${this.score}</p>
+            <button onclick="Game.start()">RECOMEÇAR</button>
         `;
     },
 
-    drawBlock(b) {
+    drawBlock(b, isGhost = false) {
         const ctx = this.ctx;
         ctx.save();
+        if(isGhost) ctx.globalAlpha = 0.8;
+
+        // Profundidade
         ctx.fillStyle = "rgba(0,0,0,0.3)";
-        ctx.fillRect(b.x + 5, b.y + 5, this.blockW, this.blockH);
+        ctx.fillRect(b.x + 6, b.y + 6, this.blockW, this.blockH);
 
         let grad = ctx.createLinearGradient(b.x, b.y, b.x + this.blockW, b.y + this.blockH);
         grad.addColorStop(0, "#B8860B");
-        grad.addColorStop(0.2, "#FFD700");
+        grad.addColorStop(0.3, "#FFD700");
         grad.addColorStop(0.5, "#FFF176");
-        grad.addColorStop(0.8, "#FFD700");
+        grad.addColorStop(0.7, "#FFD700");
         grad.addColorStop(1, "#5c4000");
         
         ctx.fillStyle = grad;
@@ -278,63 +284,67 @@ const Game = {
         ctx.fillRect(b.x, b.y, this.blockW, this.blockH);
         ctx.strokeRect(b.x, b.y, this.blockW, this.blockH);
 
-        ctx.fillStyle = "rgba(255,255,255,0.5)";
-        ctx.beginPath();
-        ctx.moveTo(b.x + 2, b.y + 2);
-        ctx.lineTo(b.x + this.blockW - 2, b.y + 2);
-        ctx.lineTo(b.x + this.blockW - 10, b.y + 8);
-        ctx.lineTo(b.x + 10, b.y + 8);
-        ctx.fill();
+        // Brilho
+        ctx.fillStyle = "rgba(255,255,255,0.4)";
+        ctx.fillRect(b.x + 5, b.y + 5, this.blockW - 10, 4);
         ctx.restore();
     },
 
     drawCorda(x1, y1, x2, y2) {
         const ctx = this.ctx;
         ctx.save();
-        ctx.strokeStyle = "rgba(0,0,0,0.4)";
-        ctx.lineWidth = 6;
-        ctx.beginPath();
-        ctx.moveTo(x1 + 3, y1);
-        ctx.lineTo(x2 + 3, y2);
-        ctx.stroke();
+        // Curvatura leve pelo vento
+        const midX = (x1 + x2) / 2 + (this.weather !== "clear" ? Math.sin(Date.now()/200)*10 : 0);
+        const midY = (y1 + y2) / 2;
 
-        ctx.strokeStyle = "#4e342e";
-        ctx.lineWidth = 5;
-        ctx.setLineDash([10, 2]);
         ctx.beginPath();
         ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
+        ctx.quadraticCurveTo(midX, midY, x2, y2);
+        
+        ctx.strokeStyle = "#3e2723";
+        ctx.lineWidth = 5;
         ctx.stroke();
-
+        
         ctx.strokeStyle = "#8d6e63";
         ctx.lineWidth = 2;
-        ctx.setLineDash([5, 7]);
+        ctx.setLineDash([5, 5]);
         ctx.stroke();
         ctx.restore();
     },
 
     render() {
         const ctx = this.ctx;
+        const time = Date.now();
         this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
 
-        if (this.weather === "storm") ctx.fillStyle = "#1a1a2e"; // Noite profunda
-        else if (this.weather === "wind") ctx.fillStyle = "#5dade2";
-        else ctx.fillStyle = "#4facfe";
-        ctx.fillRect(0, 0, this.width, this.height);
+        // --- BACKGROUND E FILTROS ---
+        let bg = "#4facfe";
+        if (this.weather === "wind") bg = "#3498db";
+        if (this.weather === "storm") bg = "#0d0d1a";
+        document.getElementById('game-wrapper').style.background = bg;
+        
+        ctx.clearRect(0,0,this.width, this.height);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0,0,this.width, this.height);
 
-        if (this.weather !== "clear") {
-            ctx.strokeStyle = "rgba(255,255,255,0.2)";
-            ctx.lineWidth = 1;
-            for(let i=0; i<8; i++) {
-                let rx = Math.random() * this.width;
-                let ry = Math.random() * this.height;
+        // Efeito de Chuva e Raios
+        if (this.weather === "storm") {
+            if (Math.random() > 0.985) {
+                document.getElementById('game-wrapper').classList.add('lightning-flash');
+                setTimeout(() => document.getElementById('game-wrapper').classList.remove('lightning-flash'), 200);
+            }
+            ctx.strokeStyle = "rgba(174, 194, 224, 0.4)";
+            for(let i=0; i<15; i++){
+                let rx = Math.random()*this.width;
+                let ry = Math.random()*this.height;
                 ctx.beginPath();
                 ctx.moveTo(rx, ry);
-                ctx.lineTo(rx - 15, ry + 15);
+                ctx.lineTo(rx - 10, ry + 25);
                 ctx.stroke();
             }
         }
 
+        // --- TORRE ---
         ctx.save();
         ctx.translate(0, this.cameraY);
         const baseY = this.height - 120;
@@ -343,38 +353,52 @@ const Game = {
         ctx.rotate(this.towerLean * Math.PI / 180);
         ctx.translate(-baseX, -baseY);
 
-        ctx.fillStyle = "#2e1d13";
-        ctx.fillRect(-this.width, baseY + 50, this.width * 3, 500);
         ctx.fillStyle = "#1b110a";
-        ctx.fillRect(-this.width, baseY + 50, this.width * 3, 10);
-
+        ctx.fillRect(-this.width, baseY + 50, this.width * 3, 500);
         this.blocks.forEach(b => this.drawBlock(b));
         ctx.restore();
 
+        // --- PÊNDULO E FÍSICA DE CLIMA ---
         if (this.gameActive) {
             this.swing.angle += this.swing.speed;
-            let drift = 0;
-            if (this.weather === "wind") drift = Math.sin(Date.now()/500) * 45;
-            if (this.weather === "storm") drift = Math.sin(Date.now()/300) * 80;
+            
+            // O Vento agora desloca a origem do cabo (Atrapalha a precisão real)
+            let windX = 0;
+            if (this.weather === "wind") windX = Math.sin(time/600) * 50;
+            if (this.weather === "storm") windX = Math.sin(time/400) * 90 + Math.cos(time/1000) * 30;
+            
+            this.swing.originShift += (windX - this.swing.originShift) * 0.05;
 
-            const range = this.width * 0.35;
-            this.swing.x = this.width / 2 + Math.sin(this.swing.angle) * range + drift;
+            const range = this.width * 0.38;
+            const originX = this.width / 2 + this.swing.originShift;
+            this.swing.x = originX + Math.sin(this.swing.angle) * range;
+            
             const swingY = this.blocks[this.blocks.length-1].y - this.dropDist;
 
             this.drawCorda(this.width/2, -50, this.swing.x, swingY + this.cameraY);
             
             ctx.save();
             ctx.translate(0, this.cameraY);
-            this.drawBlock({ x: Math.round(this.swing.x - this.blockW/2), y: swingY });
+            this.drawBlock({ x: Math.round(this.swing.x - this.blockW/2), y: swingY }, true);
             ctx.restore();
         }
 
-        if (Math.abs(this.towerLean) > 18 && this.gameActive) this.gameOver("A torre inclinou demais!");
+        // Filtro de Noite (Vignette)
+        if (this.weather === "storm") {
+            let v = ctx.createRadialGradient(this.width/2, this.height/2, 100, this.width/2, this.height/2, this.width);
+            v.addColorStop(0, "rgba(0,0,0,0)");
+            v.addColorStop(1, "rgba(0,0,0,0.7)");
+            ctx.fillStyle = v;
+            ctx.fillRect(0,0,this.width,this.height);
+        }
+
+        if (Math.abs(this.towerLean) > 18 && this.gameActive) this.gameOver("A torre desabou!");
 
         requestAnimationFrame(() => this.render());
     }
 };
 
+function varProp(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
 Game.init();
 </script>
 </body>
