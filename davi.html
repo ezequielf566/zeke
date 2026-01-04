@@ -31,18 +31,8 @@
             transition: filter 0.8s ease, background 1.5s ease;
         }
 
-        /* Noite equilibrada: mais clara e visível */
         .night-filter {
             filter: brightness(0.65) contrast(1.1) saturate(0.9);
-        }
-
-        .lightning-flash {
-            animation: flashHit 0.1s ease-out;
-        }
-        @keyframes flashHit {
-            0% { filter: brightness(1); }
-            50% { filter: brightness(2); }
-            100% { filter: brightness(0.65); }
         }
 
         canvas { width: 100%; height: 100%; display: block; }
@@ -122,7 +112,7 @@
     </div>
     <div id="overlay">
         <h1 style="color: var(--gold-main); font-size: 2.5rem; margin-bottom: 15px;">TEMPLO SAGRADO</h1>
-        <p>Prepare as pedras e o ouro puro. Davi juntou as riquezas, cabe a você erguer a fundação para a glória de Deus.</p>
+        <p>Erga os alicerces com o ouro de Davi.</p>
         <button onclick="Game.start()">INICIAR OBRA</button>
     </div>
 </div>
@@ -186,7 +176,7 @@ const Game = {
             x: this.swing.x - this.blockW / 2,
             y: (this.blocks[this.blocks.length-1].y - this.dropDist),
             vy: 0,
-            gravity: 0.95
+            gravity: 1.1
         };
     },
 
@@ -196,10 +186,7 @@ const Game = {
         const absDiff = Math.abs(diff);
 
         if (absDiff < this.blockW) {
-            let pts = 0;
-            let label = "";
-            let color = "#fff";
-
+            let pts = 0; let label = ""; let color = "#fff";
             if (absDiff < 9) {
                 pts = 35; label = "OURO PURO!"; color = "#FFF9C4";
                 this.towerLean *= 0.4; 
@@ -208,26 +195,18 @@ const Game = {
             } else {
                 pts = 5; label = "FORA DE PRUMO"; color = "#B8860B";
             }
-
             this.score += pts;
             this.showPoints(pts, label, color);
-            
-            this.blocks.push({ 
-                x: this.fallingBlock.x, 
-                y: lastBlock.y - this.blockH, 
-                w: this.blockW 
-            });
+            this.blocks.push({ x: this.fallingBlock.x, y: lastBlock.y - this.blockH, w: this.blockW });
             
             const leanMultiplier = this.blocks.length < 6 ? 0.012 : 0.045;
             this.towerLean += (diff * leanMultiplier); 
-
             this.level = Math.floor(this.blocks.length / 10) + 1;
             this.swing.speed = Math.min(0.016 + (this.level * 0.0018), this.swing.maxSpeed);
 
             if ((this.blocks[this.blocks.length-1].y + this.targetCameraY) < this.height * 0.5) {
                 this.targetCameraY += this.blockH;
             }
-            
             this.updateWeather();
             this.updateUI();
         } else {
@@ -238,9 +217,8 @@ const Game = {
 
     updateWeather() {
         const alert = document.getElementById('weather-alert');
-        const cycle = this.blocks.length % 35; // Ciclo mais curto
-        
-        if (cycle >= 30) { // Noite dura apenas 5 blocos
+        const cycle = this.blocks.length % 35;
+        if (cycle >= 30) {
             this.weather = "storm";
             alert.innerText = "PROVAÇÃO DA NOITE";
             alert.style.display = "block";
@@ -274,7 +252,6 @@ const Game = {
         document.getElementById('overlay').innerHTML = `
             <h1 style="color:var(--gold-main)">OBRA INTERROMPIDA</h1>
             <p>${msg}</p>
-            <p style="margin-top:15px; font-size: 1.2rem;">TESOUROS ACUMULADOS: ${Math.floor(this.score)}</p>
             <button onclick="Game.start()">TENTAR NOVAMENTE</button>
         `;
     },
@@ -283,28 +260,41 @@ const Game = {
         const ctx = this.ctx;
         ctx.save();
         if(isGhost) ctx.globalAlpha = 0.5;
-
-        // Ouro polido com brilho
         let grad = ctx.createLinearGradient(b.x, b.y, b.x + this.blockW, b.y + this.blockH);
         grad.addColorStop(0, "#FFD700");
         grad.addColorStop(0.3, "#FFF9C4");
-        grad.addColorStop(0.5, "#FFD700");
         grad.addColorStop(1, "#B8860B");
-        
         ctx.fillStyle = grad;
-        ctx.strokeStyle = "rgba(0,0,0,0.3)";
-        ctx.lineWidth = 1;
-        
-        // Bordas arredondadas leves
         ctx.beginPath();
         ctx.roundRect(b.x, b.y, this.blockW, this.blockH, 3);
         ctx.fill();
+        ctx.restore();
+    },
+
+    drawRope(x1, y1, x2, y2) {
+        const ctx = this.ctx;
+        ctx.save();
+        // Sombra da corda
+        ctx.beginPath();
+        ctx.moveTo(x1+2, y1); ctx.lineTo(x2+2, y2);
+        ctx.strokeStyle = "rgba(0,0,0,0.2)";
+        ctx.lineWidth = 5; ctx.stroke();
+        
+        // Corda Texturizada
+        ctx.beginPath();
+        ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+        ctx.strokeStyle = "#5d4037"; // Cor de linho escuro
+        ctx.lineWidth = 4;
+        ctx.setLineDash([8, 2]); // Simula os gomos da corda
         ctx.stroke();
         
-        if(!isGhost) {
-            ctx.fillStyle = "rgba(255,255,255,0.4)";
-            ctx.fillRect(b.x + 5, b.y + 4, this.blockW - 10, 3);
-        }
+        ctx.beginPath();
+        ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+        ctx.strokeStyle = "#8d6e63"; // Brilho da fibra
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 6]);
+        ctx.lineDashOffset = 4;
+        ctx.stroke();
         ctx.restore();
     },
 
@@ -312,26 +302,32 @@ const Game = {
         const ctx = this.ctx;
         const time = Date.now();
         this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
-
-        // Fundo celestial
-        let bg = "#81D4FA";
-        if (this.weather === "storm") bg = "#1A237E";
-        else if (this.weather === "wind") bg = "#4FC3F7";
-        ctx.fillStyle = bg;
+        ctx.fillStyle = (this.weather === "storm") ? "#1A237E" : (this.weather === "wind" ? "#4FC3F7" : "#81D4FA");
         ctx.fillRect(0,0,this.width, this.height);
 
         ctx.save();
         ctx.translate(0, this.cameraY);
-        
-        // Base de pedra do Templo
         const baseY = this.height - 100;
         ctx.fillStyle = "#546E7A";
-        ctx.fillRect(0, baseY + 45, this.width, 600);
+        ctx.fillRect(0, baseY + 45, this.width, 1000);
         
         const baseX = this.width / 2;
         ctx.translate(baseX, baseY);
         ctx.rotate(this.towerLean * Math.PI / 180);
         ctx.translate(-baseX, -baseY);
+
+        // Verificação de Limite Lateral (Perder se sair da tela)
+        if (this.gameActive && this.blocks.length > 1) {
+            const lastB = this.blocks[this.blocks.length-1];
+            // Calcula a posição real do topo considerando a rotação
+            const rad = this.towerLean * Math.PI / 180;
+            const distY = baseY - lastB.y;
+            const realX = baseX + (lastB.x - baseX + this.blockW/2) * Math.cos(rad) - (lastB.y - baseY) * Math.sin(rad);
+            
+            if (realX < 0 || realX > this.width) {
+                this.gameOver("A torre inclinou para fora dos alicerces!");
+            }
+        }
 
         this.blocks.forEach(b => this.drawBlock(b));
         
@@ -339,7 +335,6 @@ const Game = {
             this.fallingBlock.vy += this.fallingBlock.gravity;
             this.fallingBlock.y += this.fallingBlock.vy;
             this.drawBlock(this.fallingBlock);
-
             const targetY = this.blocks[this.blocks.length-1].y - this.blockH;
             if(this.fallingBlock.y >= targetY) {
                 this.fallingBlock.y = targetY;
@@ -352,17 +347,11 @@ const Game = {
             this.swing.angle += this.swing.speed;
             let windX = (this.weather !== "clear") ? Math.sin(time/400) * 50 : 0;
             this.swing.originShift += (windX - this.swing.originShift) * 0.05;
-
             const originX = this.width / 2 + this.swing.originShift;
             this.swing.x = originX + Math.sin(this.swing.angle) * (this.width * 0.38);
             const swingY = this.blocks[this.blocks.length-1].y - this.dropDist;
 
-            ctx.beginPath();
-            ctx.moveTo(this.width/2, -100);
-            ctx.lineTo(this.swing.x, swingY + this.cameraY);
-            ctx.strokeStyle = "rgba(0,0,0,0.4)";
-            ctx.lineWidth = 2;
-            ctx.stroke();
+            this.drawRope(this.width/2, -100, this.swing.x, swingY + this.cameraY);
             
             ctx.save();
             ctx.translate(0, this.cameraY);
@@ -370,14 +359,10 @@ const Game = {
             ctx.restore();
         }
 
-        if (Math.abs(this.towerLean) > 16 && this.gameActive) {
-            this.gameOver("A fundação cedeu. Ouro perdido!");
-        }
-
+        if (Math.abs(this.towerLean) > 17 && this.gameActive) this.gameOver("A fundação cedeu sob o peso!");
         requestAnimationFrame(() => this.render());
     }
 };
-
 Game.init();
 </script>
 </body>
