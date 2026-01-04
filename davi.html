@@ -65,7 +65,8 @@
             padding: 8px 25px; border-radius: 20px;
             display: none;
             background: rgba(0,0,0,0.6);
-            border: 1px solid #ff5252;
+            border: 1px solid var(--gold-main);
+            text-shadow: 0 0 5px #000;
         }
 
         #overlay {
@@ -131,7 +132,13 @@ const Game = {
     towerLean: 0,
     weather: "clear",
     
-    swing: { angle: 0, speed: 0.016, x: 0, originShift: 0, maxSpeed: 0.045 }, 
+    swing: { 
+        angle: 0, 
+        speed: 0.022, // VELOCIDADE FIXA AGORA
+        x: 0, 
+        originShift: 0, 
+        turbulence: 0 
+    }, 
     blockW: 140, 
     blockH: 50,
     dropDist: 260,
@@ -156,7 +163,8 @@ const Game = {
         this.targetCameraY = 0;
         this.towerLean = 0;
         this.weather = "clear";
-        this.swing.speed = 0.016;
+        this.swing.speed = 0.022; // Garantindo a fixação
+        this.swing.turbulence = 0;
         this.fallingBlock = null;
         this.blocks = [{ x: Math.round(this.width/2 - 70), y: this.height - 100, w: 140 }];
         this.gameActive = true;
@@ -189,7 +197,7 @@ const Game = {
             let pts = 0; let label = ""; let color = "#fff";
             if (absDiff < 9) {
                 pts = 35; label = "OURO PURO!"; color = "#FFF9C4";
-                this.towerLean *= 0.4; 
+                this.towerLean *= 0.35; 
             } else if (absDiff < 28) {
                 pts = 15; label = "BOM!"; color = "#FFD700";
             } else {
@@ -199,10 +207,9 @@ const Game = {
             this.showPoints(pts, label, color);
             this.blocks.push({ x: this.fallingBlock.x, y: lastBlock.y - this.blockH, w: this.blockW });
             
-            const leanMultiplier = this.blocks.length < 6 ? 0.012 : 0.045;
+            const leanMultiplier = this.blocks.length < 8 ? 0.010 : 0.048;
             this.towerLean += (diff * leanMultiplier); 
             this.level = Math.floor(this.blocks.length / 10) + 1;
-            this.swing.speed = Math.min(0.016 + (this.level * 0.0018), this.swing.maxSpeed);
 
             if ((this.blocks[this.blocks.length-1].y + this.targetCameraY) < this.height * 0.5) {
                 this.targetCameraY += this.blockH;
@@ -218,14 +225,22 @@ const Game = {
     updateWeather() {
         const alert = document.getElementById('weather-alert');
         const cycle = this.blocks.length % 35;
+        this.swing.turbulence = 0;
+
         if (cycle >= 30) {
             this.weather = "storm";
             alert.innerText = "PROVAÇÃO DA NOITE";
             alert.style.display = "block";
             document.getElementById('game-wrapper').classList.add('night-filter');
-        } else if (cycle >= 12) {
+        } else if (cycle >= 18 && cycle < 25) {
             this.weather = "wind";
-            alert.innerText = "VENTO DO SINAI";
+            alert.innerText = "ACLAMAÇÃO DO POVO"; // Balanço irregular (Obstáculo 1)
+            alert.style.display = "block";
+            this.swing.turbulence = 0.025; 
+            document.getElementById('game-wrapper').classList.remove('night-filter');
+        } else if (cycle >= 8 && cycle < 14) {
+            this.weather = "wind";
+            alert.innerText = "VENTO DO DESERTO"; // Deslocamento de origem (Obstáculo 2)
             alert.style.display = "block";
             document.getElementById('game-wrapper').classList.remove('night-filter');
         } else {
@@ -252,6 +267,7 @@ const Game = {
         document.getElementById('overlay').innerHTML = `
             <h1 style="color:var(--gold-main)">OBRA INTERROMPIDA</h1>
             <p>${msg}</p>
+            <p style="margin-top:10px">ALTURA: ${this.blocks.length} TIJOLOS</p>
             <button onclick="Game.start()">TENTAR NOVAMENTE</button>
         `;
     },
@@ -274,26 +290,19 @@ const Game = {
     drawRope(x1, y1, x2, y2) {
         const ctx = this.ctx;
         ctx.save();
-        // Sombra da corda
-        ctx.beginPath();
-        ctx.moveTo(x1+2, y1); ctx.lineTo(x2+2, y2);
-        ctx.strokeStyle = "rgba(0,0,0,0.2)";
-        ctx.lineWidth = 5; ctx.stroke();
-        
-        // Corda Texturizada
         ctx.beginPath();
         ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-        ctx.strokeStyle = "#5d4037"; // Cor de linho escuro
-        ctx.lineWidth = 4;
-        ctx.setLineDash([8, 2]); // Simula os gomos da corda
+        ctx.strokeStyle = "#4e342e";
+        ctx.lineWidth = 5;
+        ctx.setLineDash([6, 2]);
         ctx.stroke();
         
         ctx.beginPath();
         ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-        ctx.strokeStyle = "#8d6e63"; // Brilho da fibra
+        ctx.strokeStyle = "#a1887f";
         ctx.lineWidth = 2;
-        ctx.setLineDash([4, 6]);
-        ctx.lineDashOffset = 4;
+        ctx.setLineDash([3, 5]);
+        ctx.lineDashOffset = 3;
         ctx.stroke();
         ctx.restore();
     },
@@ -316,15 +325,14 @@ const Game = {
         ctx.rotate(this.towerLean * Math.PI / 180);
         ctx.translate(-baseX, -baseY);
 
-        // Verificação de Limite Lateral (Perder se sair da tela)
         if (this.gameActive && this.blocks.length > 1) {
-            const lastB = this.blocks[this.blocks.length-1];
-            // Calcula a posição real do topo considerando a rotação
+            const topBlock = this.blocks[this.blocks.length-1];
             const rad = this.towerLean * Math.PI / 180;
-            const distY = baseY - lastB.y;
-            const realX = baseX + (lastB.x - baseX + this.blockW/2) * Math.cos(rad) - (lastB.y - baseY) * Math.sin(rad);
+            const relX = topBlock.x - baseX + this.blockW/2;
+            const relY = topBlock.y - baseY;
+            const globalX = baseX + relX * Math.cos(rad) - relY * Math.sin(rad);
             
-            if (realX < 0 || realX > this.width) {
+            if (globalX < -20 || globalX > this.width + 20) {
                 this.gameOver("A torre inclinou para fora dos alicerces!");
             }
         }
@@ -344,9 +352,14 @@ const Game = {
         ctx.restore();
 
         if (this.gameActive && !this.fallingBlock) {
-            this.swing.angle += this.swing.speed;
-            let windX = (this.weather !== "clear") ? Math.sin(time/400) * 50 : 0;
+            // Swing com velocidade FIXA + turbulência
+            const tEffect = Math.sin(time / 150) * this.swing.turbulence;
+            this.swing.angle += (this.swing.speed + tEffect);
+            
+            // Obstáculo de vento: move o ponto de onde a corda desce
+            let windX = (this.weather === "wind") ? Math.sin(time/500) * 60 : 0;
             this.swing.originShift += (windX - this.swing.originShift) * 0.05;
+            
             const originX = this.width / 2 + this.swing.originShift;
             this.swing.x = originX + Math.sin(this.swing.angle) * (this.width * 0.38);
             const swingY = this.blocks[this.blocks.length-1].y - this.dropDist;
@@ -359,10 +372,11 @@ const Game = {
             ctx.restore();
         }
 
-        if (Math.abs(this.towerLean) > 17 && this.gameActive) this.gameOver("A fundação cedeu sob o peso!");
+        if (Math.abs(this.towerLean) > 17.5 && this.gameActive) this.gameOver("A fundação cedeu sob o peso!");
         requestAnimationFrame(() => this.render());
     }
 };
+
 Game.init();
 </script>
 </body>
