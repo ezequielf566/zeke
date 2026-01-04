@@ -9,6 +9,7 @@
             --gold-light: #FFF176;
             --gold-main: #FFD700;
             --gold-dark: #B8860B;
+            --gold-shadow: #5c4000;
         }
 
         * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
@@ -25,8 +26,9 @@
             position: relative;
             width: 100vw; height: 100vh;
             max-width: 500px; max-height: 900px;
-            background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%);
+            background: #4facfe;
             overflow: hidden;
+            box-shadow: 0 0 100px rgba(0,0,0,0.8);
         }
 
         canvas { width: 100%; height: 100%; display: block; }
@@ -39,54 +41,54 @@
         }
 
         #score-card {
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             color: var(--gold-main);
             padding: 10px 30px;
-            border-radius: 50px;
-            font-size: 2rem;
+            border-radius: 15px;
+            font-size: 1.8rem;
             font-weight: 900;
-            border: 3px solid var(--gold-main);
+            border: 2px solid var(--gold-main);
+            text-align: center;
         }
+
+        #level-tag { font-size: 0.9rem; display: block; color: white; margin-bottom: 5px; }
 
         #weather-alert {
             margin-top: 10px;
-            color: white;
-            font-weight: bold;
-            background: rgba(255, 0, 0, 0.7);
-            padding: 8px 25px;
-            border-radius: 20px;
-            display: none;
-            animation: blink 0.5s infinite alternate;
-            text-transform: uppercase;
+            color: white; font-weight: bold;
+            background: rgba(255, 0, 0, 0.8);
+            padding: 8px 25px; border-radius: 20px;
+            display: none; animation: blink 0.4s infinite alternate;
         }
 
         @keyframes blink { from { opacity: 0.4; } to { opacity: 1; } }
 
         #overlay {
             position: absolute; inset: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.9);
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             color: white; z-index: 100; text-align: center;
         }
 
         button {
-            background: var(--gold-main); border: none; padding: 20px 60px;
-            font-size: 1.8rem; font-weight: bold; border-radius: 50px;
+            background: linear-gradient(to bottom, var(--gold-main), var(--gold-dark));
+            border: none; padding: 18px 50px;
+            font-size: 1.5rem; font-weight: bold; border-radius: 10px;
             cursor: pointer; margin-top: 25px; color: #332b00;
-            box-shadow: 0 6px 0 var(--gold-dark);
+            box-shadow: 0 5px 0 #443300;
         }
 
         .points-float {
-            position: absolute; color: white;
-            font-weight: bold; font-size: 2rem; pointer-events: none;
-            animation: floatUp 1s forwards; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            left: 50%; top: 40%;
-            z-index: 20;
+            position: absolute; font-weight: 900; font-size: 2.5rem;
+            pointer-events: none; animation: floatUp 0.8s forwards;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8); z-index: 50;
         }
+
         @keyframes floatUp {
-            from { transform: translate(-50%, 0); opacity: 1; }
-            to { transform: translate(-50%, -120px); opacity: 0; }
+            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translate(-50%, -150px) scale(1.2); opacity: 0; }
         }
     </style>
 </head>
@@ -95,13 +97,16 @@
 <div id="game-wrapper">
     <canvas id="canvas"></canvas>
     <div class="ui-panel">
-        <div id="score-card"><span id="score">0</span></div>
-        <div id="weather-alert">VENTO FORTE!</div>
+        <div id="score-card">
+            <span id="level-tag">NÍVEL 1</span>
+            <span id="score">0</span>
+        </div>
+        <div id="weather-alert">VENTO FORTE</div>
     </div>
     <div id="overlay">
-        <h1 style="color: var(--gold-main); font-size: 2.5rem;">TEMPLO REAL</h1>
-        <p>Edifique com perfeição!</p>
-        <button onclick="Game.start()">JOGAR</button>
+        <h1 style="color: var(--gold-main); font-size: 2.8rem; text-shadow: 2px 2px var(--gold-shadow);">TEMPLO REAL</h1>
+        <p>A precisão é o seu único guia.</p>
+        <button onclick="Game.start()">INICIAR OBRA</button>
     </div>
 </div>
 
@@ -110,17 +115,19 @@ const Game = {
     canvas: document.getElementById('canvas'),
     ctx: null,
     score: 0,
+    level: 1,
     blocks: [],
+    particles: [],
     gameActive: false,
     cameraY: 0,
     targetCameraY: 0,
     towerLean: 0,
     weather: "clear",
     
-    swing: { angle: 0, speed: 0.016, x: 0, maxSpeed: 0.045 }, 
+    swing: { angle: 0, speed: 0.015, x: 0 }, 
     blockW: 140, 
-    blockH: 48,
-    dropDist: 190, 
+    blockH: 50,
+    dropDist: 200,
 
     init() {
         this.ctx = this.canvas.getContext('2d');
@@ -137,16 +144,22 @@ const Game = {
 
     start() {
         this.score = 0;
+        this.level = 1;
         this.cameraY = 0;
         this.targetCameraY = 0;
         this.towerLean = 0;
-        this.swing.speed = 0.016;
         this.weather = "clear";
-        this.blocks = [{ x: Math.round(this.width/2 - 70), y: this.height - 100, w: 140 }];
+        this.swing.speed = 0.015;
+        this.blocks = [{ x: Math.round(this.width/2 - 70), y: this.height - 120, w: 140 }];
+        this.particles = [];
         this.gameActive = true;
         document.getElementById('overlay').style.display = 'none';
-        document.getElementById('score').innerText = "0";
-        document.getElementById('weather-alert').style.display = 'none';
+        this.updateUI();
+    },
+
+    updateUI() {
+        document.getElementById('score').innerText = this.score;
+        document.getElementById('level-tag').innerText = `NÍVEL ${this.level}`;
     },
 
     drop() {
@@ -155,126 +168,187 @@ const Game = {
         const dropX = Math.round(this.swing.x - this.blockW / 2);
         const lastBlock = this.blocks[this.blocks.length - 1];
         const diff = dropX - lastBlock.x;
+        const absDiff = Math.abs(diff);
 
-        if (Math.abs(diff) < this.blockW) {
-            const absDiff = Math.abs(diff);
-            const points = absDiff < 15 ? 20 : 10;
-            this.showPoints(points);
-            
-            // Recompensa por perfeição: Reduz um pouco a inclinação da torre
-            if(absDiff < 8) this.towerLean *= 0.8;
+        if (absDiff < this.blockW) {
+            let pts = 0;
+            let label = "";
+            let color = "#fff";
 
-            this.blocks.push({
-                x: dropX,
-                y: lastBlock.y - this.blockH,
-                w: this.blockW
-            });
-            
-            this.score += points;
-            document.getElementById('score').innerText = this.score;
-            this.towerLean += (diff * 0.038); 
-
-            // Câmera dinâmica inteligente
-            const visualPos = (this.blocks[this.blocks.length-1].y) + this.targetCameraY;
-            if (visualPos < this.height * 0.45) {
-                this.targetCameraY += this.blockH;
+            if (absDiff < 10) {
+                pts = 50; label = "PERFEITO!"; color = "#FFF176";
+                this.towerLean *= 0.5; // Estabiliza
+            } else if (absDiff < 25) {
+                pts = 20; label = "BOM!"; color = "#FFD700";
+            } else {
+                pts = 5; label = "INSTÁVEL"; color = "#B8860B";
+                // Perda de pontos se estiver muito inclinado e errar
+                if(Math.abs(this.towerLean) > 10) pts = -10; 
             }
+
+            this.score += pts;
+            this.showPoints(pts, label, color);
+            
+            this.blocks.push({ x: dropX, y: lastBlock.y - this.blockH, w: this.blockW });
+            this.towerLean += (diff * 0.045); 
+
+            // Sistema de Nível
+            const nextLevelGoal = this.level * 300;
+            if (this.score >= nextLevelGoal) {
+                this.level++;
+                this.swing.speed += 0.005;
+            }
+
+            // Câmera
+            const visualTop = (this.blocks[this.blocks.length-1].y) + this.targetCameraY;
+            if (visualTop < this.height * 0.5) this.targetCameraY += this.blockH;
             
             this.updateWeather();
-            
-            // Aceleração gradual com limite máximo para diversão
-            if(this.swing.speed < this.swing.maxSpeed) {
-                this.swing.speed += 0.0008;
-            }
+            this.updateUI();
         } else {
-            this.gameOver("A peça caiu fora da torre!");
+            this.gameOver("A peça caiu no abismo!");
         }
     },
 
     updateWeather() {
         const alert = document.getElementById('weather-alert');
-        // Vento aparece em ondas (Modo diversão)
-        // A cada 10 blocos, temos um período de vento e um período de calma
-        const blockCount = this.blocks.length;
+        const cycle = this.blocks.length % 20;
         
-        if (blockCount >= 5 && blockCount % 15 < 7) {
-            this.weather = "wind";
-            alert.innerText = "ALERTA: VENTANIA!";
-            alert.style.display = "block";
-            alert.style.background = "rgba(255, 165, 0, 0.7)";
-        } else if (blockCount >= 20 && blockCount % 25 < 10) {
+        if (this.level >= 2 && cycle > 12) {
             this.weather = "storm";
-            alert.innerText = "CUIDADO: TEMPESTADE!";
+            alert.innerText = "TEMPESTADE";
             alert.style.display = "block";
-            alert.style.background = "rgba(255, 0, 0, 0.7)";
+        } else if (this.level >= 1 && cycle > 6) {
+            this.weather = "wind";
+            alert.innerText = "VENTO FORTE";
+            alert.style.display = "block";
         } else {
             this.weather = "clear";
             alert.style.display = "none";
         }
     },
 
-    showPoints(pts) {
+    showPoints(pts, label, color) {
         const el = document.createElement('div');
         el.className = 'points-float';
-        el.innerText = pts === 20 ? "PERFEITO! +20" : `+${pts}`;
-        if(pts === 20) el.style.color = varProp('--gold-light');
+        el.style.left = '50%';
+        el.style.top = '40%';
+        el.style.color = color;
+        el.innerText = pts > 0 ? `${label}\n+${pts}` : `${label}\n${pts}`;
         document.getElementById('game-wrapper').appendChild(el);
-        setTimeout(() => el.remove(), 1000);
+        setTimeout(() => el.remove(), 800);
     },
 
     gameOver(msg) {
         this.gameActive = false;
         document.getElementById('overlay').style.display = 'flex';
         document.getElementById('overlay').innerHTML = `
-            <h1 style="color:var(--gold-main); font-size: 2.2rem;">TORRE DESABOU!</h1>
+            <h1 style="color:var(--gold-main)">OBRA INTERROMPIDA</h1>
             <p>${msg}</p>
-            <p style="font-size: 1.5rem; margin-top:10px;">Pontos: ${this.score}</p>
-            <button onclick="Game.start()">RECOMEÇAR</button>
+            <p style="font-size:1.5rem">NÍVEL: ${this.level} | PONTOS: ${this.score}</p>
+            <button onclick="Game.start()">TENTAR NOVAMENTE</button>
         `;
     },
 
     drawBlock(b) {
         const ctx = this.ctx;
-        const x = b.x;
-        const y = b.y;
         ctx.save();
-        let grad = ctx.createLinearGradient(x, y, x, y + this.blockH);
-        grad.addColorStop(0, "#FFD700");
+        
+        // Sombra lateral para profundidade
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.fillRect(b.x + 5, b.y + 5, this.blockW, this.blockH);
+
+        // Corpo do Tijolo de Ouro
+        let grad = ctx.createLinearGradient(b.x, b.y, b.x + this.blockW, b.y + this.blockH);
+        grad.addColorStop(0, "#B8860B");
+        grad.addColorStop(0.2, "#FFD700");
         grad.addColorStop(0.5, "#FFF176");
-        grad.addColorStop(1, "#B8860B");
+        grad.addColorStop(0.8, "#FFD700");
+        grad.addColorStop(1, "#5c4000");
+        
         ctx.fillStyle = grad;
-        ctx.strokeStyle = "#5d4037";
+        ctx.strokeStyle = "#443300";
         ctx.lineWidth = 2;
-        ctx.fillRect(x, y, this.blockW, this.blockH);
-        ctx.strokeRect(x, y, this.blockW, this.blockH);
-        ctx.fillStyle = "rgba(255,255,255,0.4)";
-        ctx.fillRect(x + 5, y + 5, this.blockW - 10, 5);
+        ctx.fillRect(b.x, b.y, this.blockW, this.blockH);
+        ctx.strokeRect(b.x, b.y, this.blockW, this.blockH);
+
+        // Brilho de "Joia"
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.beginPath();
+        ctx.moveTo(b.x + 2, b.y + 2);
+        ctx.lineTo(b.x + this.blockW - 2, b.y + 2);
+        ctx.lineTo(b.x + this.blockW - 10, b.y + 8);
+        ctx.lineTo(b.x + 10, b.y + 8);
+        ctx.fill();
+        ctx.restore();
+    },
+
+    drawCorda(x1, y1, x2, y2) {
+        const ctx = this.ctx;
+        ctx.save();
+        // Sombra da corda
+        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(x1 + 3, y1);
+        ctx.lineTo(x2 + 3, y2);
+        ctx.stroke();
+
+        // Corda Texturizada (Trançada)
+        ctx.strokeStyle = "#4e342e";
+        ctx.lineWidth = 5;
+        ctx.setLineDash([10, 2]);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        ctx.strokeStyle = "#8d6e63";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 7]);
+        ctx.stroke();
         ctx.restore();
     },
 
     render() {
         const ctx = this.ctx;
-        this.cameraY += (this.targetCameraY - this.cameraY) * 0.08;
+        this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
 
-        // Fundo Climático Suave
-        if (this.weather === "storm") ctx.fillStyle = "#34495e";
-        else if (this.weather === "wind") ctx.fillStyle = "#a2e1ff";
+        // Fundo dinâmico
+        if (this.weather === "storm") ctx.fillStyle = "#1a252f";
+        else if (this.weather === "wind") ctx.fillStyle = "#5dade2";
         else ctx.fillStyle = "#4facfe";
         ctx.fillRect(0, 0, this.width, this.height);
+
+        // Efeitos de Partículas (Vento/Chuva)
+        if (this.weather !== "clear") {
+            ctx.strokeStyle = "rgba(255,255,255,0.3)";
+            ctx.lineWidth = 1;
+            for(let i=0; i<5; i++) {
+                let rx = Math.random() * this.width;
+                let ry = Math.random() * this.height;
+                ctx.beginPath();
+                ctx.moveTo(rx, ry);
+                ctx.lineTo(rx - 20, ry + 10);
+                ctx.stroke();
+            }
+        }
 
         // --- TORRE ---
         ctx.save();
         ctx.translate(0, this.cameraY);
         
-        const baseY = this.height - 100;
+        const baseY = this.height - 120;
         const baseX = this.width / 2;
         ctx.translate(baseX, baseY);
         ctx.rotate(this.towerLean * Math.PI / 180);
         ctx.translate(-baseX, -baseY);
 
-        // Chão
-        ctx.fillStyle = "#3e2723";
-        ctx.fillRect(-this.width, baseY + 48, this.width * 3, 500);
+        // Chão Realista
+        ctx.fillStyle = "#2e1d13";
+        ctx.fillRect(-this.width, baseY + 50, this.width * 3, 500);
+        ctx.fillStyle = "#1b110a";
+        ctx.fillRect(-this.width, baseY + 50, this.width * 3, 10);
 
         this.blocks.forEach(b => this.drawBlock(b));
         ctx.restore();
@@ -282,44 +356,27 @@ const Game = {
         // --- PÊNDULO ---
         if (this.gameActive) {
             this.swing.angle += this.swing.speed;
-            
             let drift = 0;
-            const time = Date.now();
-            if (this.weather === "wind") drift = Math.sin(time/500) * 35;
-            if (this.weather === "storm") drift = Math.sin(time/300) * 65 + Math.cos(time/1000) * 20;
+            if (this.weather === "wind") drift = Math.sin(Date.now()/400) * 40;
+            if (this.weather === "storm") drift = Math.sin(Date.now()/250) * 75;
 
             const range = this.width * 0.35;
             this.swing.x = this.width / 2 + Math.sin(this.swing.angle) * range + drift;
+            const swingY = this.blocks[this.blocks.length-1].y - this.dropDist;
+
+            this.drawCorda(this.width/2, -50, this.swing.x, swingY + this.cameraY);
             
-            const lastY = this.blocks[this.blocks.length - 1].y;
-            const swingY = lastY - this.dropDist;
-
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(this.width / 2, 0); 
-            ctx.lineTo(this.swing.x, (swingY + this.cameraY));
-            ctx.strokeStyle = "#3e2723";
-            ctx.lineWidth = 3;
-            ctx.setLineDash([8, 4]);
-            ctx.stroke();
-            ctx.restore();
-
             ctx.save();
             ctx.translate(0, this.cameraY);
             this.drawBlock({ x: Math.round(this.swing.x - this.blockW/2), y: swingY });
             ctx.restore();
         }
 
-        // Limite de inclinação para derrota
-        if (Math.abs(this.towerLean) > 17 && this.gameActive) {
-            this.gameOver("A torre ficou muito inclinada!");
-        }
+        if (Math.abs(this.towerLean) > 18 && this.gameActive) this.gameOver("A torre inclinou demais!");
 
         requestAnimationFrame(() => this.render());
     }
 };
-
-function varProp(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
 
 Game.init();
 </script>
