@@ -32,7 +32,6 @@
             transition: filter 2s, background 2s;
         }
 
-        /* Filtros de Ambiente */
         .night-mode { filter: brightness(0.4) contrast(1.2) saturate(0.5); }
         .sepia-mode { filter: sepia(0.8) hue-rotate(-30deg) saturate(1.5); }
         .fog-mode { filter: blur(1px) brightness(0.8); }
@@ -121,7 +120,6 @@ const Game = {
     targetCameraY: 0,
     feedbackEl: document.getElementById('feedback'),
     
-    // Estados Climáticos
     windIntensity: 0,
     rainActive: false,
     nightActive: false,
@@ -132,7 +130,7 @@ const Game = {
     
     blockW: 140,
     blockH: 45,
-    swing: { angle: 0, speed: 0.012, x: 0, y: 0, amplitude: 0.48 },
+    swing: { angle: 0, speed: 0.012, x: 0, y: 100, amplitude: 0.48 }, // y fixo no topo
 
     init() {
         this.ctx = this.canvas.getContext('2d');
@@ -162,40 +160,32 @@ const Game = {
 
     updateDifficulty() {
         const tag = document.getElementById('level-tag');
-        
-        // Gatilhos de Eventos
         if (this.score === 40) this.showFeedback("O VENTO ESTÁ VINDO...", "#FFD700", 2000);
         if (this.score >= 50) {
             this.windIntensity = 0.005;
             tag.innerText = "VENTOS DO SUL";
         }
-        
         if (this.score === 90) this.showFeedback("O CÉU ESTÁ ESCURECENDO...", "#00E5FF", 2000);
         if (this.score >= 100) {
             this.rainActive = true;
             tag.innerText = "TEMPESTADE";
             tag.style.color = "#00E5FF";
         }
-
         if (this.score === 140) this.showFeedback("O SOL SE PÕE...", "#FF5722", 2000);
         if (this.score >= 190) {
             this.wrapper.classList.add('night-mode');
             tag.innerText = "NOITE PROFUNDA";
             tag.style.color = "#9C27B0";
         }
-
         if (this.score >= 300) {
             this.wrapper.classList.add('fog-mode');
             tag.innerText = "NEBLINA ESPESSA";
         }
-
         if (this.score >= 700) {
             this.wrapper.classList.add('sepia-mode');
             tag.innerText = "TEMPESTADE DE AREIA";
             this.windIntensity = 0.015;
         }
-
-        // Velocidade baseada no score
         if (this.score < 500) this.swing.speed = 0.012;
         else if (this.score < 900) this.swing.speed = 0.024;
         else this.swing.speed = 0.032;
@@ -224,9 +214,9 @@ const Game = {
         if (!this.gameActive || this.fallingBlock) return;
         this.fallingBlock = {
             x: this.swing.x - this.blockW / 2,
-            y: this.swing.y,
+            y: this.swing.y - this.cameraY, // Ajuste para compensar a câmera na queda
             vy: 0,
-            vx: this.rainActive ? (Math.random() - 0.5) * 2 : 0, // Chuva afeta queda
+            vx: this.rainActive ? (Math.random() - 0.5) * 2 : 0,
             gravity: 1.0
         };
     },
@@ -308,18 +298,29 @@ const Game = {
 
         if (!this.exploding) this.cameraY += (this.targetCameraY - this.cameraY) * 0.08;
 
-        // Física do balanço com vento
+        // Física do balanço - Fixado no topo
         if (this.gameActive && !this.fallingBlock) {
             let windShift = Math.sin(Date.now() * 0.002) * this.windIntensity;
             this.swing.angle += this.swing.speed + windShift;
             this.swing.x = (this.width / 2) + Math.sin(this.swing.angle) * (this.width * this.swing.amplitude);
-            this.swing.y = (this.blocks[this.blocks.length-1].y - 230);
+            // y da swing não muda mais com os blocos
         }
 
+        // Camada 1: Elementos fixos (Corda e Bloco Oscilante)
+        if (this.gameActive && !this.fallingBlock) {
+            ctx.beginPath();
+            ctx.moveTo(this.width/2, -50); // Ponto fixo bem no topo
+            ctx.lineTo(this.swing.x, this.swing.y);
+            ctx.strokeStyle = "gold"; ctx.lineWidth = 2; ctx.stroke();
+            
+            ctx.fillStyle = "gold";
+            ctx.beginPath(); ctx.roundRect(this.swing.x - this.blockW/2, this.swing.y, this.blockW, this.blockH, 4); ctx.fill();
+        }
+
+        // Camada 2: Elementos afetados pela Câmera (Torre e Queda)
         ctx.save();
         ctx.translate(0, this.cameraY);
 
-        // Desenhar blocos
         this.blocks.forEach((b, i) => {
             if (this.exploding && !b.fixed) {
                 b.vy += 0.6; b.x += b.vx; b.y += b.vy;
@@ -341,7 +342,6 @@ const Game = {
             ctx.restore();
         });
 
-        // Bloco caindo
         if (this.fallingBlock) {
             this.fallingBlock.vy += this.fallingBlock.gravity;
             this.fallingBlock.x += this.fallingBlock.vx;
@@ -351,19 +351,8 @@ const Game = {
             if (this.fallingBlock.y >= this.blocks[this.blocks.length-1].y - this.blockH) this.processLanding();
         }
 
-        // Corda
-        if (this.gameActive && !this.fallingBlock) {
-            ctx.beginPath();
-            ctx.moveTo(this.width/2, -200);
-            ctx.lineTo(this.swing.x, this.swing.y);
-            ctx.strokeStyle = "gold"; ctx.lineWidth = 2; ctx.stroke();
-            ctx.fillStyle = "gold";
-            ctx.beginPath(); ctx.roundRect(this.swing.x - this.blockW/2, this.swing.y, this.blockW, this.blockH, 4); ctx.fill();
-        }
-
         ctx.restore();
         
-        // Torre desmoronando por inclinação
         if (this.gameActive) {
             this.towerLean += this.leanVelocity;
             if (Math.abs(this.towerLean) > 1.5) this.leanVelocity += (this.towerLean * 0.001);
