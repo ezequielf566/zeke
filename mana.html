@@ -42,10 +42,11 @@
             z-index: 20; 
         }
 
+        /* AVATAR: Aumentado para 95px para ter destaque */
         #player {
             position: absolute; 
             bottom: 80px; 
-            width: 90px; height: 90px; 
+            width: 95px; height: 95px; 
             background-image: url('avatarmana.png');
             background-size: contain;
             background-repeat: no-repeat;
@@ -55,11 +56,12 @@
             transform: translateX(-50%);
         }
 
+        /* ENTIDADES: Emojis reduzidos para 32px para parecerem menores que o boneco */
         .entity { 
-            position: absolute; font-size: 45px; z-index: 15; 
+            position: absolute; font-size: 32px; z-index: 15; 
             will-change: transform; pointer-events: none;
             display: flex; align-items: center; justify-content: center;
-            width: 60px; height: 60px;
+            width: 50px; height: 50px;
         }
 
         #ui-container {
@@ -110,7 +112,7 @@
     <div id="screen-start" class="overlay">
         <h1 style="font-size: 48px; color: var(--gold); margin-bottom: 10px;">MANÁ</h1>
         <p style="font-size: 18px;">Deus ouviu o clamor do Seu povo.</p>
-        <p style="font-size: 14px; opacity: 0.8; max-width: 300px;">Arraste o dedo ou toque nas laterais para colher o maná. Complete o combo para avançar.</p><br>
+        <p style="font-size: 14px; opacity: 0.8; max-width: 300px;">Arraste o dedo ou toque nas laterais para colher o maná.</p><br>
         <button class="btn" onclick="startGame()">COLHER PROVIMENTO</button>
     </div>
 
@@ -132,10 +134,8 @@
             mana: 0,
             playerX: window.innerWidth / 2,
             velocityX: 0,
-            // AJUSTE: Aceleração reduzida de 0.9 para 0.45 (mais suave)
             acceleration: 0.45, 
             friction: 0.84,    
-            // AJUSTE: Velocidade máxima reduzida de 11 para 7 (mais controlável)
             maxSpeed: 7,      
             moveDir: 0,
             items: [],
@@ -164,7 +164,6 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // --- SISTEMA DE MOVIMENTAÇÃO (TOUCH & MOUSE) ---
         const startInput = (x) => {
             game.isDragging = true;
             handleInput(x);
@@ -172,7 +171,6 @@
 
         const handleInput = (x) => {
             if (!game.active) return;
-            // Lógica de Arrastar: O personagem tenta ir para onde o dedo está
             const dist = x - game.playerX;
             if (Math.abs(dist) > 10) {
                 game.moveDir = dist > 0 ? 1 : -1;
@@ -186,14 +184,12 @@
             game.moveDir = 0;
         };
 
-        // Eventos Touch (Celular)
         window.addEventListener('touchstart', (e) => startInput(e.touches[0].clientX));
         window.addEventListener('touchmove', (e) => {
             if(game.isDragging) handleInput(e.touches[0].clientX);
         });
         window.addEventListener('touchend', stopInput);
 
-        // Eventos Mouse (Desktop)
         window.addEventListener('mousedown', (e) => startInput(e.clientX));
         window.addEventListener('mousemove', (e) => {
             if(game.isDragging) handleInput(e.clientX);
@@ -215,7 +211,7 @@
 
             game.playerX += game.velocityX;
 
-            const limit = 45;
+            const limit = 45; 
             if (game.playerX < limit) { game.playerX = limit; game.velocityX = 0; }
             if (game.playerX > window.innerWidth - limit) { game.playerX = window.innerWidth - limit; game.velocityX = 0; }
 
@@ -251,17 +247,17 @@
 
         function updateItems() {
             const groundHeight = 80;
-            const playerHeight = 90;
+            const playerHeight = 95; 
             for (let i = game.items.length - 1; i >= 0; i--) {
                 const item = game.items[i];
                 item.y += game.itemSpeed;
                 item.el.style.transform = `translateY(${item.y}px)`;
 
                 const playerCenter = game.playerX;
-                const itemCenter = item.x + 30;
+                const itemCenter = item.x + 25;
 
                 if (item.y > window.innerHeight - (groundHeight + playerHeight) && item.y < window.innerHeight - groundHeight) {
-                    if (Math.abs(playerCenter - itemCenter) < 50) {
+                    if (Math.abs(playerCenter - itemCenter) < 55) {
                         handleCollect(item);
                         destroyItem(i);
                         continue;
@@ -323,7 +319,6 @@
             game.level++;
             game.mana = 0;
             game.itemSpeed += 0.4;
-            // Aumenta a velocidade do player levemente a cada nível
             game.maxSpeed += 0.5; 
             game.spawnRate = Math.max(600, game.spawnRate - 150);
             
