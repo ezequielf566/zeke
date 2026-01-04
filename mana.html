@@ -19,7 +19,7 @@
             user-select: none; 
         }
         
-        /* Fundo Central Fixo e Responsivo */
+        /* Fundo Total e Responsivo */
         #world { 
             position: relative; 
             width: 100vw; 
@@ -32,12 +32,13 @@
             overflow: hidden; 
         }
 
+        /* Cabeçalho sem desfoque para mostrar o fundo total */
         #clouds-origin {
             position: absolute; top: 0; width: 100%; height: 60px;
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255,255,255,0.2); z-index: 10;
+            z-index: 10;
             display: flex; align-items: center; justify-content: center;
-            color: #fff; font-weight: bold; letter-spacing: 3px; font-size: 14px;
+            color: #fff; font-weight: bold; letter-spacing: 4px; font-size: 16px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5); /* Sombra para leitura */
         }
 
         /* Chão Fixo e Responsivo */
@@ -47,14 +48,14 @@
             width: 100%; 
             height: 80px; 
             background-image: url('manachao.png');
-            background-size: 100% 100%; /* Garante que preencha toda a largura */
+            background-size: 100% 100%; 
             background-repeat: no-repeat;
             z-index: 20; 
         }
 
         #player {
             position: absolute; 
-            bottom: 80px; /* Ajustado para ficar em cima do novo chão */
+            bottom: 80px; 
             width: 80px; height: 80px;
             display: flex; align-items: center; justify-content: center;
             font-size: 70px; z-index: 25; will-change: left;
@@ -69,20 +70,19 @@
         }
 
         #ui-container {
-            position: absolute; top: 80px; width: 100%; display: flex; 
+            position: absolute; top: 70px; width: 100%; display: flex; 
             justify-content: space-between; box-sizing: border-box; padding: 0 20px; z-index: 30;
         }
 
         .glass-card {
-            background: rgba(0,0,0,0.7); padding: 12px; border-radius: 12px;
+            background: rgba(0,0,0,0.5); padding: 12px; border-radius: 12px;
             color: white; border: 1px solid rgba(255,255,255,0.1); min-width: 100px;
-            backdrop-filter: blur(10px);
         }
 
         #challenge-box { border: 2px solid var(--gold); text-align: right; }
 
         .overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
             display: flex; flex-direction: column; align-items: center; 
             justify-content: center; z-index: 100; color: white; text-align: center;
             padding: 20px;
@@ -114,14 +114,14 @@
 
     <div id="screen-start" class="overlay">
         <h1 style="font-size: 48px; color: var(--gold); margin-bottom: 10px;">MANÁ</h1>
-        <p style="font-size: 18px;">Mova-se para coletar os elementos.</p>
-        <p style="font-size: 14px; opacity: 0.8;">Complete o combo para subir de nível.</p><br>
+        <p style="font-size: 18px;">Toque nas laterais para mover.</p>
+        <p style="font-size: 14px; opacity: 0.8;">Colete os itens e complete o combo!</p><br>
         <button class="btn" onclick="startGame()">INICIAR JOGO</button>
     </div>
 
     <div id="screen-win" class="overlay" style="display:none;">
-        <h1 style="color: var(--gold);">NÍVEL CONCLUÍDO!</h1>
-        <p>A energia está fluindo perfeitamente.</p><br>
+        <h1 style="color: var(--gold);">VITÓRIA!</h1>
+        <p>A energia flui através de você.</p><br>
         <button class="btn" onclick="nextLevel()">PRÓXIMA FASE</button>
     </div>
 
@@ -137,14 +137,14 @@
             mana: 0,
             playerX: window.innerWidth / 2,
             velocityX: 0,
-            acceleration: 2.0,
-            friction: 0.82,
-            maxSpeed: 18,
+            acceleration: 1.2, // Reduzido para movimento mais suave no início
+            friction: 0.85,    // Ajustado para frenagem natural
+            maxSpeed: 12,      // Reduzido para não ser tão frenético inicialmente
             moveDir: 0,
             items: [],
             lastSpawn: 0,
-            spawnRate: 1400,
-            itemSpeed: 4,
+            spawnRate: 1500,
+            itemSpeed: 3.5,
             targetEmoji: '',
             targetGoal: 3,
             currentSequence: 0,
@@ -191,9 +191,10 @@
 
             game.playerX += game.velocityX;
 
-            // Limites Laterais
-            if (game.playerX < 40) { game.playerX = 40; game.velocityX = 0; }
-            if (game.playerX > window.innerWidth - 40) { game.playerX = window.innerWidth - 40; game.velocityX = 0; }
+            // Limites Laterais responsivos
+            const limit = 40;
+            if (game.playerX < limit) { game.playerX = limit; game.velocityX = 0; }
+            if (game.playerX > window.innerWidth - limit) { game.playerX = window.innerWidth - limit; game.velocityX = 0; }
 
             player.style.left = game.playerX + 'px';
             
@@ -211,7 +212,7 @@
         }
 
         function spawnItem() {
-            const isJunk = Math.random() > 0.80;
+            const isJunk = Math.random() > 0.85;
             const emoji = isJunk ? junkPool[Math.floor(Math.random() * junkPool.length)] : foodPool[Math.floor(Math.random() * foodPool.length)];
             
             const element = document.createElement('div');
@@ -235,7 +236,7 @@
                 const playerCenter = game.playerX;
                 const itemCenter = item.x + 30;
 
-                // Colisão ajustada para o novo chão
+                // Colisão
                 if (item.y > window.innerHeight - (groundHeight + 80) && item.y < window.innerHeight - groundHeight) {
                     if (Math.abs(playerCenter - itemCenter) < 55) {
                         handleCollect(item);
@@ -254,7 +255,7 @@
             if (item.isJunk) {
                 game.currentSequence = 0;
                 game.mana = Math.max(0, game.mana - 2);
-                world.style.filter = "contrast(2) brightness(0.5)";
+                world.style.filter = "brightness(0.6) sepia(1)";
                 setTimeout(() => world.style.filter = "none", 150);
             } else {
                 game.mana++;
@@ -284,6 +285,7 @@
             
             const box = document.getElementById('challenge-box');
             box.style.borderColor = game.challengeComplete ? "#2ecc71" : "var(--gold)";
+            box.style.background = game.challengeComplete ? "rgba(46, 204, 113, 0.4)" : "rgba(0,0,0,0.5)";
         }
 
         function checkWin() {
@@ -297,8 +299,9 @@
         function nextLevel() {
             game.level++;
             game.mana = 0;
-            game.itemSpeed += 0.5;
-            game.spawnRate = Math.max(400, game.spawnRate - 100);
+            game.itemSpeed += 0.4;
+            game.maxSpeed += 0.5; // Aumenta a velocidade máxima gradualmente por fase
+            game.spawnRate = Math.max(600, game.spawnRate - 100);
             
             game.items.forEach(item => item.el.remove());
             game.items = [];
@@ -309,7 +312,6 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Redimensionamento responsivo
         window.addEventListener('resize', () => {
             game.playerX = window.innerWidth / 2;
         });
