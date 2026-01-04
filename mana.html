@@ -42,11 +42,11 @@
             z-index: 20; 
         }
 
-        /* AVATAR: Proporção maior para destaque */
+        /* AVATAR: Aumentado para 130px para melhor visualização mobile */
         #player {
             position: absolute; 
-            bottom: 80px; 
-            width: 95px; height: 95px; 
+            bottom: 75px; /* Ajuste leve para pisar no chão corretamente */
+            width: 130px; height: 130px; /* AUMENTADO DE 95px PARA 130px */
             background-image: url('avatarmana.png');
             background-size: contain;
             background-repeat: no-repeat;
@@ -56,9 +56,9 @@
             transform: translateX(-50%);
         }
 
-        /* ENTIDADES: Emojis menores (32px) para parecerem itens colhidos */
+        /* ENTIDADES */
         .entity { 
-            position: absolute; font-size: 20px; z-index: 15; 
+            position: absolute; font-size: 32px; z-index: 15; 
             will-change: transform; pointer-events: none;
             display: flex; align-items: center; justify-content: center;
             width: 50px; height: 50px;
@@ -86,6 +86,17 @@
         
         .btn { padding: 15px 40px; font-size: 20px; cursor: pointer; border-radius: 50px; border: none; background: var(--gold); font-weight: bold; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .btn:active { transform: scale(0.95); }
+        
+        .floating-score {
+            position: absolute; color: var(--gold); font-weight: bold; font-size: 24px;
+            animation: floatUp 0.8s forwards; pointer-events: none; z-index: 40;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-50px) scale(1.2); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -96,7 +107,7 @@
         <div id="ui-container">
             <div class="glass-card">
                 <b id="lvl-tag" style="color: var(--gold);">DIA 1</b><br>
-                Provimento: <span id="cur-mana">0/15</span>
+                Provimento: <span id="cur-mana">0</span>/<span id="max-mana">15</span>
             </div>
             <div class="glass-card" id="challenge-box">
                 <small>PEDIDO DO CÉU</small><br>
@@ -112,7 +123,7 @@
     <div id="screen-start" class="overlay">
         <h1 style="font-size: 48px; color: var(--gold); margin-bottom: 10px;">MANÁ</h1>
         <p style="font-size: 18px;">Deus ouviu o clamor do Seu povo.</p>
-        <p style="font-size: 14px; opacity: 0.8; max-width: 300px;">Arraste o dedo para colher o maná e complete o combo do dia.</p><br>
+        <p style="font-size: 14px; opacity: 0.8; max-width: 300px;">Arraste o dedo para mover o avatar maior e colher o maná.</p><br>
         <button class="btn" onclick="startGame()">COLHER PROVIMENTO</button>
     </div>
 
@@ -121,22 +132,36 @@
         <p>A provisão divina é fiel.</p><br>
         <button class="btn" onclick="nextLevel()">PRÓXIMO DIA</button>
     </div>
+    
+    <div id="screen-fail" class="overlay" style="display:none;">
+        <h1 style="color: #e74c3c;">OPS!</h1>
+        <p>Cuidado com o que não convém.</p><br>
+        <button class="btn" onclick="restartLevel()">TENTAR DE NOVO</button>
+    </div>
 
     <script>
         const world = document.getElementById('world');
         const player = document.getElementById('player');
-        const foodPool = ['🍎','🍉','🍍','🍇','🍓','🥥','🍑','🍒'];
-        const junkPool = ['🗑️','⚓','💣','🧱'];
+        const uiMana = document.getElementById('cur-mana');
+        const uiMaxMana = document.getElementById('max-mana');
+        const uiProgress = document.getElementById('challenge-progress');
+        const uiTargetCount = document.getElementById('target-count');
+        const uiTargetEmoji = document.getElementById('target-emoji');
+        const uiLevelTag = document.getElementById('lvl-tag');
+
+        const foodPool = ['🍎','🍉','🍍','🍇','🍓','🥥','🍑','🍒','🥖','🍯'];
+        const junkPool = ['🗑️','⚓','💣','🧱','🦂'];
 
         let game = {
             active: false,
             level: 1,
             mana: 0,
+            manaGoal: 15,
             playerX: window.innerWidth / 2,
             velocityX: 0,
-            acceleration: 0.45, 
-            friction: 0.84,    
-            maxSpeed: 7,      
+            acceleration: 0.55, // Um pouco mais ágil para compensar o tamanho
+            friction: 0.84,     
+            maxSpeed: 8,       
             moveDir: 0,
             items: [],
             lastSpawn: 0,
@@ -149,19 +174,60 @@
             isDragging: false
         };
 
+        function updateUI() {
+            uiMana.innerText = game.mana;
+            uiMaxMana.innerText = game.manaGoal;
+            uiProgress.innerText = game.currentSequence + "/" + game.targetGoal;
+            uiTargetCount.innerText = game.targetGoal;
+            uiTargetEmoji.innerText = game.targetEmoji;
+            uiLevelTag.innerText = "DIA " + game.level;
+            
+            if(game.challengeComplete) {
+                document.getElementById('challenge-box').style.borderColor = '#2ecc71';
+                uiProgress.style.color = '#2ecc71';
+            } else {
+                document.getElementById('challenge-box').style.borderColor = '#f1c40f';
+                uiProgress.style.color = 'white';
+            }
+        }
+
         function setChallenge() {
             game.targetEmoji = foodPool[Math.floor(Math.random() * foodPool.length)];
             game.targetGoal = 2 + Math.floor(game.level / 2);
             game.currentSequence = 0;
             game.challengeComplete = false;
+            game.spawnRate = Math.max(500, 1400 - (game.level * 50));
+            game.itemSpeed = 3.5 + (game.level * 0.2);
             updateUI();
         }
 
         function startGame() {
             document.getElementById('screen-start').style.display = 'none';
+            document.getElementById('screen-win').style.display = 'none';
+            document.getElementById('screen-fail').style.display = 'none';
+            
+            // Limpar itens antigos
+            game.items.forEach(i => i.element.remove());
+            game.items = [];
+            
+            game.mana = 0;
+            game.manaGoal = 10 + (game.level * 5);
             game.active = true;
+            game.lastSpawn = performance.now();
             setChallenge();
+            
             requestAnimationFrame(gameLoop);
+        }
+        
+        function nextLevel() {
+            game.level++;
+            startGame();
+        }
+        
+        function restartLevel() {
+            game.mana = 0;
+            game.currentSequence = 0;
+            startGame();
         }
 
         const startInput = (x) => {
@@ -172,7 +238,8 @@
         const handleInput = (x) => {
             if (!game.active) return;
             const dist = x - game.playerX;
-            if (Math.abs(dist) > 10) {
+            // Zona morta um pouco maior
+            if (Math.abs(dist) > 15) {
                 game.moveDir = dist > 0 ? 1 : -1;
             } else {
                 game.moveDir = 0;
@@ -184,10 +251,11 @@
             game.moveDir = 0;
         };
 
-        window.addEventListener('touchstart', (e) => startInput(e.touches[0].clientX));
+        window.addEventListener('touchstart', (e) => startInput(e.touches[0].clientX), {passive: false});
         window.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Previne scroll
             if(game.isDragging) handleInput(e.touches[0].clientX);
-        });
+        }, {passive: false});
         window.addEventListener('touchend', stopInput);
 
         window.addEventListener('mousedown', (e) => startInput(e.clientX));
@@ -196,9 +264,55 @@
         });
         window.addEventListener('mouseup', stopInput);
 
+        function spawnItem() {
+            const isFood = Math.random() > 0.25; // 75% chance de comida
+            let content = '';
+            let type = 'food';
+            
+            if (isFood) {
+                // Aumenta a chance de vir o item do desafio
+                if (!game.challengeComplete && Math.random() > 0.6) {
+                    content = game.targetEmoji;
+                } else {
+                    content = foodPool[Math.floor(Math.random() * foodPool.length)];
+                }
+            } else {
+                content = junkPool[Math.floor(Math.random() * junkPool.length)];
+                type = 'junk';
+            }
+
+            const el = document.createElement('div');
+            el.className = 'entity';
+            el.innerText = content;
+            el.style.left = (Math.random() * (window.innerWidth - 60) + 30) + 'px';
+            el.style.top = '-60px';
+            world.appendChild(el);
+
+            game.items.push({
+                element: el,
+                x: parseFloat(el.style.left),
+                y: -60,
+                content: content,
+                type: type,
+                active: true
+            });
+        }
+
+        function createFloater(text, x, y, color) {
+            const f = document.createElement('div');
+            f.className = 'floating-score';
+            f.innerText = text;
+            f.style.left = x + 'px';
+            f.style.top = y + 'px';
+            f.style.color = color;
+            world.appendChild(f);
+            setTimeout(() => f.remove(), 800);
+        }
+
         function gameLoop(timestamp) {
             if (!game.active) return;
 
+            // FÍSICA DO JOGADOR
             if (game.moveDir !== 0) {
                 game.velocityX += game.moveDir * game.acceleration;
             } else {
@@ -211,17 +325,91 @@
 
             game.playerX += game.velocityX;
 
-            const limit = 45; 
+            // LIMITES DE TELA - AJUSTADO PARA O AVATAR MAIOR
+            // O avatar tem 130px de largura. Metade é 65px.
+            // Usamos 65 como limite para ele não entrar na parede.
+            const limit = 65; 
             if (game.playerX < limit) { game.playerX = limit; game.velocityX = 0; }
             if (game.playerX > window.innerWidth - limit) { game.playerX = window.innerWidth - limit; game.velocityX = 0; }
 
             player.style.left = game.playerX + 'px';
             
+            // Virar o boneco
             if (Math.abs(game.velocityX) > 0.5) {
                 player.style.transform = `translateX(-50%) scaleX(${game.velocityX < 0 ? -1 : 1})`;
             }
 
+            // SPAWN DE ITENS
             if (timestamp - game.lastSpawn > game.spawnRate) {
                 spawnItem();
-                game.lastSpawn
+                game.lastSpawn = timestamp;
+            }
 
+            // MOVIMENTO E COLISÃO DOS ITENS
+            // Zona de colisão: O avatar é grande, mas a "boca" é no centro.
+            // Damos uma margem de 60px para cada lado (quase a largura total)
+            const hitRadius = 60; 
+            const catchHeight = window.innerHeight - 150; // Altura onde ocorre a colisão
+
+            for (let i = game.items.length - 1; i >= 0; i--) {
+                let item = game.items[i];
+                item.y += game.itemSpeed;
+                item.element.style.transform = `translateY(${item.y}px)`;
+
+                // Checar colisão
+                if (item.active && item.y > catchHeight && item.y < catchHeight + 80) {
+                    if (Math.abs(item.x - game.playerX) < hitRadius) {
+                        // COLIDIU
+                        item.active = false;
+                        item.element.remove();
+                        game.items.splice(i, 1);
+
+                        if (item.type === 'junk') {
+                            // Pegou lixo
+                            createFloater("-3", game.playerX, catchHeight, 'red');
+                            game.mana = Math.max(0, game.mana - 3);
+                            game.currentSequence = 0; // Quebra combo
+                            if(game.mana === 0) {
+                                // Opcional: Game Over se zerar muito? 
+                                // Por enquanto apenas penaliza
+                            }
+                        } else {
+                            // Pegou comida
+                            game.mana++;
+                            createFloater("+1", game.playerX, catchHeight, '#f1c40f');
+                            
+                            // Lógica do desafio
+                            if (!game.challengeComplete) {
+                                if (item.content === game.targetEmoji) {
+                                    game.currentSequence++;
+                                    if(game.currentSequence >= game.targetGoal) {
+                                        game.challengeComplete = true;
+                                        createFloater("BÊNÇÃO!", game.playerX, catchHeight - 30, '#2ecc71');
+                                        game.mana += 5; // Bônus
+                                    }
+                                }
+                            }
+                        }
+                        updateUI();
+                        
+                        // Checar Vitória
+                        if (game.mana >= game.manaGoal) {
+                            game.active = false;
+                            document.getElementById('screen-win').style.display = 'flex';
+                        }
+                        continue;
+                    }
+                }
+
+                // Remove se sair da tela
+                if (item.y > window.innerHeight) {
+                    item.element.remove();
+                    game.items.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
