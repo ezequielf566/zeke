@@ -30,7 +30,6 @@
             background-repeat: no-repeat;
             background-position: center center;
             background-size: cover;
-            /* Transição suave de 2 segundos */
             transition: background-image 2s ease-in-out, filter 2s;
         }
 
@@ -134,7 +133,7 @@ const Game = {
     towerLean: 0, leanVelocity: 0, badHits: 0,
     blockW: 140, blockH: 45,
     swing: { angle: 0, speed: 0.012, x: 0, y: 0, amplitude: 0.45 },
-    cachedImages: {}, // Guarda as imagens pré-carregadas
+    cachedImages: {},
 
     init() {
         this.ctx = this.canvas.getContext('2d');
@@ -142,7 +141,7 @@ const Game = {
         window.addEventListener('resize', () => this.resize());
         this.canvas.addEventListener('pointerdown', (e) => {
             e.preventDefault();
-            if(!this.exploding) this.launch();
+            if(!this.exploding && this.gameActive) this.launch();
         });
         this.initParticles();
         this.render();
@@ -153,13 +152,11 @@ const Game = {
         this.height = this.canvas.height = this.canvas.offsetHeight;
     },
 
-    // FUNÇÃO CHAVE: Pré-carrega a imagem 20 pontos antes
     preloadWeather(nextImg) {
         if (!this.cachedImages[nextImg]) {
             const img = new Image();
             img.src = nextImg;
             this.cachedImages[nextImg] = img;
-            console.log("Pré-carregando fundo: " + nextImg);
         }
     },
 
@@ -190,31 +187,34 @@ const Game = {
     updateDifficulty() {
         const tag = document.getElementById('level-tag');
         const s = this.score;
+        const cycleScore = s % 500; // Define um ciclo que se repete a cada 500 pontos
 
-        // GATILHOS DE PRÉ-CARREGAMENTO (20 pontos antes)
-        if (s >= 80 && s < 100) this.preloadWeather('chuva_fundo.png');
-        if (s >= 180 && s < 200) this.preloadWeather('tempestade_fundo.png');
-        if (s >= 280 && s < 300) this.preloadWeather('areia_fundo.png');
-        if (s >= 380 && s < 400) this.preloadWeather('manafundo.png');
+        // Preload antecipado baseado no ciclo
+        if (cycleScore >= 80 && cycleScore < 100) this.preloadWeather('chuva_fundo.png');
+        if (cycleScore >= 180 && cycleScore < 200) this.preloadWeather('tempestade_fundo.png');
+        if (cycleScore >= 280 && cycleScore < 300) this.preloadWeather('areia_fundo.png');
+        if (cycleScore >= 480 || cycleScore < 20) this.preloadWeather('manafundo.png');
 
-        this.leavesActive = false; this.rainActive = false; this.stormActive = false; this.sandActive = false;
+        this.leavesActive = false; this.rainActive = false; 
+        this.stormActive = false; this.sandActive = false;
         this.windIntensity = 0;
         
         this.wrapper.classList.remove('night-mode', 'sand-storm', 'bg-dia', 'bg-chuva', 'bg-tempestade', 'bg-areia');
 
-        if (s >= 400 && s < 450) {
+        // Lógica de fases repetitivas
+        if (cycleScore >= 400 && cycleScore < 500) {
             this.sandActive = true; this.windIntensity = 0.012;
             this.wrapper.classList.add('sand-storm', 'bg-areia');
             tag.innerText = "TEMPESTADE DE AREIA"; tag.style.color = "#FFCC80";
-        } else if (s >= 300 && s < 350) {
+        } else if (cycleScore >= 300 && cycleScore < 400) {
             this.stormActive = true; this.rainActive = true; this.windIntensity = 0.010;
             this.wrapper.classList.add('night-mode', 'bg-tempestade');
             tag.innerText = "TEMPESTADE"; tag.style.color = "#00E5FF";
-        } else if (s >= 200 && s < 250) {
+        } else if (cycleScore >= 200 && cycleScore < 300) {
             this.rainActive = true;
             this.wrapper.classList.add('bg-chuva');
             tag.innerText = "CHUVA NO TEMPLO"; tag.style.color = "#90CAF9";
-        } else if (s >= 100 && s < 150) {
+        } else if (cycleScore >= 100 && cycleScore < 200) {
             this.leavesActive = true; this.windIntensity = 0.006;
             this.wrapper.classList.add('bg-dia');
             tag.innerText = "VENTO E FOLHAS"; tag.style.color = "#A5D6A7";
@@ -228,6 +228,7 @@ const Game = {
         this.score = 0; this.cameraY = 0; this.targetCameraY = 0;
         this.towerLean = 0; this.leanVelocity = 0; this.badHits = 0;
         this.exploding = false;
+        this.fallingBlock = null; // Limpa qualquer bloco em queda ao reiniciar
         this.blocks = [{ x: this.width/2 - 70, y: this.height - 100, fixed: true, vx: 0, vy: 0 }];
         this.gameActive = true;
         this.updateDifficulty();
@@ -236,7 +237,9 @@ const Game = {
     },
 
     launch() {
-        if (!this.gameActive || this.fallingBlock) return;
+        // Bloqueia novos lançamentos se já houver um em queda (evita crash por cliques rápidos)
+        if (!this.gameActive || this.fallingBlock || this.exploding) return;
+        
         this.fallingBlock = {
             x: this.swing.x - this.blockW / 2,
             y: this.swing.y,
@@ -261,6 +264,8 @@ const Game = {
 
     processLanding() {
         const lastBlock = this.blocks[this.blocks.length - 1];
+        if (!lastBlock) return;
+
         const rad = this.towerLean * Math.PI / 180;
         const towerTopX = lastBlock.x + (this.blocks.length * Math.sin(rad) * 4); 
         const diff = this.fallingBlock.x - towerTopX;
@@ -344,7 +349,8 @@ const Game = {
             let windShift = Math.sin(Date.now() * 0.002) * this.windIntensity;
             this.swing.angle += this.swing.speed + windShift;
             this.swing.x = (this.width / 2) + Math.sin(this.swing.angle) * (this.width * this.swing.amplitude);
-            this.swing.y = (this.blocks[this.blocks.length-1].y - 220);
+            const lastBlockY = this.blocks[this.blocks.length-1]?.y || this.height - 100;
+            this.swing.y = (lastBlockY - 220);
         }
 
         ctx.save();
@@ -375,7 +381,8 @@ const Game = {
             this.fallingBlock.x += this.fallingBlock.vx;
             ctx.fillStyle = "gold";
             ctx.beginPath(); ctx.roundRect(this.fallingBlock.x, this.fallingBlock.y, this.blockW, this.blockH, 5); ctx.fill();
-            if (this.fallingBlock.y >= this.blocks[this.blocks.length-1].y - this.blockH) this.processLanding();
+            const lastBlockY = this.blocks[this.blocks.length-1]?.y || this.height - 100;
+            if (this.fallingBlock.y >= lastBlockY - this.blockH) this.processLanding();
         }
 
         if (this.gameActive && !this.fallingBlock) {
