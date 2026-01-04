@@ -58,6 +58,19 @@
             padding: 20px;
         }
 
+        #feedback {
+            position: absolute;
+            top: 40%; width: 100%;
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 10px rgba(0,0,0,1);
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+        }
+
         button {
             background: linear-gradient(to bottom, #FFD700, #B8860B);
             border: none; padding: 18px 45px;
@@ -70,6 +83,7 @@
 
 <div id="game-wrapper">
     <canvas id="canvas"></canvas>
+    <div id="feedback">PERFEITO!</div>
     <div class="ui-panel">
         <div id="score-card">
             <div style="font-size: 0.7rem; color: #fff; text-transform: uppercase;">Altura do Templo</div>
@@ -93,6 +107,7 @@ const Game = {
     gameActive: false,
     cameraY: 0,
     targetCameraY: 0,
+    feedbackEl: document.getElementById('feedback'),
     
     // Física
     towerLean: 0,
@@ -101,7 +116,7 @@ const Game = {
     // Constantes
     blockW: 140,
     blockH: 45,
-    swing: { angle: 0, speed: 0.012, x: 0, y: 0 }, // Velocidade reduzida (ideal crianças)
+    swing: { angle: 0, speed: 0.012, x: 0, y: 0 },
 
     init() {
         this.ctx = this.canvas.getContext('2d');
@@ -119,6 +134,13 @@ const Game = {
         this.height = this.canvas.height = this.canvas.offsetHeight;
     },
 
+    showFeedback(text, color) {
+        this.feedbackEl.innerText = text;
+        this.feedbackEl.style.color = color;
+        this.feedbackEl.style.display = 'block';
+        setTimeout(() => this.feedbackEl.style.display = 'none', 1000);
+    },
+
     start() {
         this.score = 0;
         this.cameraY = 0;
@@ -126,8 +148,6 @@ const Game = {
         this.towerLean = 0;
         this.leanVelocity = 0;
         this.fallingBlock = null;
-        
-        // O Bloco 0 (Alicerce) é fixo
         this.blocks = [{ x: this.width/2 - 70, y: this.height - 100, fixed: true }];
         this.gameActive = true;
         document.getElementById('overlay').style.display = 'none';
@@ -146,19 +166,33 @@ const Game = {
 
     processLanding() {
         const lastBlock = this.blocks[this.blocks.length - 1];
-        
-        // Calculamos a posição horizontal real do topo da torre para checar colisão
         const rad = this.towerLean * Math.PI / 180;
-        const towerTopX = lastBlock.x + (this.blocks.length * Math.sin(rad) * 5); 
-        
+        const towerTopX = lastBlock.x + (this.blocks.length * Math.sin(rad) * 4); 
         const diff = this.fallingBlock.x - towerTopX;
+        const absDiff = Math.abs(diff);
 
-        if (Math.abs(diff) < this.blockW) {
+        if (absDiff < this.blockW) {
             this.score++;
             this.blocks.push({ x: this.fallingBlock.x, y: lastBlock.y - this.blockH, fixed: false });
             
-            // A força de inclinação aumenta conforme o erro de centralização
-            this.leanVelocity += (diff * 0.0018);
+            // LÓGICA DE PONTUAÇÃO E ESTABILIDADE
+            if (absDiff < 10) {
+                this.showFeedback("PERFEITO!", "#00FFCC");
+                this.leanVelocity *= 0.5; // Reduz balanço anterior
+                this.towerLean *= 0.8;    // Centraliza a torre
+            } 
+            else if (absDiff < 30) {
+                this.showFeedback("ÓTIMO", "#FFD700");
+                this.leanVelocity *= 0.9; // Estabiliza levemente
+            }
+            else if (absDiff < 60) {
+                this.showFeedback("BOM", "#FFFFFF");
+                this.leanVelocity += (diff * 0.0005);
+            }
+            else {
+                this.showFeedback("CUIDADO!", "#FF4444");
+                this.leanVelocity += (diff * 0.0025); // Desequilibra mais
+            }
 
             if (this.blocks.length > 5) this.targetCameraY += this.blockH;
             document.getElementById('score').innerText = this.score;
@@ -182,13 +216,10 @@ const Game = {
 
     drawBlock(ctx, b, index) {
         ctx.save();
-        
-        // Se não for o alicerce, aplica a inclinação baseada na altura
         if (!b.fixed) {
             const pivotX = this.width / 2;
             const pivotY = this.height - 100;
             ctx.translate(pivotX, pivotY);
-            // Cada bloco inclina um pouco mais que o anterior (efeito torre)
             ctx.rotate((this.towerLean * (index / this.blocks.length)) * Math.PI / 180);
             ctx.translate(-pivotX, -pivotY);
         }
@@ -213,28 +244,20 @@ const Game = {
 
         if (this.gameActive && this.blocks.length > 1) {
             this.towerLean += this.leanVelocity;
-            this.leanVelocity += (this.towerLean * 0.0004); // Gravidade puxando a inclinação
+            this.leanVelocity += (this.towerLean * 0.0003); 
             
-            // Game over se a inclinação for absurda
-            if (Math.abs(this.towerLean) > 35) this.gameOver("O Templo perdeu o equilíbrio!");
+            if (Math.abs(this.towerLean) > 38) this.gameOver("O Templo perdeu o prumo!");
         }
 
         ctx.save();
         ctx.translate(0, this.cameraY);
-        
-        // Desenha Blocos da Pilha
         this.blocks.forEach((b, i) => this.drawBlock(ctx, b, i));
 
-        // Desenha Bloco em Queda
         if (this.fallingBlock) {
             this.fallingBlock.vy += this.fallingBlock.gravity;
             this.fallingBlock.y += this.fallingBlock.vy;
             
-            // Desenha o bloco caindo reto (física real)
-            const grad = ctx.createLinearGradient(this.fallingBlock.x, this.fallingBlock.y, this.fallingBlock.x, this.fallingBlock.y + this.blockH);
-            grad.addColorStop(0, "#FFD700");
-            grad.addColorStop(1, "#B8860B");
-            ctx.fillStyle = grad;
+            ctx.fillStyle = "#FFD700";
             ctx.beginPath();
             ctx.roundRect(this.fallingBlock.x, this.fallingBlock.y, this.blockW, this.blockH, 4);
             ctx.fill();
@@ -247,10 +270,9 @@ const Game = {
         }
         ctx.restore();
 
-        // Corda e Pêndulo
         if (this.gameActive && !this.fallingBlock) {
             this.swing.angle += this.swing.speed;
-            this.swing.x = (this.width / 2) + Math.sin(this.swing.angle) * (this.width * 0.35);
+            this.swing.x = (this.width / 2) + Math.sin(this.swing.angle) * (this.width * 0.38);
             this.swing.y = (this.blocks[this.blocks.length-1].y - 250);
 
             ctx.beginPath();
@@ -259,14 +281,10 @@ const Game = {
             ctx.strokeStyle = "gold";
             ctx.stroke();
 
-            // Bloco Fantasma na corda
             ctx.save();
             ctx.translate(this.swing.x - this.blockW/2, this.swing.y + this.cameraY);
             ctx.globalAlpha = 0.7;
-            const grad = ctx.createLinearGradient(0, 0, 0, this.blockH);
-            grad.addColorStop(0, "#FFD700");
-            grad.addColorStop(1, "#B8860B");
-            ctx.fillStyle = grad;
+            ctx.fillStyle = "#FFD700";
             ctx.roundRect(0, 0, this.blockW, this.blockH, 4);
             ctx.fill();
             ctx.restore();
