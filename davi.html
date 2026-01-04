@@ -21,6 +21,7 @@
             height: 100vh;
         }
 
+        /* FUNDO COM TRANSIÇÃO NATURAL */
         #game-wrapper {
             position: relative;
             width: 100vw; height: 100vh;
@@ -28,11 +29,18 @@
             overflow: hidden;
             background: url('manafundo.png') no-repeat center center;
             background-size: cover;
-            transition: filter 1.5s, background-color 1.5s;
+            /* Transição de 2 segundos para o fundo e filtros */
+            transition: background-image 2s ease-in-out, filter 2s, background-color 2s;
         }
 
+        /* Classes de Fundo para os Climas */
+        #game-wrapper.bg-dia { background-image: url('manafundo.png'); }
+        #game-wrapper.bg-chuva { background-image: url('chuva_fundo.png'); }
+        #game-wrapper.bg-tempestade { background-image: url('tempestade_fundo.png'); }
+        #game-wrapper.bg-areia { background-image: url('areia_fundo.png'); }
+
         .night-mode { filter: brightness(0.6) saturate(1.2); }
-        .sand-storm { background-color: rgba(194, 178, 128, 0.4) !important; filter: sepia(0.8) brightness(0.8); }
+        .sand-storm { filter: sepia(0.6) brightness(0.8); }
         .storm-flash { animation: flash 0.15s ease-out; }
 
         @keyframes flash {
@@ -97,7 +105,7 @@
 </head>
 <body>
 
-<div id="game-wrapper">
+<div id="game-wrapper" class="bg-dia">
     <canvas id="canvas"></canvas>
     <div id="feedback">PERFEITO!</div>
     <div class="ui-panel">
@@ -189,24 +197,28 @@ const Game = {
 
         this.leavesActive = false; this.rainActive = false; this.stormActive = false; this.sandActive = false;
         this.windIntensity = 0;
-        this.wrapper.classList.remove('night-mode', 'sand-storm');
+        
+        // Limpa classes de clima e fundo antes de aplicar a nova
+        this.wrapper.classList.remove('night-mode', 'sand-storm', 'bg-dia', 'bg-chuva', 'bg-tempestade', 'bg-areia');
 
-        // CICLOS DURANDO 50 PONTOS CADA
         if (s >= 400 && s < 450) {
             this.sandActive = true; this.windIntensity = 0.012;
-            this.wrapper.classList.add('sand-storm');
+            this.wrapper.classList.add('sand-storm', 'bg-areia');
             tag.innerText = "TEMPESTADE DE AREIA"; tag.style.color = "#FFCC80";
         } else if (s >= 300 && s < 350) {
             this.stormActive = true; this.rainActive = true; this.windIntensity = 0.010;
-            this.wrapper.classList.add('night-mode');
+            this.wrapper.classList.add('night-mode', 'bg-tempestade');
             tag.innerText = "TEMPESTADE"; tag.style.color = "#00E5FF";
         } else if (s >= 200 && s < 250) {
             this.rainActive = true;
+            this.wrapper.classList.add('bg-chuva');
             tag.innerText = "CHUVA NO TEMPLO"; tag.style.color = "#90CAF9";
         } else if (s >= 100 && s < 150) {
             this.leavesActive = true; this.windIntensity = 0.006;
+            this.wrapper.classList.add('bg-dia');
             tag.innerText = "VENTO E FOLHAS"; tag.style.color = "#A5D6A7";
         } else {
+            this.wrapper.classList.add('bg-dia');
             tag.innerText = "DIA CLARO"; tag.style.color = "#FFF";
         }
     },
@@ -259,12 +271,11 @@ const Game = {
                 this.showFeedback("PERFEITO!", "#00FFCC");
                 this.towerLean *= 0.4;
                 this.leanVelocity = 0;
-                this.badHits = 0; // Reseta erros acumulados no perfeito
+                this.badHits = 0;
             } else if (absDiff < 55) {
                 this.score += 5;
                 this.showFeedback("BOM!", "#FFD700");
             } else {
-                // AGORA DIZ "NA BEIRA" PARA DIFERENCIAR O ERRO
                 this.score += 2;
                 this.badHits++;
                 this.showFeedback("NA BEIRA!", "#FF4400");
