@@ -3,315 +3,371 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Maná: O Pão do Céu</title>
+    <title>O Templo Sagrado: A Oferta de Davi</title>
     <style>
-        :root { --gold: #f1c40f; }
-        
-        body, html { 
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden; 
-            font-family: 'Segoe UI', sans-serif; 
-            background: #000; 
-            touch-action: none; 
-            user-select: none; 
+        :root {
+            --gold-light: #FFF9C4;
+            --gold-main: #FFD700;
+            --gold-dark: #B8860B;
+            --holy-blue: #1565C0;
         }
+
+        * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
         
-        #world { 
-            position: relative; 
-            width: 100vw; height: 100vh; 
-            background-image: url('mana.png');
+        body {
+            background: #000;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh;
+        }
+
+        #game-wrapper {
+            position: relative;
+            width: 100vw; height: 100vh;
+            max-width: 500px; max-height: 900px;
+            /* Fundo com a imagem solicitada */
+            background: url('manafundo.png') no-repeat center center;
             background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            overflow: hidden; 
+            overflow: hidden;
+            transition: filter 0.8s ease;
         }
 
-        #clouds-origin {
-            position: absolute; top: 0; width: 100%; height: 60px;
-            z-index: 10;
-            display: flex; align-items: center; justify-content: center;
-            color: #fff; font-weight: bold; letter-spacing: 4px; font-size: 16px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        .night-filter {
+            filter: brightness(0.6) contrast(1.2) saturate(0.8) hue-rotate(200deg);
         }
 
-        #ground { 
-            position: absolute; bottom: 0; width: 100%; height: 80px; 
-            background-image: url('manachao.png');
-            background-size: 100% 100%; 
-            z-index: 20; 
+        canvas { width: 100%; height: 100%; display: block; }
+
+        .ui-panel {
+            position: absolute;
+            top: 20px; width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            pointer-events: none; z-index: 20;
         }
 
-        /* AJUSTE DO AVATAR PNG */
-        #player {
-            position: absolute; 
-            bottom: 80px; 
-            width: 90px; height: 90px; /* Tamanho otimizado para celulares */
-            background-image: url('avatarmana.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: bottom center;
-            z-index: 25; 
-            will-change: left;
-            transform: translateX(-50%);
+        #score-card {
+            background: rgba(26, 35, 126, 0.9);
+            color: var(--gold-main);
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-size: 1.6rem;
+            font-weight: bold;
+            border: 2px solid var(--gold-main);
+            text-align: center;
+            min-width: 150px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
         }
 
-        .entity { 
-            position: absolute; font-size: 45px; z-index: 15; 
-            will-change: transform; pointer-events: none;
-            display: flex; align-items: center; justify-content: center;
-            width: 60px; height: 60px;
+        #level-tag { font-size: 0.85rem; display: block; color: #fff; margin-bottom: 5px; letter-spacing: 1px; }
+
+        #weather-alert {
+            margin-top: 10px;
+            color: #fff; font-weight: bold;
+            padding: 8px 25px; border-radius: 20px;
+            display: none;
+            background: rgba(184, 134, 11, 0.8);
+            border: 1px solid var(--gold-light);
+            text-shadow: 0 0 5px #000;
         }
 
-        #ui-container {
-            position: absolute; top: 70px; width: 100%; display: flex; 
-            justify-content: space-between; box-sizing: border-box; padding: 0 20px; z-index: 30;
+        #overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            color: white; z-index: 100; text-align: center;
+            padding: 30px;
         }
 
-        .glass-card {
-            background: rgba(0,0,0,0.6); padding: 12px; border-radius: 12px;
-            color: white; border: 1px solid rgba(255,255,255,0.1); min-width: 100px;
-            backdrop-filter: blur(4px);
+        button {
+            background: linear-gradient(to bottom, #FFD700, #B8860B);
+            border: none; padding: 18px 45px;
+            font-size: 1.4rem; font-weight: bold; border-radius: 50px;
+            cursor: pointer; margin-top: 25px; color: #3e2723;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        #challenge-box { border: 2px solid var(--gold); text-align: right; }
-
-        .overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-            display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; z-index: 100; color: white; text-align: center;
-            padding: 20px;
+        .points-float {
+            position: absolute; font-weight: 900; font-size: 2.2rem;
+            pointer-events: none; animation: floatUp 1s cubic-bezier(0,0,0.2,1) forwards;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8); z-index: 50;
+            text-align: center;
         }
-        
-        .btn { padding: 15px 40px; font-size: 20px; cursor: pointer; border-radius: 50px; border: none; background: var(--gold); font-weight: bold; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: transform 0.2s; }
-        .btn:active { transform: scale(0.95); }
+
+        @keyframes floatUp {
+            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+            30% { opacity: 1; }
+            100% { transform: translate(-50%, -150px) scale(1.1); opacity: 0; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="world">
-        <div id="clouds-origin">O MANÁ NO DESERTO</div>
-
-        <div id="ui-container">
-            <div class="glass-card">
-                <b id="lvl-tag" style="color: var(--gold);">DIA 1</b><br>
-                Provimento: <span id="cur-mana">0/15</span>
-            </div>
-            <div class="glass-card" id="challenge-box">
-                <small>PEDIDO DO CÉU</small><br>
-                <span id="target-count">3</span>x <span id="target-emoji" style="font-size: 24px;">🍉</span><br>
-                <b>Combo: <span id="challenge-progress">0</span></b>
-            </div>
+<div id="game-wrapper">
+    <canvas id="canvas"></canvas>
+    <div class="ui-panel">
+        <div id="score-card">
+            <span id="level-tag">TESOURO DE DAVI</span>
+            <span id="score">0</span>
         </div>
-
-        <div id="player"></div>
-        <div id="ground"></div>
+        <div id="weather-alert">VENTO FORTE</div>
     </div>
-
-    <div id="screen-start" class="overlay">
-        <h1 style="font-size: 48px; color: var(--gold); margin-bottom: 10px;">MANÁ</h1>
-        <p style="font-size: 18px;">Deus ouviu o clamor do Seu povo.</p>
-        <p style="font-size: 14px; opacity: 0.8; max-width: 300px;">Mova o avatar tocando nas laterais para colher o que cai do céu. Complete o combo para avançar.</p><br>
-        <button class="btn" onclick="startGame()">COLHER PROVIMENTO</button>
+    <div id="overlay">
+        <h1 style="color: var(--gold-main); font-size: 2.5rem; margin-bottom: 15px;">TEMPLO SAGRADO</h1>
+        <p>Erga os alicerces com o ouro de Davi.</p>
+        <button onclick="Game.start()">INICIAR OBRA</button>
     </div>
+</div>
 
-    <div id="screen-win" class="overlay" style="display:none;">
-        <h1 style="color: var(--gold);">POVO ALIMENTADO!</h1>
-        <p>A provisão divina é fiel.</p><br>
-        <button class="btn" onclick="nextLevel()">PRÓXIMO DIA</button>
-    </div>
+<script>
+const Game = {
+    canvas: document.getElementById('canvas'),
+    ctx: null,
+    score: 0,
+    blocks: [],
+    fallingBlock: null,
+    gameActive: false,
+    cameraY: 0,
+    targetCameraY: 0,
+    towerLean: 0, 
+    leanVelocity: 0, // Velocidade da queda por gravidade
+    weather: "clear",
+    
+    swing: { 
+        angle: 0, 
+        speed: 0.015, 
+        x: 0, 
+        originShift: 0, 
+        turbulence: 0 
+    }, 
+    blockW: 140, 
+    blockH: 50,
+    dropDist: 260,
 
-    <script>
-        const world = document.getElementById('world');
-        const player = document.getElementById('player');
-        const foodPool = ['🍎','🍉','🍍','🍇','🍓','🥥','🍑','🍒'];
-        const junkPool = ['🗑️','⚓','💣','🧱'];
+    init() {
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this.canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); this.launch(); });
+        this.render();
+    },
 
-        let game = {
-            active: false,
-            level: 1,
-            mana: 0,
-            playerX: window.innerWidth / 2,
-            velocityX: 0,
-            acceleration: 0.9, 
-            friction: 0.84,    
-            maxSpeed: 11,      
-            moveDir: 0,
-            items: [],
-            lastSpawn: 0,
-            spawnRate: 1400,   
-            itemSpeed: 3.5,    
-            targetEmoji: '',
-            targetGoal: 3,
-            currentSequence: 0,
-            challengeComplete: false
+    resize() {
+        this.width = this.canvas.width = this.canvas.offsetWidth;
+        this.height = this.canvas.height = this.canvas.offsetHeight;
+    },
+
+    start() {
+        this.score = 0;
+        this.cameraY = 0;
+        this.targetCameraY = 0;
+        this.towerLean = 0;
+        this.leanVelocity = 0;
+        this.weather = "clear";
+        this.swing.speed = 0.015;
+        this.fallingBlock = null;
+        this.blocks = [{ x: Math.round(this.width/2 - 70), y: this.height - 100, w: 140 }];
+        this.gameActive = true;
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('game-wrapper').classList.remove('night-filter');
+        this.updateUI();
+    },
+
+    updateUI() {
+        document.getElementById('score').innerText = Math.floor(this.score);
+        document.getElementById('level-tag').innerText = "OFERTA DE ADORAÇÃO";
+    },
+
+    launch() {
+        if(!this.gameActive || this.fallingBlock) return;
+        this.fallingBlock = {
+            x: this.swing.x - this.blockW / 2,
+            y: (this.blocks[this.blocks.length-1].y - this.dropDist),
+            vy: 0,
+            gravity: 1.1
         };
+    },
 
-        function setChallenge() {
-            game.targetEmoji = foodPool[Math.floor(Math.random() * foodPool.length)];
-            game.targetGoal = 2 + Math.floor(game.level / 2);
-            game.currentSequence = 0;
-            game.challengeComplete = false;
-            updateUI();
-        }
+    processLanding() {
+        const lastBlock = this.blocks[this.blocks.length - 1];
+        const diff = this.fallingBlock.x - lastBlock.x;
+        const absDiff = Math.abs(diff);
 
-        function startGame() {
-            document.getElementById('screen-start').style.display = 'none';
-            game.active = true;
-            setChallenge();
-            requestAnimationFrame(gameLoop);
-        }
-
-        const handleInput = (x) => {
-            const screenMid = window.innerWidth / 2;
-            game.moveDir = x < screenMid ? -1 : 1;
-        };
-
-        window.addEventListener('touchstart', (e) => handleInput(e.touches[0].clientX));
-        window.addEventListener('mousedown', (e) => handleInput(e.clientX));
-        window.addEventListener('touchend', () => game.moveDir = 0);
-        window.addEventListener('mouseup', () => game.moveDir = 0);
-
-        function gameLoop(timestamp) {
-            if (!game.active) return;
-
-            if (game.moveDir !== 0) {
-                game.velocityX += game.moveDir * game.acceleration;
+        if (absDiff < this.blockW) {
+            let pts = 0; let label = ""; let color = "#fff";
+            if (absDiff < 12) {
+                pts = 35; label = "PERFEITO!"; color = "#FFF9C4";
+            } else if (absDiff < 35) {
+                pts = 15; label = "BOM!"; color = "#FFD700";
             } else {
-                game.velocityX *= game.friction;
+                pts = 5; label = "INSTÁVEL"; color = "#B8860B";
             }
-
-            if (Math.abs(game.velocityX) > game.maxSpeed) {
-                game.velocityX = game.maxSpeed * Math.sign(game.velocityX);
-            }
-
-            game.playerX += game.velocityX;
-
-            const limit = 45;
-            if (game.playerX < limit) { game.playerX = limit; game.velocityX = 0; }
-            if (game.playerX > window.innerWidth - limit) { game.playerX = window.innerWidth - limit; game.velocityX = 0; }
-
-            player.style.left = game.playerX + 'px';
             
-            // Inverte o PNG conforme a direção
-            if (Math.abs(game.velocityX) > 0.5) {
-                player.style.transform = `translateX(-50%) scaleX(${game.velocityX < 0 ? -1 : 1})`;
-            }
-
-            if (timestamp - game.lastSpawn > game.spawnRate) {
-                spawnItem();
-                game.lastSpawn = timestamp;
-            }
-
-            updateItems();
-            requestAnimationFrame(gameLoop);
-        }
-
-        function spawnItem() {
-            const isJunk = Math.random() > 0.88;
-            const emoji = isJunk ? junkPool[Math.floor(Math.random() * junkPool.length)] : foodPool[Math.floor(Math.random() * foodPool.length)];
+            this.score += pts;
+            this.showPoints(pts, label, color);
+            this.blocks.push({ x: this.fallingBlock.x, y: lastBlock.y - this.blockH, w: this.blockW });
             
-            const element = document.createElement('div');
-            element.className = 'entity';
-            element.innerText = emoji;
-            const startX = 40 + Math.random() * (window.innerWidth - 80);
-            element.style.left = startX + 'px';
-            
-            const itemObj = { el: element, x: startX, y: -50, emoji: emoji, isJunk: isJunk };
-            world.appendChild(element);
-            game.items.push(itemObj);
+            // Lógica de Peso: Calcula o desequilíbrio acumulado
+            // Se colocar pra esquerda (diff negativo), a velocidade de inclinação aumenta para a esquerda
+            this.leanVelocity += (diff * 0.005); 
+
+            if ((this.blocks[this.blocks.length-1].y + this.targetCameraY) < this.height * 0.5) {
+                this.targetCameraY += this.blockH;
+            }
+            this.updateWeather();
+            this.updateUI();
+        } else {
+            this.gameOver("A pedra caiu no abismo!");
+        }
+        this.fallingBlock = null;
+    },
+
+    updateWeather() {
+        const alert = document.getElementById('weather-alert');
+        const count = this.blocks.length;
+        this.swing.turbulence = 0;
+
+        if (count % 15 >= 12) {
+            this.weather = "storm";
+            alert.innerText = "PROVAÇÃO DA NOITE";
+            alert.style.display = "block";
+            document.getElementById('game-wrapper').classList.add('night-filter');
+        } else if (count % 10 >= 7) {
+            this.weather = "wind";
+            alert.innerText = "VENTO FORTE"; 
+            alert.style.display = "block";
+            this.swing.turbulence = 0.01;
+            document.getElementById('game-wrapper').classList.remove('night-filter');
+        } else {
+            this.weather = "clear";
+            alert.style.display = "none";
+            document.getElementById('game-wrapper').classList.remove('night-filter');
+        }
+    },
+
+    showPoints(pts, label, color) {
+        const el = document.createElement('div');
+        el.className = 'points-float';
+        el.style.left = '50%';
+        el.style.top = '35%';
+        el.style.color = color;
+        el.innerHTML = `<div style="font-size:0.9rem">${label}</div>+${pts}`;
+        document.getElementById('game-wrapper').appendChild(el);
+        setTimeout(() => el.remove(), 1000);
+    },
+
+    gameOver(msg) {
+        this.gameActive = false;
+        document.getElementById('overlay').style.display = 'flex';
+        document.getElementById('overlay').innerHTML = `
+            <h1 style="color:var(--gold-main)">TEMPLO CAÍDO</h1>
+            <p>${msg}</p>
+            <p style="margin-top:10px">ALTURA ALCANÇADA: ${this.blocks.length} TIJOLOS</p>
+            <button onclick="Game.start()">RECOMEÇAR OBRA</button>
+        `;
+    },
+
+    drawBlock(b, isGhost = false) {
+        const ctx = this.ctx;
+        ctx.save();
+        if(isGhost) ctx.globalAlpha = 0.5;
+        let grad = ctx.createLinearGradient(b.x, b.y, b.x + this.blockW, b.y + this.blockH);
+        grad.addColorStop(0, "#FFD700");
+        grad.addColorStop(0.5, "#FFF9C4");
+        grad.addColorStop(1, "#B8860B");
+        ctx.fillStyle = grad;
+        ctx.shadowBlur = isGhost ? 0 : 10;
+        ctx.shadowColor = "rgba(0,0,0,0.5)";
+        ctx.beginPath();
+        ctx.roundRect(b.x, b.y, this.blockW, this.blockH, 5);
+        ctx.fill();
+        ctx.restore();
+    },
+
+    render() {
+        const ctx = this.ctx;
+        const time = Date.now();
+        
+        // Limpa a tela (se a imagem de fundo falhar, mantém uma cor sólida)
+        ctx.clearRect(0, 0, this.width, this.height);
+
+        this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
+
+        ctx.save();
+        ctx.translate(0, this.cameraY);
+        
+        const baseY = this.height - 100;
+        const baseX = this.width / 2;
+
+        // EFEITO DE GRAVIDADE ACUMULADA
+        if (this.gameActive && this.blocks.length > 1) {
+            // A torre inclina baseada na velocidade acumulada (peso dos blocos)
+            this.towerLean += this.leanVelocity;
+            // Se já estiver inclinado, a própria gravidade puxa mais (aceleração)
+            this.leanVelocity += (this.towerLean * 0.001); 
         }
 
-        function updateItems() {
-            const groundHeight = 80;
-            const playerHeight = 90;
-            for (let i = game.items.length - 1; i >= 0; i--) {
-                const item = game.items[i];
-                item.y += game.itemSpeed;
-                item.el.style.transform = `translateY(${item.y}px)`;
+        ctx.translate(baseX, baseY);
+        ctx.rotate(this.towerLean * Math.PI / 180);
+        ctx.translate(-baseX, -baseY);
 
-                const playerCenter = game.playerX;
-                const itemCenter = item.x + 30;
+        // Verifica se o topo da torre saiu da tela
+        const topBlock = this.blocks[this.blocks.length - 1];
+        const rad = this.towerLean * Math.PI / 180;
+        const relX = topBlock.x - baseX + this.blockW/2;
+        const relY = topBlock.y - baseY;
+        const globalX = baseX + relX * Math.cos(rad) - relY * Math.sin(rad);
 
-                // Hitbox ajustada para o PNG (mais alta)
-                if (item.y > window.innerHeight - (groundHeight + playerHeight) && item.y < window.innerHeight - groundHeight) {
-                    if (Math.abs(playerCenter - itemCenter) < 50) {
-                        handleCollect(item);
-                        destroyItem(i);
-                        continue;
-                    }
-                }
+        if (this.gameActive && (globalX < 0 || globalX > this.width || Math.abs(this.towerLean) > 22)) {
+            this.gameOver("A gravidade venceu a estrutura!");
+        }
 
-                if (item.y > window.innerHeight) {
-                    destroyItem(i);
-                }
+        this.blocks.forEach(b => this.drawBlock(b));
+        
+        if(this.fallingBlock) {
+            this.fallingBlock.vy += this.fallingBlock.gravity;
+            this.fallingBlock.y += this.fallingBlock.vy;
+            this.drawBlock(this.fallingBlock);
+            const targetY = this.blocks[this.blocks.length-1].y - this.blockH;
+            if(this.fallingBlock.y >= targetY) {
+                this.fallingBlock.y = targetY;
+                this.processLanding();
             }
         }
+        ctx.restore();
 
-        function handleCollect(item) {
-            if (item.isJunk) {
-                game.currentSequence = 0;
-                game.mana = Math.max(0, game.mana - 2);
-                world.style.filter = "brightness(0.6) sepia(1)";
-                setTimeout(() => world.style.filter = "none", 150);
-            } else {
-                game.mana++;
-                if (item.emoji === game.targetEmoji) {
-                    game.currentSequence++;
-                    if (game.currentSequence >= game.targetGoal) game.challengeComplete = true;
-                } else {
-                    game.currentSequence = 0; 
-                }
-                checkWin();
-            }
-            updateUI();
-        }
-
-        function destroyItem(index) {
-            if(game.items[index] && game.items[index].el) game.items[index].el.remove();
-            game.items.splice(index, 1);
-        }
-
-        function updateUI() {
-            const mGoal = 10 + (game.level * 2);
-            document.getElementById('cur-mana').innerText = `${game.mana}/${mGoal}`;
-            document.getElementById('target-count').innerText = game.targetGoal;
-            document.getElementById('target-emoji').innerText = game.targetEmoji;
-            document.getElementById('challenge-progress').innerText = game.currentSequence;
-            document.getElementById('lvl-tag').innerText = `DIA ${game.level}`;
+        // Balanço do bloco atual
+        if (this.gameActive && !this.fallingBlock) {
+            const tEffect = Math.sin(time / 150) * this.swing.turbulence;
+            this.swing.angle += (this.swing.speed + tEffect);
             
-            const box = document.getElementById('challenge-box');
-            box.style.borderColor = game.challengeComplete ? "#2ecc71" : "var(--gold)";
-            box.style.background = game.challengeComplete ? "rgba(46, 204, 113, 0.4)" : "rgba(0,0,0,0.6)";
-        }
-
-        function checkWin() {
-            const mGoal = 10 + (game.level * 2);
-            if (game.mana >= mGoal && game.challengeComplete) {
-                game.active = false;
-                document.getElementById('screen-win').style.display = 'flex';
-            }
-        }
-
-        function nextLevel() {
-            game.level++;
-            game.mana = 0;
-            game.itemSpeed += 0.4;
-            game.maxSpeed += 0.6; 
-            game.spawnRate = Math.max(600, game.spawnRate - 150);
+            let windX = (this.weather === "wind") ? Math.sin(time/600) * 40 : 0;
+            this.swing.originShift += (windX - this.swing.originShift) * 0.05;
             
-            game.items.forEach(item => item.el.remove());
-            game.items = [];
+            const originX = this.width / 2 + this.swing.originShift;
+            this.swing.x = originX + Math.sin(this.swing.angle) * (this.width * 0.35);
+            const swingY = this.blocks[this.blocks.length-1].y - this.dropDist;
 
-            document.getElementById('screen-win').style.display = 'none';
-            setChallenge();
-            game.active = true;
-            requestAnimationFrame(gameLoop);
+            // Desenha a corda
+            ctx.beginPath();
+            ctx.moveTo(this.width/2, -100);
+            ctx.lineTo(this.swing.x, swingY + this.cameraY);
+            ctx.strokeStyle = "rgba(0,0,0,0.4)";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.save();
+            ctx.translate(0, this.cameraY);
+            this.drawBlock({ x: this.swing.x - this.blockW/2, y: swingY }, true);
+            ctx.restore();
         }
 
-        window.addEventListener('resize', () => {
-            game.playerX = window.innerWidth / 2;
-        });
-    </script>
+        requestAnimationFrame(() => this.render());
+    }
+};
+
+Game.init();
+</script>
 </body>
 </html>
