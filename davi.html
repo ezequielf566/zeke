@@ -47,6 +47,7 @@
             font-weight: bold;
             border: 2px solid var(--gold-main);
             text-align: center;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
         }
 
         #overlay {
@@ -63,7 +64,10 @@
             border: none; padding: 18px 45px;
             font-size: 1.4rem; font-weight: bold; border-radius: 50px;
             cursor: pointer; margin-top: 25px; color: #3e2723;
+            transition: transform 0.2s;
         }
+        
+        button:active { transform: scale(0.9); }
     </style>
 </head>
 <body>
@@ -78,7 +82,7 @@
     </div>
     <div id="overlay">
         <h1 style="color: var(--gold-main); font-size: 2.5rem;">TEMPLO SAGRADO</h1>
-        <p>Empilhe as ofertas com precisão.</p>
+        <p>Erga a torre com equilíbrio e precisão.</p>
         <button onclick="Game.start()">INICIAR OBRA</button>
     </div>
 </div>
@@ -94,10 +98,19 @@ const Game = {
     cameraY: 0,
     targetCameraY: 0,
     
-    // Configurações Fixas
+    // FÍSICA DE EQUILÍBRIO
+    towerLean: 0,
+    leanVelocity: 0,
+    
+    // CONFIGURAÇÕES
     blockW: 140,
     blockH: 45,
-    swing: { angle: 0, speed: 0.025, x: 0 },
+    swing: { 
+        angle: 0, 
+        speed: 0.015, // Corda mais lenta para crianças
+        x: 0,
+        y: 0
+    },
     
     init() {
         this.ctx = this.canvas.getContext('2d');
@@ -119,11 +132,12 @@ const Game = {
         this.score = 0;
         this.cameraY = 0;
         this.targetCameraY = 0;
+        this.towerLean = 0;
+        this.leanVelocity = 0;
         this.fallingBlock = null;
-        this.blockW = 140; // Reseta largura inicial
         
-        // Base sólida central
-        this.blocks = [{ x: this.width / 2 - 70, y: this.height - 80, w: 140 }];
+        // Base inicial centrada
+        this.blocks = [{ x: this.width / 2 - 70, y: this.height - 100, w: 140 }];
         this.gameActive = true;
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('score').innerText = "0";
@@ -131,66 +145,74 @@ const Game = {
 
     launch() {
         if (!this.gameActive || this.fallingBlock) return;
+        
+        // O bloco agora solta exatamente de onde o pêndulo está visualmente
         this.fallingBlock = {
             x: this.swing.x - this.blockW / 2,
-            y: -50,
+            y: this.swing.y, 
             vy: 0,
-            gravity: 1.2,
+            gravity: 0.8,
             w: this.blockW
         };
     },
 
     processLanding() {
         const lastBlock = this.blocks[this.blocks.length - 1];
+        
+        // Distância do centro do bloco anterior
         const diff = this.fallingBlock.x - lastBlock.x;
 
-        // Se houver sobreposição mínima entre os blocos
         if (Math.abs(diff) < lastBlock.w) {
             this.score++;
             
-            // O novo bloco herda a posição X de onde caiu
+            // Adiciona o bloco na pilha
             this.blocks.push({
                 x: this.fallingBlock.x,
                 y: lastBlock.y - this.blockH,
                 w: this.blockW
             });
 
-            // Sobe a câmera
-            if (this.blocks.length > 4) {
+            // Lógica de inclinação: quanto mais longe do centro, mais a torre entorta
+            // O peso aumenta conforme a altura (score)
+            this.leanVelocity += (diff * 0.0025);
+
+            if (this.blocks.length > 5) {
                 this.targetCameraY += this.blockH;
             }
             document.getElementById('score').innerText = this.score;
         } else {
-            this.gameOver();
+            this.gameOver("O tijolo caiu fora do alicerce!");
         }
         this.fallingBlock = null;
     },
 
-    gameOver() {
+    gameOver(msg) {
         this.gameActive = false;
         const overlay = document.getElementById('overlay');
         overlay.style.display = 'flex';
         overlay.innerHTML = `
-            <h1 style="color:var(--gold-main)">FIM DA OBRA</h1>
-            <p>Sua torre alcançou ${this.score} blocos de altura.</p>
+            <h1 style="color:var(--gold-main)">OBRA INTERROMPIDA</h1>
+            <p>${msg}</p>
+            <p style="margin-top:10px">O templo atingiu ${this.score} metros.</p>
             <button onclick="Game.start()">RECOMEÇAR</button>
         `;
     },
 
     drawBlock(ctx, b, isGhost = false) {
         ctx.save();
-        if (isGhost) ctx.globalAlpha = 0.8;
+        if (isGhost) ctx.globalAlpha = 0.6;
 
         const grad = ctx.createLinearGradient(b.x, b.y, b.x, b.y + this.blockH);
         grad.addColorStop(0, "#FFD700");
+        grad.addColorStop(0.5, "#FFF9C4");
         grad.addColorStop(1, "#B8860B");
 
         ctx.fillStyle = grad;
-        ctx.strokeStyle = "#FFF9C4";
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.lineWidth = 1.5;
 
         ctx.beginPath();
-        ctx.roundRect(b.x, b.y, b.w || this.blockW, this.blockH, 4);
+        ctx.roundRect(b.x, b.y, b.w, this.blockH, 5);
         ctx.fill();
         ctx.stroke();
         ctx.restore();
@@ -200,16 +222,36 @@ const Game = {
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.width, this.height);
 
-        // Suavização da câmera
-        this.cameraY += (this.targetCameraY - this.cameraY) * 0.1;
+        // Suavização de câmera
+        this.cameraY += (this.targetCameraY - this.cameraY) * 0.08;
+
+        // --- SISTEMA DE INCLINAÇÃO DA TORRE ---
+        if (this.gameActive && this.blocks.length > 1) {
+            this.towerLean += this.leanVelocity;
+            // Se já está inclinado, a gravidade ajuda a puxar mais (efeito de queda real)
+            this.leanVelocity += (this.towerLean * 0.0005);
+            
+            // Perde se a inclinação for extrema (torre tombou)
+            if (Math.abs(this.towerLean) > 22) {
+                this.gameOver("A torre perdeu o prumo e desabou!");
+            }
+        }
 
         ctx.save();
         ctx.translate(0, this.cameraY);
         
-        // Desenha os blocos empilhados
+        // PONTO DE ROTAÇÃO: Base da torre
+        const pivotX = this.width / 2;
+        const pivotY = this.height - 100;
+        
+        ctx.translate(pivotX, pivotY);
+        ctx.rotate(this.towerLean * Math.PI / 180);
+        ctx.translate(-pivotX, -pivotY);
+
+        // Desenha blocos fixos
         this.blocks.forEach(b => this.drawBlock(ctx, b));
 
-        // Desenha bloco caindo
+        // Bloco caindo (dentro da rotação da torre para alinhar o encaixe)
         if (this.fallingBlock) {
             this.fallingBlock.vy += this.fallingBlock.gravity;
             this.fallingBlock.y += this.fallingBlock.vy;
@@ -223,23 +265,27 @@ const Game = {
         }
         ctx.restore();
 
-        // Desenha o Pêndulo/Corda
+        // --- CORDA E BALANÇO (ESTÁTICO NA TELA) ---
         if (this.gameActive && !this.fallingBlock) {
             this.swing.angle += this.swing.speed;
             this.swing.x = (this.width / 2) + Math.sin(this.swing.angle) * (this.width * 0.4);
             
-            const lastBlockY = this.blocks[this.blocks.length-1].y;
-            const ghostY = lastBlockY - 250;
+            // Altura da mira acompanhando a pilha
+            const lastY = this.blocks[this.blocks.length-1].y;
+            this.swing.y = lastY - 260;
 
+            // Desenha a corda vindo de cima
             ctx.beginPath();
-            ctx.moveTo(this.width/2, -50);
-            ctx.lineTo(this.swing.x, ghostY + this.cameraY);
-            ctx.strokeStyle = "rgba(255,255,255,0.4)";
+            ctx.moveTo(this.width/2, -100);
+            ctx.lineTo(this.swing.x, this.swing.y + this.cameraY);
+            ctx.strokeStyle = "rgba(255, 215, 0, 0.4)";
+            ctx.lineWidth = 2;
             ctx.stroke();
 
+            // Bloco fantasma na ponta da corda
             ctx.save();
             ctx.translate(0, this.cameraY);
-            this.drawBlock(ctx, { x: this.swing.x - this.blockW/2, y: ghostY, w: this.blockW }, true);
+            this.drawBlock(ctx, { x: this.swing.x - this.blockW/2, y: this.swing.y, w: this.blockW }, true);
             ctx.restore();
         }
 
