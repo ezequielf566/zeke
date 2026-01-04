@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Maná: Fluxo Perfeito</title>
+    <title>Maná: O Pão do Céu</title>
     <style>
         :root { --gold: #f1c40f; }
         
@@ -91,40 +91,41 @@
 <body>
 
     <div id="world">
-        <div id="clouds-origin">MANÁ SYSTEM</div>
+        <div id="clouds-origin">O MANÁ NO DESERTO</div>
 
         <div id="ui-container">
             <div class="glass-card">
-                <b id="lvl-tag" style="color: var(--gold);">FASE 1</b><br>
-                Mana: <span id="cur-mana">0/15</span>
+                <b id="lvl-tag" style="color: var(--gold);">DIA 1</b><br>
+                Provimento: <span id="cur-mana">0/15</span>
             </div>
             <div class="glass-card" id="challenge-box">
-                <small>MISSÃO</small><br>
+                <small>PEDIDO DO CÉU</small><br>
                 <span id="target-count">3</span>x <span id="target-emoji" style="font-size: 24px;">🍉</span><br>
                 <b>Combo: <span id="challenge-progress">0</span></b>
             </div>
         </div>
 
-        <div id="player">🏋️</div>
+        <div id="player">🧔</div>
         <div id="ground"></div>
     </div>
 
     <div id="screen-start" class="overlay">
         <h1 style="font-size: 48px; color: var(--gold); margin-bottom: 10px;">MANÁ</h1>
-        <p style="font-size: 18px;">Toque nas laterais para mover.</p>
-        <p style="font-size: 14px; opacity: 0.8;">Colete os itens e complete o combo!</p><br>
-        <button class="btn" onclick="startGame()">INICIAR JOGO</button>
+        <p style="font-size: 18px;">Deus ouviu o clamor do Seu povo no deserto.</p>
+        <p style="font-size: 14px; opacity: 0.8; max-width: 300px;">Mova-se para colher os alimentos que caem do céu e complete o combo solicitado para avançar.</p><br>
+        <button class="btn" onclick="startGame()">COLHER PROVIMENTO</button>
     </div>
 
     <div id="screen-win" class="overlay" style="display:none;">
-        <h1 style="color: var(--gold);">VITÓRIA!</h1>
-        <p>A energia flui através de você.</p><br>
-        <button class="btn" onclick="nextLevel()">PRÓXIMA FASE</button>
+        <h1 style="color: var(--gold);">POVO ALIMENTADO!</h1>
+        <p>A provisão divina é fiel e abundante.</p><br>
+        <button class="btn" onclick="nextLevel()">PRÓXIMO DIA</button>
     </div>
 
     <script>
         const world = document.getElementById('world');
         const player = document.getElementById('player');
+        // Mantendo a mecânica de chuva rápida que você gostou
         const foodPool = ['🍎','🍉','🍍','🍇','🍓','🥥','🍑','🍒'];
         const junkPool = ['🗑️','⚓','💣','🧱'];
 
@@ -134,12 +135,10 @@
             mana: 0,
             playerX: window.innerWidth / 2,
             velocityX: 0,
-            // AJUSTES DE VELOCIDADE DO PERSONAGEM
             acceleration: 0.9, 
             friction: 0.84,    
             maxSpeed: 11,      
             moveDir: 0,
-            // AJUSTES DE QUEDA (CHUVA) VOLTADOS AO NORMAL
             items: [],
             lastSpawn: 0,
             spawnRate: 1400,   
@@ -278,7 +277,7 @@
             document.getElementById('target-count').innerText = game.targetGoal;
             document.getElementById('target-emoji').innerText = game.targetEmoji;
             document.getElementById('challenge-progress').innerText = game.currentSequence;
-            document.getElementById('lvl-tag').innerText = `FASE ${game.level}`;
+            document.getElementById('lvl-tag').innerText = `DIA ${game.level}`;
             
             const box = document.getElementById('challenge-box');
             box.style.borderColor = game.challengeComplete ? "#2ecc71" : "var(--gold)";
