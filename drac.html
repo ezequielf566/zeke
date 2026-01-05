@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>O Tesouro da Fé</title>
+    <title>A Dracma Perdida</title>
     <style>
         /* --- ESTILOS GERAIS E CENÁRIO --- */
         :root {
@@ -209,42 +209,42 @@
         <symbol id="icon-coin" viewBox="0 0 50 50">
             <circle cx="25" cy="25" r="22" fill="#DAA520" stroke="#B8860B" stroke-width="2"/>
             <circle cx="25" cy="25" r="18" fill="#FFD700" stroke="#DAA520" stroke-width="1"/>
-            <text x="50%" y="65%" text-anchor="middle" font-size="24" fill="#B8860B" font-weight="bold">✝</text>
+            <text x="50%" y="65%" text-anchor="middle" font-size="24" fill="#B8860B" font-weight="bold">★</text>
         </symbol>
     </svg>
 
     <div id="menu-screen" class="screen">
-        <h1>O Tesouro da Fé</h1>
-        <p>A sabedoria é mais valiosa que o ouro. Teste sua percepção e encontre a relíquia sagrada.</p>
-        <button class="btn" onclick="mostrarBriefing()">Iniciar Jornada</button>
+        <h1>A Dracma Perdida</h1>
+        <p>Ajude a encontrar a moedinha que sumiu! Preste muita atenção nos vasos e mostre que você é um excelente buscador.</p>
+        <button class="btn" onclick="mostrarBriefing()">Começar Busca</button>
         <div class="rank-box">
-            <h3>Guardiões da Fé (Ranking)</h3>
+            <h3>Melhores Buscadores</h3>
             <div id="rank-list"></div>
         </div>
     </div>
 
     <div id="briefing-screen" class="screen hidden">
-        <h2>Sua Provação</h2>
-        <p>"Pois onde estiver o vosso tesouro, aí estará também o vosso coração." (Mateus 6:21)</p>
+        <h2>Onde está o Tesouro?</h2>
+        <p>"Alegrai-vos comigo, porque já achei a dracma perdida." (Lucas 15:9)</p>
         <br>
-        <p>Esteja atento! O mundo tenta nos confundir, mas quem mantém o foco no lugar certo encontra a <strong>Moeda da Fé</strong>.</p>
-        <button class="btn" onclick="iniciarJogo()">Aceitar Desafio</button>
+        <p>A moedinha será escondida sob um dos vasos. Fique de olho nela enquanto eles se movem!</p>
+        <button class="btn" onclick="iniciarJogo()">Estou Pronto!</button>
     </div>
 
     <div id="gameover-screen" class="screen hidden">
-        <h1 style="color: #ffb86b">Foco Perdido!</h1>
-        <h2>Pontuação Alcançada: <span id="final-score">0</span></h2>
-        <p id="gameover-msg">Não desanime. A perseverança é a chave para a vitória. Tente novamente!</p>
-        <button class="btn" onclick="voltarMenu()">Reiniciar Caminhada</button>
+        <h1 style="color: #ffb86b">Não foi dessa vez!</h1>
+        <h2>Dracmas Encontradas: <span id="final-score">0</span></h2>
+        <p id="gameover-msg">Não desista! Quem procura com fé e atenção sempre acaba encontrando. Vamos tentar de novo?</p>
+        <button class="btn" onclick="voltarMenu()">Tentar Novamente</button>
     </div>
 
     <div id="game-area">
         <div id="hud">
-            <span>Etapa: <span id="level-display">1</span></span>
-            <span>Bênçãos: <span id="score-display">0</span></span>
+            <span>Nível: <span id="level-display">1</span></span>
+            <span>Dracmas: <span id="score-display">0</span></span>
         </div>
         <div id="message-modal">
-            <h3 id="modal-title" style="margin:0;">Revelado!</h3>
+            <h3 id="modal-title" style="margin:0;">Você Achou!</h3>
             <div id="modal-verse" class="verse-text"></div>
         </div>
         <div id="wall"></div>
@@ -267,12 +267,12 @@
     };
 
     const frasesFe = [
-        "Com Deus, você pode superar qualquer obstáculo!",
-        "A fé transforma o invisível em visível.",
-        "Sua atenção é um dom, use-a para o bem.",
-        "Quem persevera até o fim, alcança a recompensa.",
-        "Mova montanhas com a força da sua crença.",
-        "A luz da verdade guia os seus olhos."
+        "Parabéns! Você encontrou o que estava perdido!",
+        "Que alegria! Vamos buscar a próxima?",
+        "Você tem olhos de águia! Continue assim.",
+        "A festa no céu é grande quando algo é encontrado!",
+        "Muito bem! Sua atenção está nota dez!",
+        "Uau! Você é um mestre em encontrar tesouros!"
     ];
 
     const tableEl = document.getElementById('table');
@@ -280,24 +280,24 @@
     const msgModal = document.getElementById('message-modal');
 
     function carregarRank() {
-        const rank = JSON.parse(localStorage.getItem('rankCristao')) || [];
+        const rank = JSON.parse(localStorage.getItem('rankDracma')) || [];
         const listEl = document.getElementById('rank-list');
         listEl.innerHTML = '';
         if(rank.length === 0) {
-            listEl.innerHTML = '<div class="rank-item"><span>Sem registros</span></div>';
+            listEl.innerHTML = '<div class="rank-item"><span>Sem recordes ainda</span></div>';
             return;
         }
         rank.slice(0, 5).forEach((r, i) => {
-            listEl.innerHTML += `<div class="rank-item"><span>${i+1}. Fiel Guardião</span><span>${r} pts</span></div>`;
+            listEl.innerHTML += `<div class="rank-item"><span>${i+1}º Lugar</span><span>${r} dracmas</span></div>`;
         });
     }
 
     function salvarPontuacao(pontos) {
-        let rank = JSON.parse(localStorage.getItem('rankCristao')) || [];
+        let rank = JSON.parse(localStorage.getItem('rankDracma')) || [];
         rank.push(pontos);
         rank.sort((a, b) => b - a);
         rank = rank.slice(0, 5);
-        localStorage.setItem('rankCristao', JSON.stringify(rank));
+        localStorage.setItem('rankDracma', JSON.stringify(rank));
     }
 
     function mostrarBriefing() {
@@ -420,10 +420,10 @@
         moverMoedaParaCopo(el);
         coinEl.style.display = 'block';
         el.classList.add('lift-up');
-        ESTADO.pontos += (ESTADO.nivel * 100);
+        ESTADO.pontos += 1;
         atualizarHUD();
         
-        msgModal.querySelector('#modal-title').innerText = "Excelente!";
+        msgModal.querySelector('#modal-title').innerText = "Encontrou!";
         msgModal.querySelector('#modal-title').style.color = "#2E7D32";
         msgModal.querySelector('#modal-verse').innerText = frasesFe[Math.floor(Math.random() * frasesFe.length)];
         msgModal.classList.add('msg-visible');
