@@ -3,246 +3,465 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>A SAGA - Galeria Kids</title>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <title>O Tesouro da Fé</title>
     <style>
+        /* --- ESTILOS GERAIS E CENÁRIO --- */
         :root {
-            --primary-blue: #3a86ff;
-            --light-blue: #e0f2fe;
-            --snow-white: #f8faff;
-            --app-green: #2ecc71;
-            --text-dark: #2d3436;
-            --shadow: 0 15px 35px rgba(58, 134, 255, 0.2);
-        }
-
-        * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent;
+            --mesa-cor: #8B4513;
+            --toalha-cor: #a01818;
+            --fundo-parede: #fdf5e6;
+            --ouro: #FFD700;
         }
 
         body {
-            margin: 0; 
+            margin: 0;
             padding: 0;
-            background-color: var(--snow-white);
-            background-image: radial-gradient(circle at 50% 50%, var(--snow-white) 70%, #d6e9ff 100%);
-            font-family: 'Quicksand', sans-serif;
-            color: var(--text-dark);
-            display: flex; 
-            flex-direction: column; 
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        header { 
-            padding: 60px 20px 40px; 
-            text-align: center; 
-        }
-
-        header h1 { 
-            margin: 0; 
-            font-size: 2.8rem; 
-            color: var(--primary-blue);
-            text-transform: uppercase;
-            letter-spacing: -1px;
-            filter: drop-shadow(2px 4px 0px rgba(58, 134, 255, 0.1));
-        }
-
-        header p { 
-            color: #74b9ff; 
-            margin: 10px 0 0; 
-            font-size: 1.2rem; 
-            font-weight: 500;
-        }
-
-        .game-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            width: 100%;
-            max-width: 450px; 
-            padding: 20px;
-            margin-bottom: 60px;
-        }
-
-        .card {
-            background: #ffffff;
-            border-radius: 35px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
-            text-decoration: none;
-            color: inherit;
-            display: flex; 
+            background-color: var(--fundo-parede);
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        /* Telas (Menu, Jogo, GameOver) */
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
             flex-direction: column;
-            position: relative;
-            box-shadow: var(--shadow);
-            border: 2px solid #ffffff;
-            transition: all 0.3s ease;
-        }
-
-        .card:hover, .card:active {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(58, 134, 255, 0.25);
-        }
-
-        .cover {
-            width: 100%;
-            height: 320px; 
-            background: #f0f7ff;
-            display: flex;
-            align-items: center;
             justify-content: center;
-            position: relative;
-            padding: 15px;
-            background-image: linear-gradient(135deg, #e0f2fe 0%, #f8faff 100%);
-        }
-
-        .cover img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain; 
-            border-radius: 15px; 
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));
-        }
-
-        .info { 
-            padding: 25px; 
-            text-align: center; 
-            background: white;
-            z-index: 2;
-        }
-
-        .info h2 { 
-            margin: 0; 
-            font-size: 1.6rem; 
-            color: var(--primary-blue);
-        }
-
-        .info p {
-            font-size: 1rem;
-            color: #636e72;
-            margin: 10px 0 20px 0;
-            line-height: 1.5;
-        }
-        
-        .status-badge {
-            position: absolute; 
-            top: 20px; 
-            left: 20px;
-            padding: 8px 16px; 
-            border-radius: 20px; 
-            font-size: 0.8rem; 
-            font-weight: 700;
-            background: var(--app-green);
+            align-items: center;
+            z-index: 10;
+            background: rgba(0,0,0,0.85);
             color: white;
-            z-index: 3;
-            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+            transition: opacity 0.3s;
         }
 
-        .play-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .hidden { display: none !important; }
+
+        /* --- UI DO JOGO --- */
+        #game-area {
+            position: relative;
             width: 100%;
-            padding: 16px; 
-            border-radius: 20px;
-            background: var(--app-green); 
-            color: #ffffff;
-            font-weight: 700; 
-            font-size: 1.1rem;
-            transition: 0.3s;
-            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
-            text-transform: uppercase;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
         }
 
-        footer { 
-            padding: 40px; 
-            color: #b2bec3; 
-            font-size: 0.9rem; 
+        #wall {
+            flex: 1;
+            background: radial-gradient(circle at center, #fff8e7 0%, #e6dcc3 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #hud {
+            position: absolute;
+            top: 10px;
+            width: 90%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            color: #5a3a22;
+            font-weight: bold;
+            z-index: 5;
+        }
+
+        #table {
+            position: relative;
+            width: 100%;
+            height: 30vh; /* Reduzido para subir a linha da mesa */
+            background: linear-gradient(to bottom, #723a0f 0%, #5e2f0b 100%);
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: flex-end;
+        }
+
+        /* Toalha de mesa decorativa */
+        #table::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, var(--toalha-cor) 0%, #680e0e 100%);
+            clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+            opacity: 0.9;
+        }
+
+        /* --- OBJETOS (COPOS E MOEDA) --- */
+        .cup-container {
+            position: absolute;
+            bottom: 100%; /* Ajustado para ficar acima da mesa, saindo do rodapé */
+            margin-bottom: -10px; /* Pequeno ajuste para "sentar" na borda */
+            width: 20%;  
+            max-width: 120px;
+            height: auto;
+            aspect-ratio: 1 / 1.2;
+            cursor: pointer;
+            z-index: 10;
+            transition: transform 0.3s ease-out;
+        }
+
+        .cup-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+        }
+
+        #coin {
+            position: absolute;
+            bottom: 100%; /* Sobe junto com os copos */
+            margin-bottom: -5px;
+            width: 10%;
+            max-width: 60px;
+            aspect-ratio: 1;
+            z-index: 5;
+            display: none;
+            transition: all 0.2s;
+        }
+
+        /* --- BOTÕES E TEXTOS --- */
+        h1 { color: var(--ouro); text-shadow: 2px 2px 0 #000; margin-bottom: 10px; text-align: center;}
+        h2 { font-size: 1.5rem; margin-bottom: 20px; text-align: center; color: #eee;}
+        p { text-align: center; max-width: 80%; line-height: 1.5; }
+        
+        .btn {
+            background: linear-gradient(to bottom, #4CAF50, #2E7D32);
+            border: 2px solid #fff;
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+            margin-top: 20px;
+        }
+        .btn:active { transform: scale(0.95); }
+
+        .rank-box {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            width: 80%;
+            max-width: 300px;
+        }
+        .rank-item { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.2); padding: 5px 0;}
+
+        /* Animação Levantada */
+        .lift-up { transform: translateY(-110px) !important; }
+        
+        /* Modal de Mensagem */
+        #message-modal {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             text-align: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            width: 80%;
+            max-width: 400px;
         }
+        .msg-visible { opacity: 1 !important; }
+        .verse-text { font-style: italic; color: #555; font-size: 0.9rem; margin-top: 5px; }
 
-        @media (min-width: 768px) {
-            .game-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                max-width: 950px;
-            }
-        }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Jornada Kids</h1>
-        <p>Descubra o amor de Deus brincando!</p>
-    </header>
+    <svg style="display: none;">
+        <symbol id="icon-cup" viewBox="0 0 100 120">
+            <defs>
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#DAA520;stop-opacity:1" />
+                    <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#DAA520;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <g transform="rotate(180, 50, 60)">
+                <ellipse cx="50" cy="20" rx="35" ry="10" fill="#633100"/>
+                <path d="M15 20 Q50 5 85 20 L75 70 Q50 80 25 70 Z" fill="url(#goldGrad)" stroke="#B8860B" stroke-width="1"/>
+                <rect x="42" y="70" width="16" height="30" fill="#B8860B" />
+                <rect x="42" y="70" width="10" height="30" fill="url(#goldGrad)" />
+                <ellipse cx="50" cy="100" rx="35" ry="10" fill="#B8860B" />
+                <ellipse cx="50" cy="98" rx="30" ry="8" fill="url(#goldGrad)" />
+                <g transform="rotate(180, 50, 45)">
+                    <path d="M50 35 L50 55 M40 42 L60 42" stroke="#B8860B" stroke-width="3" fill="none" opacity="0.6"/>
+                </g>
+            </g>
+        </symbol>
 
-    <div class="game-grid">
-        
-        <a href="drac.html" class="card">
-            <span class="status-badge" style="background: #f1c40f;">NOVIDADE</span>
-            <div class="cover">
-                <img src="draccapa.png" alt="A Dracma Perdida" onerror="this.src='https://via.placeholder.com/300x400/e0f2fe/3a86ff?text=A+Dracma+Perdida'">
-            </div>
-            <div class="info">
-                <h2>A Dracma Perdida</h2>
-                <p>Onde está a moedinha? Olhe com atenção e encontre a dracma escondida!</p>
-                <div class="play-btn">JOGAR AGORA</div>
-            </div>
-        </a>
+        <symbol id="icon-coin" viewBox="0 0 50 50">
+            <circle cx="25" cy="25" r="22" fill="#DAA520" stroke="#B8860B" stroke-width="2"/>
+            <circle cx="25" cy="25" r="18" fill="#FFD700" stroke="#DAA520" stroke-width="1"/>
+            <text x="50%" y="65%" text-anchor="middle" font-size="24" fill="#B8860B" font-weight="bold">✝</text>
+        </symbol>
+    </svg>
 
-        <a href="noe.html" class="card">
-            <span class="status-badge">DISPONÍVEL</span>
-            <div class="cover">
-                <img src="capa.png" alt="José e a Arca">
-            </div>
-            <div class="info">
-                <h2>José e a Arca</h2>
-                <p>Ajude o porquinho José a chegar em segurança na arca!</p>
-                <div class="play-btn">JOGAR AGORA</div>
-            </div>
-        </a>
-
-        <a href="pesca.html" class="card">
-            <span class="status-badge">DISPONÍVEL</span>
-            <div class="cover">
-                <img src="capa2.png" alt="Maré de Sorte">
-            </div>
-            <div class="info">
-                <h2>Maré de Sorte</h2>
-                <p>Navegue com fé e descubra as maravilhas do mar.</p>
-                <div class="play-btn">JOGAR AGORA</div>
-            </div>
-        </a>
-
-        <a href="mana.html" class="card">
-            <span class="status-badge">DISPONÍVEL</span>
-            <div class="cover">
-                <img src="capa3.png" alt="Chuva de Bênçãos">
-            </div>
-            <div class="info">
-                <h2>Chuva de Bênçãos</h2>
-                <p>Receba as bênçãos do céu em um desafio cheio de alegria.</p>
-                <div class="play-btn">JOGAR AGORA</div>
-            </div>
-        </a>
-
-        <a href="davi.html" class="card">
-            <span class="status-badge">DISPONÍVEL</span>
-            <div class="cover">
-                <img src="capa4.png" alt="O Grande Templo" onerror="this.src='https://via.placeholder.com/300x400/e0f2fe/3a86ff?text=O+Templo+de+Salomão'">
-            </div>
-            <div class="info">
-                <h2>O Grande Templo</h2>
-                <p>Seja um mestre construtor e ajude a erguer o majestoso templo!</p>
-                <div class="play-btn">JOGAR AGORA</div>
-            </div>
-        </a>
-
+    <div id="menu-screen" class="screen">
+        <h1>O Tesouro da Fé</h1>
+        <p>A sabedoria é mais valiosa que o ouro. Teste sua percepção e encontre a relíquia sagrada.</p>
+        <button class="btn" onclick="mostrarBriefing()">Iniciar Jornada</button>
+        <div class="rank-box">
+            <h3>Guardiões da Fé (Ranking)</h3>
+            <div id="rank-list"></div>
+        </div>
     </div>
 
-    <footer>
-        &copy; 2026 A Saga Games<br>Semeando amor e diversão
-    </footer>
+    <div id="briefing-screen" class="screen hidden">
+        <h2>Sua Provação</h2>
+        <p>"Pois onde estiver o vosso tesouro, aí estará também o vosso coração." (Mateus 6:21)</p>
+        <br>
+        <p>Esteja atento! O mundo tenta nos confundir, mas quem mantém o foco no lugar certo encontra a <strong>Moeda da Fé</strong>.</p>
+        <button class="btn" onclick="iniciarJogo()">Aceitar Desafio</button>
+    </div>
 
+    <div id="gameover-screen" class="screen hidden">
+        <h1 style="color: #ffb86b">Foco Perdido!</h1>
+        <h2>Pontuação Alcançada: <span id="final-score">0</span></h2>
+        <p id="gameover-msg">Não desanime. A perseverança é a chave para a vitória. Tente novamente!</p>
+        <button class="btn" onclick="voltarMenu()">Reiniciar Caminhada</button>
+    </div>
+
+    <div id="game-area">
+        <div id="hud">
+            <span>Etapa: <span id="level-display">1</span></span>
+            <span>Bênçãos: <span id="score-display">0</span></span>
+        </div>
+        <div id="message-modal">
+            <h3 id="modal-title" style="margin:0;">Revelado!</h3>
+            <div id="modal-verse" class="verse-text"></div>
+        </div>
+        <div id="wall"></div>
+        <div id="table">
+            <div id="coin">
+                <svg viewBox="0 0 50 50" style="width:100%; height:100%"><use href="#icon-coin"></use></svg>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const ESTADO = {
+        nivel: 1,
+        pontos: 0,
+        copos: 3,
+        jogando: false,
+        posicaoMoeda: 0,
+        velocidadeSwap: 600,
+        numeroTrocas: 5
+    };
+
+    const frasesFe = [
+        "Com Deus, você pode superar qualquer obstáculo!",
+        "A fé transforma o invisível em visível.",
+        "Sua atenção é um dom, use-a para o bem.",
+        "Quem persevera até o fim, alcança a recompensa.",
+        "Mova montanhas com a força da sua crença.",
+        "A luz da verdade guia os seus olhos."
+    ];
+
+    const tableEl = document.getElementById('table');
+    const coinEl = document.getElementById('coin');
+    const msgModal = document.getElementById('message-modal');
+
+    function carregarRank() {
+        const rank = JSON.parse(localStorage.getItem('rankCristao')) || [];
+        const listEl = document.getElementById('rank-list');
+        listEl.innerHTML = '';
+        if(rank.length === 0) {
+            listEl.innerHTML = '<div class="rank-item"><span>Sem registros</span></div>';
+            return;
+        }
+        rank.slice(0, 5).forEach((r, i) => {
+            listEl.innerHTML += `<div class="rank-item"><span>${i+1}. Fiel Guardião</span><span>${r} pts</span></div>`;
+        });
+    }
+
+    function salvarPontuacao(pontos) {
+        let rank = JSON.parse(localStorage.getItem('rankCristao')) || [];
+        rank.push(pontos);
+        rank.sort((a, b) => b - a);
+        rank = rank.slice(0, 5);
+        localStorage.setItem('rankCristao', JSON.stringify(rank));
+    }
+
+    function mostrarBriefing() {
+        document.getElementById('menu-screen').classList.add('hidden');
+        document.getElementById('briefing-screen').classList.remove('hidden');
+    }
+
+    function voltarMenu() {
+        document.getElementById('gameover-screen').classList.add('hidden');
+        document.getElementById('menu-screen').classList.remove('hidden');
+        carregarRank();
+    }
+
+    function iniciarJogo() {
+        document.getElementById('briefing-screen').classList.add('hidden');
+        ESTADO.nivel = 1;
+        ESTADO.pontos = 0;
+        atualizarHUD();
+        prepararNivel();
+    }
+
+    function atualizarHUD() {
+        document.getElementById('level-display').textContent = ESTADO.nivel;
+        document.getElementById('score-display').textContent = ESTADO.pontos;
+    }
+
+    function calcularDificuldade() {
+        if (ESTADO.nivel >= 20) ESTADO.copos = 5;
+        else if (ESTADO.nivel >= 10) ESTADO.copos = 4;
+        else ESTADO.copos = 3;
+
+        let speed = 700 - (ESTADO.nivel * 20); 
+        if (speed < 250) speed = 250; 
+        ESTADO.velocidadeSwap = speed;
+        ESTADO.numeroTrocas = 4 + Math.floor(ESTADO.nivel / 2);
+    }
+
+    function prepararNivel() {
+        calcularDificuldade();
+        gerarCoposHTML();
+        ESTADO.jogando = false;
+        coinEl.style.display = 'none';
+        setTimeout(() => { animacaoInicial(); }, 500);
+    }
+
+    function gerarCoposHTML() {
+        const antigos = document.querySelectorAll('.cup-container');
+        antigos.forEach(c => c.remove());
+
+        let largura = (ESTADO.copos >= 5) ? 16 : 22; 
+        let margem = (100 - (largura * ESTADO.copos)) / (ESTADO.copos + 1);
+
+        for(let i=0; i < ESTADO.copos; i++) {
+            const cup = document.createElement('div');
+            cup.className = 'cup-container';
+            let leftPos = margem + (i * (largura + margem));
+            cup.style.left = leftPos + '%';
+            cup.style.width = largura + '%';
+            cup.id = `cup-${i}`;
+            cup.innerHTML = `<svg class="cup-svg"><use href="#icon-cup"></use></svg>`;
+            cup.onclick = () => cliqueCopo(i);
+            tableEl.appendChild(cup);
+        }
+    }
+
+    async function animacaoInicial() {
+        ESTADO.posicaoMoeda = Math.floor(Math.random() * ESTADO.copos);
+        const copoPremiado = document.getElementById(`cup-${ESTADO.posicaoMoeda}`);
+        moverMoedaParaCopo(copoPremiado);
+        coinEl.style.display = 'block';
+
+        copoPremiado.classList.add('lift-up');
+        await esperar(1000);
+        copoPremiado.classList.remove('lift-up');
+        await esperar(500);
+        coinEl.style.display = 'none';
+        embaralhar();
+    }
+
+    async function embaralhar() {
+        ESTADO.jogando = false;
+        let cupObjects = [];
+        for(let i=0; i<ESTADO.copos; i++) {
+            let el = document.getElementById(`cup-${i}`);
+            cupObjects.push({ id: i, el: el, posPct: parseFloat(el.style.left) });
+        }
+        const slots = cupObjects.map(c => c.posPct);
+
+        for(let n=0; n < ESTADO.numeroTrocas; n++) {
+            let slotA = Math.floor(Math.random() * ESTADO.copos);
+            let slotB = Math.floor(Math.random() * ESTADO.copos);
+            while(slotA === slotB) slotB = Math.floor(Math.random() * ESTADO.copos);
+
+            let objA = cupObjects.find(c => Math.abs(c.posPct - slots[slotA]) < 0.1);
+            let objB = cupObjects.find(c => Math.abs(c.posPct - slots[slotB]) < 0.1);
+
+            objA.el.style.transition = `left ${ESTADO.velocidadeSwap}ms ease-in-out`;
+            objB.el.style.transition = `left ${ESTADO.velocidadeSwap}ms ease-in-out`;
+
+            objA.el.style.left = slots[slotB] + '%';
+            objB.el.style.left = slots[slotA] + '%';
+
+            objA.posPct = slots[slotB];
+            objB.posPct = slots[slotA];
+
+            await esperar(ESTADO.velocidadeSwap + 50);
+        }
+        ESTADO.jogando = true;
+    }
+
+    function cliqueCopo(idOriginal) {
+        if(!ESTADO.jogando) return;
+        ESTADO.jogando = false;
+        const el = document.getElementById(`cup-${idOriginal}`);
+        if(idOriginal === ESTADO.posicaoMoeda) vitoria(el);
+        else derrota(el);
+    }
+
+    async function vitoria(el) {
+        moverMoedaParaCopo(el);
+        coinEl.style.display = 'block';
+        el.classList.add('lift-up');
+        ESTADO.pontos += (ESTADO.nivel * 100);
+        atualizarHUD();
+        
+        msgModal.querySelector('#modal-title').innerText = "Excelente!";
+        msgModal.querySelector('#modal-title').style.color = "#2E7D32";
+        msgModal.querySelector('#modal-verse').innerText = frasesFe[Math.floor(Math.random() * frasesFe.length)];
+        msgModal.classList.add('msg-visible');
+
+        await esperar(2000);
+        msgModal.classList.remove('msg-visible');
+        el.classList.remove('lift-up');
+        ESTADO.nivel++;
+        atualizarHUD();
+        prepararNivel();
+    }
+
+    function derrota(el) {
+        el.classList.add('lift-up');
+        setTimeout(() => {
+            const certo = document.getElementById(`cup-${ESTADO.posicaoMoeda}`);
+            moverMoedaParaCopo(certo);
+            coinEl.style.display = 'block';
+            certo.classList.add('lift-up');
+            setTimeout(() => { fimDeJogo(); }, 1500);
+        }, 800);
+    }
+
+    function fimDeJogo() {
+        salvarPontuacao(ESTADO.pontos);
+        document.getElementById('final-score').innerText = ESTADO.pontos;
+        document.getElementById('gameover-screen').classList.remove('hidden');
+    }
+
+    function moverMoedaParaCopo(copoEl) {
+        let left = parseFloat(copoEl.style.left);
+        let width = parseFloat(copoEl.style.width);
+        coinEl.style.left = (left + (width - 10) / 2) + '%';
+    }
+
+    function esperar(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+    carregarRank();
+</script>
 </body>
 </html>
