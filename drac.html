@@ -259,9 +259,9 @@
 
     <div id="briefing-screen" class="screen hidden">
         <h2>Onde está o Tesouro?</h2>
-        <p>A moedinha será escondida sob um dos vasos. Fique de olho nela enquanto eles se movem!</p>
-        <br>
         <p>"Alegrai-vos comigo, porque já achei a dracma perdida." (Lucas 15:9)</p>
+        <br>
+        <p>A moedinha será escondida sob um dos vasos. Fique de olho nela enquanto eles se movem!</p>
         <button class="btn" onclick="iniciarJogo()">Estou Pronto!</button>
     </div>
 
@@ -489,9 +489,14 @@
     }
 
     function moverMoedaParaCopo(copoEl) {
-        let left = parseFloat(copoEl.style.left);
-        let width = parseFloat(copoEl.style.width);
-        coinEl.style.left = (left + (width - 10) / 2) + '%';
+        let cupLeft = parseFloat(copoEl.style.left);
+        let cupWidth = parseFloat(copoEl.style.width);
+        let coinWidth = 10; // largura da moeda em % conforme CSS
+        
+        // Centraliza a moeda: posição do copo + metade da largura do copo - metade da largura da moeda
+        let centerPos = cupLeft + (cupWidth / 2) - (coinWidth / 2);
+        
+        coinEl.style.left = centerPos + '%';
     }
 
     function esperar(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
