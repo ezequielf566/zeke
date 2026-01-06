@@ -11,6 +11,7 @@
             --toalha-cor: #a01818;
             --fundo-parede: #fdf5e6;
             --ouro: #FFD700;
+            --fundo-modal: #fffcf2; /* Cor de papel/pergaminho */
         }
 
         body {
@@ -74,14 +75,13 @@
         #table {
             position: relative;
             width: 100%;
-            height: 30vh; /* Reduzido para subir a linha da mesa */
+            height: 30vh;
             background: linear-gradient(to bottom, #723a0f 0%, #5e2f0b 100%);
             box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
             display: flex;
             align-items: flex-end;
         }
 
-        /* Toalha de mesa decorativa */
         #table::before {
             content: '';
             position: absolute;
@@ -94,11 +94,11 @@
             opacity: 0.9;
         }
 
-        /* --- OBJETOS (COPOS E MOEDA) --- */
+        /* --- OBJETOS --- */
         .cup-container {
             position: absolute;
-            bottom: 100%; /* Ajustado para ficar acima da mesa, saindo do rodapé */
-            margin-bottom: -10px; /* Pequeno ajuste para "sentar" na borda */
+            bottom: 100%;
+            margin-bottom: -10px;
             width: 20%;  
             max-width: 120px;
             height: auto;
@@ -116,7 +116,7 @@
 
         #coin {
             position: absolute;
-            bottom: 100%; /* Sobe junto com os copos */
+            bottom: 100%;
             margin-bottom: -5px;
             width: 10%;
             max-width: 60px;
@@ -129,7 +129,17 @@
         /* --- BOTÕES E TEXTOS --- */
         h1 { color: var(--ouro); text-shadow: 2px 2px 0 #000; margin-bottom: 10px; text-align: center;}
         h2 { font-size: 1.5rem; margin-bottom: 20px; text-align: center; color: #eee;}
-        p { text-align: center; max-width: 80%; line-height: 1.5; }
+        
+        /* Ajuste de legibilidade nos parágrafos das telas escuras */
+        .screen p { 
+            text-align: center; 
+            max-width: 80%; 
+            line-height: 1.5; 
+            background: rgba(0, 0, 0, 0.5); 
+            padding: 15px; 
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
         
         .btn {
             background: linear-gradient(to bottom, #4CAF50, #2E7D32);
@@ -145,30 +155,43 @@
         }
         .btn:active { transform: scale(0.95); }
 
+        /* Ajuste do Ranking para legibilidade total */
         .rank-box {
-            background: rgba(255,255,255,0.1);
-            padding: 15px;
-            border-radius: 10px;
+            background: linear-gradient(135deg, #4b3621 0%, #2c1e12 100%);
+            padding: 20px;
+            border-radius: 15px;
             margin-top: 15px;
-            width: 80%;
-            max-width: 300px;
+            width: 85%;
+            max-width: 320px;
+            border: 2px solid var(--ouro);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        .rank-item { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.2); padding: 5px 0;}
+        .rank-box h3 { margin-top: 0; color: var(--ouro); text-align: center; }
+        .rank-item { 
+            display: flex; 
+            justify-content: space-between; 
+            border-bottom: 1px solid rgba(255,215,0,0.2); 
+            padding: 8px 5px;
+            color: #fff;
+            font-weight: bold;
+        }
 
         /* Animação Levantada */
         .lift-up { transform: translateY(-110px) !important; }
         
-        /* Modal de Mensagem */
+        /* Modal de Mensagem Estilizado como Pergaminho */
         #message-modal {
             position: absolute;
-            top: 20%;
+            top: 25%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.95);
-            color: #333;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background: var(--fundo-modal);
+            color: #4b3621;
+            padding: 25px;
+            border-radius: 5px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 0 50px rgba(139, 69, 19, 0.1);
+            border-left: 8px solid #8B4513;
+            border-right: 8px solid #8B4513;
             text-align: center;
             z-index: 100;
             opacity: 0;
@@ -177,8 +200,19 @@
             width: 80%;
             max-width: 400px;
         }
+        #message-modal::before, #message-modal::after {
+            content: "";
+            position: absolute;
+            height: 10px;
+            width: 100%;
+            left: 0;
+            background: #8B4513;
+        }
+        #message-modal::before { top: -5px; border-radius: 5px 5px 0 0; }
+        #message-modal::after { bottom: -5px; border-radius: 0 0 5px 5px; }
+
         .msg-visible { opacity: 1 !important; }
-        .verse-text { font-style: italic; color: #555; font-size: 0.9rem; margin-top: 5px; }
+        .verse-text { font-style: italic; color: #5d4037; font-size: 1.1rem; margin-top: 10px; font-weight: 500; }
 
     </style>
 </head>
@@ -233,7 +267,9 @@
 
     <div id="gameover-screen" class="screen hidden">
         <h1 style="color: #ffb86b">Não foi dessa vez!</h1>
-        <h2>Dracmas Encontradas: <span id="final-score">0</span></h2>
+        <div style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 15px; border: 1px solid #ffb86b; margin-bottom: 10px;">
+            <h2 style="margin:0">Dracmas Encontradas: <span id="final-score">0</span></h2>
+        </div>
         <p id="gameover-msg">Não desista! Quem procura com fé e atenção sempre acaba encontrando. Vamos tentar de novo?</p>
         <button class="btn" onclick="voltarMenu()">Tentar Novamente</button>
     </div>
@@ -244,7 +280,7 @@
             <span>Dracmas: <span id="score-display">0</span></span>
         </div>
         <div id="message-modal">
-            <h3 id="modal-title" style="margin:0;">Você Achou!</h3>
+            <h2 id="modal-title" style="margin:0; color: #2E7D32;">Você Achou!</h2>
             <div id="modal-verse" class="verse-text"></div>
         </div>
         <div id="wall"></div>
@@ -424,7 +460,6 @@
         atualizarHUD();
         
         msgModal.querySelector('#modal-title').innerText = "Encontrou!";
-        msgModal.querySelector('#modal-title').style.color = "#2E7D32";
         msgModal.querySelector('#modal-verse').innerText = frasesFe[Math.floor(Math.random() * frasesFe.length)];
         msgModal.classList.add('msg-visible');
 
