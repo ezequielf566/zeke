@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Lost Drachma</title>
+    <style>
+        /* --- GENERAL STYLES AND SCENERY --- */
+        :root {
+            --mesa-cor: #8B4513;
+            --toalha-cor: #a01818;
+            --fundo-parede: #fdf5e6;
+            --ouro: #FFD700;
+            --fundo-modal: #fffcf2;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background-color: var(--fundo-parede);
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            transition: opacity 0.3s;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- GAME UI --- */
+        #game-area {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            z-index: 1;
+        }
+
+        #wall {
+            flex: 1;
+            background: radial-gradient(circle at center, #fff8e7 0%, #e6dcc3 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #hud {
+            position: absolute;
+            top: 10px;
+            width: 90%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            color: #5a3a22;
+            font-weight: bold;
+            z-index: 5;
+        }
+
+        #table {
+            position: relative;
+            width: 100%;
+            height: 30vh;
+            background: linear-gradient(to bottom, #723a0f 0%, #5e2f0b 100%);
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: flex-end;
+        }
+
+        #table::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, var(--toalha-cor) 0%, #680e0e 100%);
+            clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+            opacity: 0.9;
+        }
+
+        /* --- OBJECTS --- */
+        .cup-container {
+            position: absolute;
+            bottom: 100%;
+            margin-bottom: -10px;
+            width: 20%;  
+            max-width: 120px;
+            height: auto;
+            aspect-ratio: 1 / 1.2;
+            cursor: pointer;
+            z-index: 10;
+            transition: transform 0.3s ease-out;
+        }
+
+        .cup-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+        }
+
+        #coin {
+            position: absolute;
+            bottom: 100%;
+            margin-bottom: -5px;
+            width: 10%;
+            max-width: 60px;
+            aspect-ratio: 1;
+            z-index: 5;
+            display: none;
+            transition: all 0.2s;
+            transform: translateX(-50%); 
+        }
+
+        /* --- BUTTONS AND TEXTS --- */
+        h1 { color: var(--ouro); text-shadow: 2px 2px 0 #000; margin-bottom: 10px; text-align: center;}
+        h2 { font-size: 1.5rem; margin-bottom: 20px; text-align: center; color: #eee;}
+        
+        .screen p { 
+            text-align: center; 
+            max-width: 85%; 
+            line-height: 1.4; 
+            background: rgba(0, 0, 0, 0.6); 
+            padding: 12px; 
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            position: relative;
+            z-index: 101;
+            font-size: 0.95rem;
+        }
+        
+        .btn {
+            background: linear-gradient(to bottom, #4CAF50, #2E7D32);
+            border: 2px solid #fff;
+            color: white;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+            margin-top: 15px;
+            position: relative;
+            z-index: 101;
+        }
+        .btn:active { transform: scale(0.95); }
+
+        .rank-box {
+            background: linear-gradient(135deg, #4b3621 0%, #2c1e12 100%);
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 15px;
+            width: 80%;
+            max-width: 280px;
+            border: 2px solid var(--ouro);
+            z-index: 101;
+        }
+        .rank-box h3 { margin-top: 0; color: var(--ouro); text-align: center; font-size: 1.1rem; }
+
+        .lift-up { transform: translateY(-110px) !important; }
+        
+        #message-modal {
+            position: absolute;
+            top: 22%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--fundo-modal);
+            color: #4b3621;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            border-left: 6px solid #8B4513;
+            border-right: 6px solid #8B4513;
+            text-align: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            width: 75%;
+            max-width: 300px;
+        }
+
+        #message-modal h2 {
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+
+        .verse-text { 
+            font-style: italic; 
+            color: #5d4037; 
+            font-size: 0.95rem;
+            margin-top: 5px; 
+            font-weight: 500; 
+            line-height: 1.3;
+        }
+
+        .msg-visible { opacity: 1 !important; }
+
+    </style>
+</head>
+<body>
+    <svg style="display: none;">
+        <symbol id="icon-cup" viewBox="0 0 100 120">
+            <defs>
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#DAA520;stop-opacity:1" />
+                    <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#DAA520;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <g transform="rotate(180, 50, 60)">
+                <ellipse cx="50" cy="20" rx="35" ry="10" fill="#633100"/>
+                <path d="M15 20 Q50 5 85 20 L75 70 Q50 80 25 70 Z" fill="url(#goldGrad)" stroke="#B8860B" stroke-width="1"/>
+                <rect x="42" y="70" width="16" height="30" fill="#B8860B" />
+                <rect x="42" y="70" width="10" height="30" fill="url(#goldGrad)" />
+                <ellipse cx="50" cy="100" rx="35" ry="10" fill="#B8860B" />
+                <ellipse cx="50" cy="98" rx="30" ry="8" fill="url(#goldGrad)" />
+                <g transform="rotate(180, 50, 45)">
+                    <path d="M50 35 L50 55 M40 42 L60 42" stroke="#B8860B" stroke-width="3" fill="none" opacity="0.6"/>
+                </g>
+            </g>
+        </symbol>
+
+        <symbol id="icon-coin" viewBox="0 0 50 50">
+            <circle cx="25" cy="25" r="22" fill="#DAA520" stroke="#B8860B" stroke-width="2"/>
+            <circle cx="25" cy="25" r="18" fill="#FFD700" stroke="#DAA520" stroke-width="1"/>
+            <text x="50%" y="65%" text-anchor="middle" font-size="24" fill="#B8860B" font-weight="bold">★</text>
+        </symbol>
+    </svg>
+
+    <div id="menu-screen" class="screen">
+        <h1>The Lost Drachma</h1>
+        <p>Help find the coin that went missing! Pay close attention to the vessels and prove you are an excellent seeker.</p>
+        <button class="btn" onclick="mostrarBriefing()">Start Search</button>
+        <div class="rank-box">
+            <h3>Top Seekers</h3>
+            <div id="rank-list"></div>
+        </div>
+    </div>
+
+    <div id="briefing-screen" class="screen hidden">
+        <h2 style="color:var(--ouro)">Where is the Treasure?</h2>
+        <p>"Rejoice with me; I have found my lost coin." (Luke 15:9)</p>
+        <p style="background:none; border:none; margin-top:10px">The coin will be hidden under one of the vessels. Keep your eyes on it!</p>
+        <button class="btn" onclick="iniciarJogo()">I'm Ready!</button>
+    </div>
+
+    <div id="gameover-screen" class="screen hidden">
+        <h1 style="color: #ffb86b">Not this time!</h1>
+        <div style="background: rgba(0,0,0,0.6); padding: 15px; border-radius: 15px; border: 1px solid #ffb86b; margin-bottom: 10px;">
+            <h2 style="margin:0">Drachmas Found: <span id="final-score">0</span></h2>
+        </div>
+        <p id="gameover-msg">Don't give up! Whoever seeks with faith and focus always finds what they're looking for.</p>
+        <button class="btn" onclick="voltarMenu()">Try Again</button>
+    </div>
+
+    <div id="game-area">
+        <div id="hud">
+            <span>Level: <span id="level-display">1</span></span>
+            <span>Drachmas: <span id="score-display">0</span></span>
+        </div>
+        <div id="message-modal">
+            <h2 id="modal-title" style="margin:0; color: #2E7D32;">You Found It!</h2>
+            <div id="modal-verse" class="verse-text"></div>
+        </div>
+        <div id="wall"></div>
+        <div id="table">
+            <div id="coin">
+                <svg viewBox="0 0 50 50" style="width:100%; height:100%"><use href="#icon-coin"></use></svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ESTADO = {
+            nivel: 1,
+            pontos: 0,
+            copos: 3,
+            jogando: false,
+            posicaoMoeda: 0,
+            velocidadeSwap: 600,
+            numeroTrocas: 5
+        };
+
+        const frasesFe = [
+            "Great job! You found what was lost!",
+            "What a joy! Shall we look for the next one?",
+            "You have eagle eyes!",
+            "There is a big party in heaven!",
+            "Well done! Perfect focus!",
+            "Wow! A master treasure hunter!"
+        ];
+
+        const tableEl = document.getElementById('table');
+        const coinEl = document.getElementById('coin');
+        const msgModal = document.getElementById('message-modal');
+
+        function carregarRank() {
+            const rank = JSON.parse(localStorage.getItem('rankDracma')) || [];
+            const listEl = document.getElementById('rank-list');
+            listEl.innerHTML = '';
+            if(rank.length === 0) {
+                listEl.innerHTML = '<div class="rank-item"><span>No records yet</span></div>';
+                return;
+            }
+            rank.slice(0, 5).forEach((r, i) => {
+                listEl.innerHTML += `<div class="rank-item" style="display:flex; justify-content:space-between; width:100%; margin: 2px 0;"><span>Rank ${i+1}</span><span>${r} pts</span></div>`;
+            });
+        }
+
+        function salvarPontuacao(pontos) {
+            let rank = JSON.parse(localStorage.getItem('rankDracma')) || [];
+            rank.push(pontos);
+            rank.sort((a, b) => b - a);
+            rank = rank.slice(0, 5);
+            localStorage.setItem('rankDracma', JSON.stringify(rank));
+        }
+
+        function mostrarBriefing() {
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('briefing-screen').classList.remove('hidden');
+        }
+
+        function voltarMenu() {
+            document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('menu-screen').classList.remove('hidden');
+            carregarRank();
+        }
+
+        function iniciarJogo() {
+            document.getElementById('briefing-screen').classList.add('hidden');
+            ESTADO.nivel = 1;
+            ESTADO.pontos = 0;
+            atualizarHUD();
+            prepararNivel();
+        }
+
+        function atualizarHUD() {
+            document.getElementById('level-display').textContent = ESTADO.nivel;
+            document.getElementById('score-display').textContent = ESTADO.pontos;
+        }
+
+        function calcularDificuldade() {
+            if (ESTADO.nivel >= 20) ESTADO.copos = 5;
+            else if (ESTADO.nivel >= 10) ESTADO.copos = 4;
+            else ESTADO.copos = 3;
+
+            let speed = 700 - (ESTADO.nivel * 20); 
+            if (speed < 250) speed = 250; 
+            ESTADO.velocidadeSwap = speed;
+            ESTADO.numeroTrocas = 4 + Math.floor(ESTADO.nivel / 2);
+        }
+
+        function prepararNivel() {
+            calcularDificuldade();
+            gerarCoposHTML();
+            ESTADO.jogando = false;
+            coinEl.style.display = 'none';
+            setTimeout(() => { animacaoInicial(); }, 500);
+        }
+
+        function gerarCoposHTML() {
+            const antigos = document.querySelectorAll('.cup-container');
+            antigos.forEach(c => c.remove());
+
+            let largura = (ESTADO.copos >= 5) ? 16 : 22; 
+            let margem = (100 - (largura * ESTADO.copos)) / (ESTADO.copos + 1);
+
+            for(let i=0; i < ESTADO.copos; i++) {
+                const cup = document.createElement('div');
+                cup.className = 'cup-container';
+                let leftPos = margem + (i * (largura + margem));
+                cup.style.left = leftPos + '%';
+                cup.style.width = largura + '%';
+                cup.id = `cup-${i}`;
+                cup.innerHTML = `<svg class="cup-svg"><use href="#icon-cup"></use></svg>`;
+                cup.onclick = () => cliqueCopo(i);
+                tableEl.appendChild(cup);
+            }
+        }
+
+        async function animacaoInicial() {
+            ESTADO.posicaoMoeda = Math.floor(Math.random() * ESTADO.copos);
+            const copoPremiado = document.getElementById(`cup-${ESTADO.posicaoMoeda}`);
+            moverMoedaParaCopo(copoPremiado);
+            coinEl.style.display = 'block';
+
+            copoPremiado.classList.add('lift-up');
+            await esperar(1000);
+            copoPremiado.classList.remove('lift-up');
+            await esperar(500);
+            coinEl.style.display = 'none';
+            embaralhar();
+        }
+
+        async function embaralhar() {
+            ESTADO.jogando = false;
+            let cupObjects = [];
+            for(let i=0; i<ESTADO.copos; i++) {
+                let el = document.getElementById(`cup-${i}`);
+                cupObjects.push({ id: i, el: el, posPct: parseFloat(el.style.left) });
+            }
+            const slots = cupObjects.map(c => c.posPct);
+
+            for(let n=0; n < ESTADO.numeroTrocas; n++) {
+                let slotA = Math.floor(Math.random() * ESTADO.copos);
+                let slotB = Math.floor(Math.random() * ESTADO.copos);
+                while(slotA === slotB) slotB = Math.floor(Math.random() * ESTADO.copos);
+
+                let objA = cupObjects.find(c => Math.abs(c.posPct - slots[slotA]) < 0.1);
+                let objB = cupObjects.find(c => Math.abs(c.posPct - slots[slotB]) < 0.1);
+
+                objA.el.style.transition = `left ${ESTADO.velocidadeSwap}ms ease-in-out`;
+                objB.el.style.transition = `left ${ESTADO.velocidadeSwap}ms ease-in-out`;
+
+                objA.el.style.left = slots[slotB] + '%';
+                objB.el.style.left = slots[slotA] + '%';
+
+                objA.posPct = slots[slotB];
+                objB.posPct = slots[slotA];
+
+                await esperar(ESTADO.velocidadeSwap + 50);
+            }
+            ESTADO.jogando = true;
+        }
+
+        function cliqueCopo(idOriginal) {
+            if(!ESTADO.jogando) return;
+            ESTADO.jogando = false;
+            const el = document.getElementById(`cup-${idOriginal}`);
+            if(idOriginal === ESTADO.posicaoMoeda) vitoria(el);
+            else derrota(el);
+        }
+
+        async function vitoria(el) {
+            moverMoedaParaCopo(el);
+            coinEl.style.display = 'block';
+            el.classList.add('lift-up');
+            ESTADO.pontos += 1;
+            atualizarHUD();
+            
+            msgModal.querySelector('#modal-title').innerText = "You Found It!";
+            msgModal.querySelector('#modal-verse').innerText = frasesFe[Math.floor(Math.random() * frasesFe.length)];
+            msgModal.classList.add('msg-visible');
+
+            await esperar(2000);
+            msgModal.classList.remove('msg-visible');
+            el.classList.remove('lift-up');
+            ESTADO.nivel++;
+            atualizarHUD();
+            prepararNivel();
+        }
+
+        function derrota(el) {
+            el.classList.add('lift-up');
+            setTimeout(() => {
+                const certo = document.getElementById(`cup-${ESTADO.posicaoMoeda}`);
+                moverMoedaParaCopo(certo);
+                coinEl.style.display = 'block';
+                certo.classList.add('lift-up');
+                setTimeout(() => { fimDeJogo(); }, 1500);
+            }, 800);
+        }
+
+        function fimDeJogo() {
+            salvarPontuacao(ESTADO.pontos);
+            document.getElementById('final-score').innerText = ESTADO.pontos;
+            document.getElementById('gameover-screen').classList.remove('hidden');
+        }
+
+        function moverMoedaParaCopo(copoEl) {
+            const cupRect = copoEl.getBoundingClientRect();
+            const tableRect = tableEl.getBoundingClientRect();
+            const cupCenter = cupRect.left + (cupRect.width / 2);
+            const relativePos = cupCenter - tableRect.left;
+            coinEl.style.left = relativePos + 'px';
+        }
+
+        function esperar(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+        carregarRank();
+    </script>
+</body>
+</html>
