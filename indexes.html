@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>A SAGA - Galería Kids</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #3a86ff;
+            --light-blue: #e0f2fe;
+            --snow-white: #f8faff;
+            --app-green: #2ecc71;
+            --text-dark: #2d3436;
+            --shadow: 0 15px 35px rgba(58, 134, 255, 0.2);
+        }
+
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0; 
+            padding: 0;
+            background-color: var(--snow-white);
+            background-image: radial-gradient(circle at 50% 50%, var(--snow-white) 70%, #d6e9ff 100%);
+            font-family: 'Quicksand', sans-serif;
+            color: var(--text-dark);
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Navegación para volver al Menú */
+        .back-nav {
+            width: 100%;
+            max-width: 950px;
+            padding: 20px;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .btn-back {
+            text-decoration: none;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+
+        .btn-back:hover {
+            transform: scale(1.05);
+        }
+
+        header { 
+            padding: 20px 20px 40px; 
+            text-align: center; 
+        }
+
+        header h1 { 
+            margin: 0; 
+            font-size: 2.8rem; 
+            color: var(--primary-blue);
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            filter: drop-shadow(2px 4px 0px rgba(58, 134, 255, 0.1));
+        }
+
+        header p { 
+            color: #74b9ff; 
+            margin: 10px 0 0; 
+            font-size: 1.2rem; 
+            font-weight: 500;
+        }
+
+        .game-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            width: 100%;
+            max-width: 450px; 
+            padding: 20px;
+            margin-bottom: 60px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 35px;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            display: flex; 
+            flex-direction: column;
+            position: relative;
+            box-shadow: var(--shadow);
+            border: 2px solid #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover, .card:active {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(58, 134, 255, 0.25);
+        }
+
+        .cover {
+            width: 100%;
+            height: 320px; 
+            background: #f0f7ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 15px;
+            background-image: linear-gradient(135deg, #e0f2fe 0%, #f8faff 100%);
+        }
+
+        .cover img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain; 
+            border-radius: 15px; 
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));
+        }
+
+        .info { 
+            padding: 25px; 
+            text-align: center; 
+            background: white;
+            z-index: 2;
+        }
+
+        .info h2 { 
+            margin: 0; 
+            font-size: 1.6rem; 
+            color: var(--primary-blue);
+        }
+
+        .info p {
+            font-size: 1rem;
+            color: #636e72;
+            margin: 10px 0 20px 0;
+            line-height: 1.5;
+        }
+        
+        .status-badge {
+            position: absolute; 
+            top: 20px; 
+            left: 20px;
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            font-size: 0.8rem; 
+            font-weight: 700;
+            background: var(--app-green);
+            color: white;
+            z-index: 3;
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+        }
+
+        .play-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 16px; 
+            border-radius: 20px;
+            background: var(--app-green); 
+            color: #ffffff;
+            font-weight: 700; 
+            font-size: 1.1rem;
+            transition: 0.3s;
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+            text-transform: uppercase;
+        }
+
+        footer { 
+            padding: 40px; 
+            color: #b2bec3; 
+            font-size: 0.9rem; 
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .game-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                max-width: 950px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="back-nav">
+        <a href="index.html?reset=true" class="btn-back"><span>🏠</span> Menú Principal</a>
+    </nav>
+
+    <header>
+        <h1>Jornada Kids</h1>
+        <p>¡Descubre el amor de Dios jugando!</p>
+    </header>
+
+    <div class="game-grid">
+        
+        <a href="jogos/draces.html" class="card">
+            <span class="status-badge" style="background: #f1c40f;">NOVEDAD</span>
+            <div class="cover">
+                <img src="draccapa.png" alt="La Dracma Perdida" onerror="this.src='https://via.placeholder.com/300x400/e0f2fe/3a86ff?text=La+Dracma+Perdida'">
+            </div>
+            <div class="info">
+                <h2>La Dracma Perdida</h2>
+                <p>¿Dónde está la moneda? ¡Mira con atención y encuentra la dracma escondida!</p>
+                <div class="play-btn">JUGAR AHORA</div>
+            </div>
+        </a>
+
+        <a href="jogos/porcoes.html" class="card">
+            <span class="status-badge">DISPONIBLE</span>
+            <div class="cover">
+                <img src="capa.png" alt="José y el Arca">
+            </div>
+            <div class="info">
+                <h2>José y el Arca</h2>
+                <p>¡Ayuda al cerdito José a llegar seguro al arca!</p>
+                <div class="play-btn">JUGAR AHORA</div>
+            </div>
+        </a>
+
+        <a href="jogos/marees.html" class="card">
+            <span class="status-badge">DISPONIBLE</span>
+            <div class="cover">
+                <img src="capa2.png" alt="Marea de Suerte">
+            </div>
+            <div class="info">
+                <h2>Marea de Suerte</h2>
+                <p>Navega con fe y descubre las maravillas del mar.</p>
+                <div class="play-btn">JUGAR AHORA</div>
+            </div>
+        </a>
+
+        <a href="jogos/manaes.html" class="card">
+            <span class="status-badge">DISPONIBLE</span>
+            <div class="cover">
+                <img src="capa3.png" alt="Lluvia de Bendiciones">
+            </div>
+            <div class="info">
+                <h2>Lluvia de Bendiciones</h2>
+                <p>Recibe las bendiciones del cielo en un desafío lleno de alegría.</p>
+                <div class="play-btn">JUGAR AHORA</div>
+            </div>
+        </a>
+
+        <a href="jogos/davies.html" class="card">
+            <span class="status-badge">DISPONIBLE</span>
+            <div class="cover">
+                <img src="capa4.png" alt="El Gran Templo" onerror="this.src='https://via.placeholder.com/300x400/e0f2fe/3a86ff?text=El+Templo+de+Salomón'">
+            </div>
+            <div class="info">
+                <h2>El Gran Templo</h2>
+                <p>¡Sé un maestro constructor y ayuda a levantar el majestuoso templo!</p>
+                <div class="play-btn">JUGAR AHORA</div>
+            </div>
+        </a>
+
+    </div>
+
+    <footer>
+        &copy; 2026 A Saga Games<br>Sembrando amor y diversión
+    </footer>
+
+</body>
+</html>
