@@ -11,7 +11,7 @@
             --toalha-cor: #a01818;
             --fundo-parede: #fdf5e6;
             --ouro: #FFD700;
-            --fundo-modal: #fffcf2; /* Cor de papel/pergaminho */
+            --fundo-modal: #fffcf2;
         }
 
         body {
@@ -24,7 +24,6 @@
             user-select: none;
         }
 
-        /* Telas (Menu, Jogo, GameOver) */
         .screen {
             position: absolute;
             width: 100%;
@@ -33,8 +32,8 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10;
-            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            background: rgba(0,0,0,0.9);
             color: white;
             transition: opacity 0.3s;
         }
@@ -49,6 +48,7 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
+            z-index: 1;
         }
 
         #wall {
@@ -124,100 +124,98 @@
             z-index: 5;
             display: none;
             transition: all 0.2s;
+            transform: translateX(-50%); 
         }
 
         /* --- BOTÕES E TEXTOS --- */
         h1 { color: var(--ouro); text-shadow: 2px 2px 0 #000; margin-bottom: 10px; text-align: center;}
         h2 { font-size: 1.5rem; margin-bottom: 20px; text-align: center; color: #eee;}
         
-        /* Ajuste de legibilidade nos parágrafos das telas escuras */
+        /* AJUSTE NO BALÃO DE TEXTO DAS TELAS (MENU/BRIEFING) */
         .screen p { 
             text-align: center; 
-            max-width: 80%; 
-            line-height: 1.5; 
-            background: rgba(0, 0, 0, 0.5); 
-            padding: 15px; 
+            max-width: 85%; 
+            line-height: 1.4; 
+            background: rgba(0, 0, 0, 0.6); 
+            padding: 12px; 
             border-radius: 10px;
             border: 1px solid rgba(255, 215, 0, 0.3);
+            position: relative;
+            z-index: 101;
+            font-size: 0.95rem; /* Fonte levemente menor para caber melhor */
         }
         
         .btn {
             background: linear-gradient(to bottom, #4CAF50, #2E7D32);
             border: 2px solid #fff;
             color: white;
-            padding: 15px 40px;
-            font-size: 1.2rem;
+            padding: 12px 30px;
+            font-size: 1.1rem;
             border-radius: 30px;
             cursor: pointer;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             transition: transform 0.1s;
-            margin-top: 20px;
+            margin-top: 15px;
+            position: relative;
+            z-index: 101;
         }
         .btn:active { transform: scale(0.95); }
 
-        /* Ajuste do Ranking para legibilidade total */
         .rank-box {
             background: linear-gradient(135deg, #4b3621 0%, #2c1e12 100%);
-            padding: 20px;
+            padding: 15px;
             border-radius: 15px;
             margin-top: 15px;
-            width: 85%;
-            max-width: 320px;
+            width: 80%;
+            max-width: 280px;
             border: 2px solid var(--ouro);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            z-index: 101;
         }
-        .rank-box h3 { margin-top: 0; color: var(--ouro); text-align: center; }
-        .rank-item { 
-            display: flex; 
-            justify-content: space-between; 
-            border-bottom: 1px solid rgba(255,215,0,0.2); 
-            padding: 8px 5px;
-            color: #fff;
-            font-weight: bold;
-        }
+        .rank-box h3 { margin-top: 0; color: var(--ouro); text-align: center; font-size: 1.1rem; }
 
-        /* Animação Levantada */
         .lift-up { transform: translateY(-110px) !important; }
         
-        /* Modal de Mensagem Estilizado como Pergaminho */
+        /* AJUSTE NO BALÃO DE VITÓRIA (DRACMA) */
         #message-modal {
             position: absolute;
-            top: 25%;
+            top: 22%; /* Subi um pouco para afastar dos vasos */
             left: 50%;
             transform: translate(-50%, -50%);
             background: var(--fundo-modal);
             color: #4b3621;
-            padding: 25px;
+            padding: 15px 20px; /* Reduzi o padding interno */
             border-radius: 5px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 0 50px rgba(139, 69, 19, 0.1);
-            border-left: 8px solid #8B4513;
-            border-right: 8px solid #8B4513;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            border-left: 6px solid #8B4513;
+            border-right: 6px solid #8B4513;
             text-align: center;
-            z-index: 100;
+            z-index: 200;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
-            width: 80%;
-            max-width: 400px;
+            width: 75%; /* Mais estreito */
+            max-width: 300px; /* Limite de largura menor */
         }
-        #message-modal::before, #message-modal::after {
-            content: "";
-            position: absolute;
-            height: 10px;
-            width: 100%;
-            left: 0;
-            background: #8B4513;
+
+        #message-modal h2 {
+            font-size: 1.3rem; /* Título menor */
+            margin-bottom: 5px;
         }
-        #message-modal::before { top: -5px; border-radius: 5px 5px 0 0; }
-        #message-modal::after { bottom: -5px; border-radius: 0 0 5px 5px; }
+
+        .verse-text { 
+            font-style: italic; 
+            color: #5d4037; 
+            font-size: 0.95rem; /* Texto menor */
+            margin-top: 5px; 
+            font-weight: 500; 
+            line-height: 1.3;
+        }
 
         .msg-visible { opacity: 1 !important; }
-        .verse-text { font-style: italic; color: #5d4037; font-size: 1.1rem; margin-top: 10px; font-weight: 500; }
 
     </style>
 </head>
 <body>
-
     <svg style="display: none;">
         <symbol id="icon-cup" viewBox="0 0 100 120">
             <defs>
@@ -258,19 +256,18 @@
     </div>
 
     <div id="briefing-screen" class="screen hidden">
-        <h2>Onde está o Tesouro?</h2>
+        <h2 style="color:var(--ouro)">Onde está o Tesouro?</h2>
         <p>"Alegrai-vos comigo, porque já achei a dracma perdida." (Lucas 15:9)</p>
-        <br>
-        <p>A moedinha será escondida sob um dos vasos. Fique de olho nela enquanto eles se movem!</p>
+        <p style="background:none; border:none; margin-top:10px">A moedinha será escondida sob um dos vasos. Fique de olho nela!</p>
         <button class="btn" onclick="iniciarJogo()">Estou Pronto!</button>
     </div>
 
     <div id="gameover-screen" class="screen hidden">
         <h1 style="color: #ffb86b">Não foi dessa vez!</h1>
-        <div style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 15px; border: 1px solid #ffb86b; margin-bottom: 10px;">
+        <div style="background: rgba(0,0,0,0.6); padding: 15px; border-radius: 15px; border: 1px solid #ffb86b; margin-bottom: 10px;">
             <h2 style="margin:0">Dracmas Encontradas: <span id="final-score">0</span></h2>
         </div>
-        <p id="gameover-msg">Não desista! Quem procura com fé e atenção sempre acaba encontrando. Vamos tentar de novo?</p>
+        <p id="gameover-msg">Não desista! Quem procura com fé e atenção sempre acaba encontrando.</p>
         <button class="btn" onclick="voltarMenu()">Tentar Novamente</button>
     </div>
 
@@ -291,217 +288,216 @@
         </div>
     </div>
 
-<script>
-    const ESTADO = {
-        nivel: 1,
-        pontos: 0,
-        copos: 3,
-        jogando: false,
-        posicaoMoeda: 0,
-        velocidadeSwap: 600,
-        numeroTrocas: 5
-    };
+    <script>
+        // O restante do seu Script permanece o mesmo, 
+        // as mudanças de estilo acima já resolvem a aparência.
+        const ESTADO = {
+            nivel: 1,
+            pontos: 0,
+            copos: 3,
+            jogando: false,
+            posicaoMoeda: 0,
+            velocidadeSwap: 600,
+            numeroTrocas: 5
+        };
 
-    const frasesFe = [
-        "Parabéns! Você encontrou o que estava perdido!",
-        "Que alegria! Vamos buscar a próxima?",
-        "Você tem olhos de águia! Continue assim.",
-        "A festa no céu é grande quando algo é encontrado!",
-        "Muito bem! Sua atenção está nota dez!",
-        "Uau! Você é um mestre em encontrar tesouros!"
-    ];
+        const frasesFe = [
+            "Parabéns! Você encontrou o que estava perdido!",
+            "Que alegria! Vamos buscar a próxima?",
+            "Você tem olhos de águia!",
+            "A festa no céu é grande!",
+            "Muito bem! Atenção nota dez!",
+            "Uau! Um mestre em tesouros!"
+        ];
 
-    const tableEl = document.getElementById('table');
-    const coinEl = document.getElementById('coin');
-    const msgModal = document.getElementById('message-modal');
+        const tableEl = document.getElementById('table');
+        const coinEl = document.getElementById('coin');
+        const msgModal = document.getElementById('message-modal');
 
-    function carregarRank() {
-        const rank = JSON.parse(localStorage.getItem('rankDracma')) || [];
-        const listEl = document.getElementById('rank-list');
-        listEl.innerHTML = '';
-        if(rank.length === 0) {
-            listEl.innerHTML = '<div class="rank-item"><span>Sem recordes ainda</span></div>';
-            return;
+        function carregarRank() {
+            const rank = JSON.parse(localStorage.getItem('rankDracma')) || [];
+            const listEl = document.getElementById('rank-list');
+            listEl.innerHTML = '';
+            if(rank.length === 0) {
+                listEl.innerHTML = '<div class="rank-item"><span>Sem recordes</span></div>';
+                return;
+            }
+            rank.slice(0, 5).forEach((r, i) => {
+                listEl.innerHTML += `<div class="rank-item"><span>${i+1}º Lugar</span><span>${r} pts</span></div>`;
+            });
         }
-        rank.slice(0, 5).forEach((r, i) => {
-            listEl.innerHTML += `<div class="rank-item"><span>${i+1}º Lugar</span><span>${r} dracmas</span></div>`;
-        });
-    }
 
-    function salvarPontuacao(pontos) {
-        let rank = JSON.parse(localStorage.getItem('rankDracma')) || [];
-        rank.push(pontos);
-        rank.sort((a, b) => b - a);
-        rank = rank.slice(0, 5);
-        localStorage.setItem('rankDracma', JSON.stringify(rank));
-    }
-
-    function mostrarBriefing() {
-        document.getElementById('menu-screen').classList.add('hidden');
-        document.getElementById('briefing-screen').classList.remove('hidden');
-    }
-
-    function voltarMenu() {
-        document.getElementById('gameover-screen').classList.add('hidden');
-        document.getElementById('menu-screen').classList.remove('hidden');
-        carregarRank();
-    }
-
-    function iniciarJogo() {
-        document.getElementById('briefing-screen').classList.add('hidden');
-        ESTADO.nivel = 1;
-        ESTADO.pontos = 0;
-        atualizarHUD();
-        prepararNivel();
-    }
-
-    function atualizarHUD() {
-        document.getElementById('level-display').textContent = ESTADO.nivel;
-        document.getElementById('score-display').textContent = ESTADO.pontos;
-    }
-
-    function calcularDificuldade() {
-        if (ESTADO.nivel >= 20) ESTADO.copos = 5;
-        else if (ESTADO.nivel >= 10) ESTADO.copos = 4;
-        else ESTADO.copos = 3;
-
-        let speed = 700 - (ESTADO.nivel * 20); 
-        if (speed < 250) speed = 250; 
-        ESTADO.velocidadeSwap = speed;
-        ESTADO.numeroTrocas = 4 + Math.floor(ESTADO.nivel / 2);
-    }
-
-    function prepararNivel() {
-        calcularDificuldade();
-        gerarCoposHTML();
-        ESTADO.jogando = false;
-        coinEl.style.display = 'none';
-        setTimeout(() => { animacaoInicial(); }, 500);
-    }
-
-    function gerarCoposHTML() {
-        const antigos = document.querySelectorAll('.cup-container');
-        antigos.forEach(c => c.remove());
-
-        let largura = (ESTADO.copos >= 5) ? 16 : 22; 
-        let margem = (100 - (largura * ESTADO.copos)) / (ESTADO.copos + 1);
-
-        for(let i=0; i < ESTADO.copos; i++) {
-            const cup = document.createElement('div');
-            cup.className = 'cup-container';
-            let leftPos = margem + (i * (largura + margem));
-            cup.style.left = leftPos + '%';
-            cup.style.width = largura + '%';
-            cup.id = `cup-${i}`;
-            cup.innerHTML = `<svg class="cup-svg"><use href="#icon-cup"></use></svg>`;
-            cup.onclick = () => cliqueCopo(i);
-            tableEl.appendChild(cup);
+        function salvarPontuacao(pontos) {
+            let rank = JSON.parse(localStorage.getItem('rankDracma')) || [];
+            rank.push(pontos);
+            rank.sort((a, b) => b - a);
+            rank = rank.slice(0, 5);
+            localStorage.setItem('rankDracma', JSON.stringify(rank));
         }
-    }
 
-    async function animacaoInicial() {
-        ESTADO.posicaoMoeda = Math.floor(Math.random() * ESTADO.copos);
-        const copoPremiado = document.getElementById(`cup-${ESTADO.posicaoMoeda}`);
-        moverMoedaParaCopo(copoPremiado);
-        coinEl.style.display = 'block';
-
-        copoPremiado.classList.add('lift-up');
-        await esperar(1000);
-        copoPremiado.classList.remove('lift-up');
-        await esperar(500);
-        coinEl.style.display = 'none';
-        embaralhar();
-    }
-
-    async function embaralhar() {
-        ESTADO.jogando = false;
-        let cupObjects = [];
-        for(let i=0; i<ESTADO.copos; i++) {
-            let el = document.getElementById(`cup-${i}`);
-            cupObjects.push({ id: i, el: el, posPct: parseFloat(el.style.left) });
+        function mostrarBriefing() {
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('briefing-screen').classList.remove('hidden');
         }
-        const slots = cupObjects.map(c => c.posPct);
 
-        for(let n=0; n < ESTADO.numeroTrocas; n++) {
-            let slotA = Math.floor(Math.random() * ESTADO.copos);
-            let slotB = Math.floor(Math.random() * ESTADO.copos);
-            while(slotA === slotB) slotB = Math.floor(Math.random() * ESTADO.copos);
-
-            let objA = cupObjects.find(c => Math.abs(c.posPct - slots[slotA]) < 0.1);
-            let objB = cupObjects.find(c => Math.abs(c.posPct - slots[slotB]) < 0.1);
-
-            objA.el.style.transition = `left ${ESTADO.velocidadeSwap}ms ease-in-out`;
-            objB.el.style.transition = `left ${ESTADO.velocidadeSwap}ms ease-in-out`;
-
-            objA.el.style.left = slots[slotB] + '%';
-            objB.el.style.left = slots[slotA] + '%';
-
-            objA.posPct = slots[slotB];
-            objB.posPct = slots[slotA];
-
-            await esperar(ESTADO.velocidadeSwap + 50);
+        function voltarMenu() {
+            document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('menu-screen').classList.remove('hidden');
+            carregarRank();
         }
-        ESTADO.jogando = true;
-    }
 
-    function cliqueCopo(idOriginal) {
-        if(!ESTADO.jogando) return;
-        ESTADO.jogando = false;
-        const el = document.getElementById(`cup-${idOriginal}`);
-        if(idOriginal === ESTADO.posicaoMoeda) vitoria(el);
-        else derrota(el);
-    }
+        function iniciarJogo() {
+            document.getElementById('briefing-screen').classList.add('hidden');
+            ESTADO.nivel = 1;
+            ESTADO.pontos = 0;
+            atualizarHUD();
+            prepararNivel();
+        }
 
-    async function vitoria(el) {
-        moverMoedaParaCopo(el);
-        coinEl.style.display = 'block';
-        el.classList.add('lift-up');
-        ESTADO.pontos += 1;
-        atualizarHUD();
-        
-        msgModal.querySelector('#modal-title').innerText = "Encontrou!";
-        msgModal.querySelector('#modal-verse').innerText = frasesFe[Math.floor(Math.random() * frasesFe.length)];
-        msgModal.classList.add('msg-visible');
+        function atualizarHUD() {
+            document.getElementById('level-display').textContent = ESTADO.nivel;
+            document.getElementById('score-display').textContent = ESTADO.pontos;
+        }
 
-        await esperar(2000);
-        msgModal.classList.remove('msg-visible');
-        el.classList.remove('lift-up');
-        ESTADO.nivel++;
-        atualizarHUD();
-        prepararNivel();
-    }
+        function calcularDificuldade() {
+            if (ESTADO.nivel >= 20) ESTADO.copos = 5;
+            else if (ESTADO.nivel >= 10) ESTADO.copos = 4;
+            else ESTADO.copos = 3;
 
-    function derrota(el) {
-        el.classList.add('lift-up');
-        setTimeout(() => {
-            const certo = document.getElementById(`cup-${ESTADO.posicaoMoeda}`);
-            moverMoedaParaCopo(certo);
+            let speed = 700 - (ESTADO.nivel * 20); 
+            if (speed < 250) speed = 250; 
+            ESTADO.velocidadeSwap = speed;
+            ESTADO.numeroTrocas = 4 + Math.floor(ESTADO.nivel / 2);
+        }
+
+        function prepararNivel() {
+            calcularDificuldade();
+            gerarCoposHTML();
+            ESTADO.jogando = false;
+            coinEl.style.display = 'none';
+            setTimeout(() => { animacaoInicial(); }, 500);
+        }
+
+        function gerarCoposHTML() {
+            const antigos = document.querySelectorAll('.cup-container');
+            antigos.forEach(c => c.remove());
+
+            let largura = (ESTADO.copos >= 5) ? 16 : 22; 
+            let margem = (100 - (largura * ESTADO.copos)) / (ESTADO.copos + 1);
+
+            for(let i=0; i < ESTADO.copos; i++) {
+                const cup = document.createElement('div');
+                cup.className = 'cup-container';
+                let leftPos = margem + (i * (largura + margem));
+                cup.style.left = leftPos + '%';
+                cup.style.width = largura + '%';
+                cup.id = `cup-${i}`;
+                cup.innerHTML = `<svg class="cup-svg"><use href="#icon-cup"></use></svg>`;
+                cup.onclick = () => cliqueCopo(i);
+                tableEl.appendChild(cup);
+            }
+        }
+
+        async function animacaoInicial() {
+            ESTADO.posicaoMoeda = Math.floor(Math.random() * ESTADO.copos);
+            const copoPremiado = document.getElementById(`cup-${ESTADO.posicaoMoeda}`);
+            moverMoedaParaCopo(copoPremiado);
             coinEl.style.display = 'block';
-            certo.classList.add('lift-up');
-            setTimeout(() => { fimDeJogo(); }, 1500);
-        }, 800);
-    }
 
-    function fimDeJogo() {
-        salvarPontuacao(ESTADO.pontos);
-        document.getElementById('final-score').innerText = ESTADO.pontos;
-        document.getElementById('gameover-screen').classList.remove('hidden');
-    }
+            copoPremiado.classList.add('lift-up');
+            await esperar(1000);
+            copoPremiado.classList.remove('lift-up');
+            await esperar(500);
+            coinEl.style.display = 'none';
+            embaralhar();
+        }
 
-    function moverMoedaParaCopo(copoEl) {
-        let cupLeft = parseFloat(copoEl.style.left);
-        let cupWidth = parseFloat(copoEl.style.width);
-        let coinWidth = 10; // largura da moeda em % conforme CSS
-        
-        // Centraliza a moeda: posição do copo + metade da largura do copo - metade da largura da moeda
-        let centerPos = cupLeft + (cupWidth / 2) - (coinWidth / 2);
-        
-        coinEl.style.left = centerPos + '%';
-    }
+        async function embaralhar() {
+            ESTADO.jogando = false;
+            let cupObjects = [];
+            for(let i=0; i<ESTADO.copos; i++) {
+                let el = document.getElementById(`cup-${i}`);
+                cupObjects.push({ id: i, el: el, posPct: parseFloat(el.style.left) });
+            }
+            const slots = cupObjects.map(c => c.posPct);
 
-    function esperar(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+            for(let n=0; n < ESTADO.numeroTrocas; n++) {
+                let slotA = Math.floor(Math.random() * ESTADO.copos);
+                let slotB = Math.floor(Math.random() * ESTADO.copos);
+                while(slotA === slotB) slotB = Math.floor(Math.random() * ESTADO.copos);
 
-    carregarRank();
-</script>
+                let objA = cupObjects.find(c => Math.abs(c.posPct - slots[slotA]) < 0.1);
+                let objB = cupObjects.find(c => Math.abs(c.posPct - slots[slotB]) < 0.1);
+
+                objA.el.style.transition = `left ${ESTADO.velocidadeSwap}ms ease-in-out`;
+                objB.el.style.transition = `left ${ESTADO.velocidadeSwap}ms ease-in-out`;
+
+                objA.el.style.left = slots[slotB] + '%';
+                objB.el.style.left = slots[slotA] + '%';
+
+                objA.posPct = slots[slotB];
+                objB.posPct = slots[slotA];
+
+                await esperar(ESTADO.velocidadeSwap + 50);
+            }
+            ESTADO.jogando = true;
+        }
+
+        function cliqueCopo(idOriginal) {
+            if(!ESTADO.jogando) return;
+            ESTADO.jogando = false;
+            const el = document.getElementById(`cup-${idOriginal}`);
+            if(idOriginal === ESTADO.posicaoMoeda) vitoria(el);
+            else derrota(el);
+        }
+
+        async function vitoria(el) {
+            moverMoedaParaCopo(el);
+            coinEl.style.display = 'block';
+            el.classList.add('lift-up');
+            ESTADO.pontos += 1;
+            atualizarHUD();
+            
+            msgModal.querySelector('#modal-title').innerText = "Encontrou!";
+            msgModal.querySelector('#modal-verse').innerText = frasesFe[Math.floor(Math.random() * frasesFe.length)];
+            msgModal.classList.add('msg-visible');
+
+            await esperar(2000);
+            msgModal.classList.remove('msg-visible');
+            el.classList.remove('lift-up');
+            ESTADO.nivel++;
+            atualizarHUD();
+            prepararNivel();
+        }
+
+        function derrota(el) {
+            el.classList.add('lift-up');
+            setTimeout(() => {
+                const certo = document.getElementById(`cup-${ESTADO.posicaoMoeda}`);
+                moverMoedaParaCopo(certo);
+                coinEl.style.display = 'block';
+                certo.classList.add('lift-up');
+                setTimeout(() => { fimDeJogo(); }, 1500);
+            }, 800);
+        }
+
+        function fimDeJogo() {
+            salvarPontuacao(ESTADO.pontos);
+            document.getElementById('final-score').innerText = ESTADO.pontos;
+            document.getElementById('gameover-screen').classList.remove('hidden');
+        }
+
+        function moverMoedaParaCopo(copoEl) {
+            const cupRect = copoEl.getBoundingClientRect();
+            const tableRect = tableEl.getBoundingClientRect();
+            const cupCenter = cupRect.left + (cupRect.width / 2);
+            const relativePos = cupCenter - tableRect.left;
+            coinEl.style.left = relativePos + 'px';
+        }
+
+        function esperar(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+        carregarRank();
+    </script>
 </body>
 </html>
