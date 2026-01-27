@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>La Dracma Perdida</title>
     <style>
-        /* --- ESTILOS GENERALES Y ESCENARIO --- */
+        /* --- ESTILOS GERAIS E CENÁRIO --- */
         :root {
             --mesa-cor: #8B4513;
             --toalha-cor: #a01818;
@@ -40,7 +40,7 @@
 
         .hidden { display: none !important; }
 
-        /* --- UI DEL JUEGO --- */
+        /* --- UI DO JOGO --- */
         #game-area {
             position: relative;
             width: 100%;
@@ -127,7 +127,7 @@
             transform: translateX(-50%); 
         }
 
-        /* --- BOTONES Y TEXTOS --- */
+        /* --- BOTÕES E TEXTOS --- */
         h1 { color: var(--ouro); text-shadow: 2px 2px 0 #000; margin-bottom: 10px; text-align: center;}
         h2 { font-size: 1.5rem; margin-bottom: 20px; text-align: center; color: #eee;}
         
@@ -171,6 +171,14 @@
             z-index: 101;
         }
         .rank-box h3 { margin-top: 0; color: var(--ouro); text-align: center; font-size: 1.1rem; }
+
+        /* AJUSTE: ESPACIAMIENTO EN EL RANKING */
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 2px 0;
+        }
 
         .lift-up { transform: translateY(-110px) !important; }
         
@@ -245,7 +253,7 @@
 
     <div id="menu-screen" class="screen">
         <h1>La Dracma Perdida</h1>
-        <p>¡Ayuda a encontrar la moneda perdida! Presta mucha atención a los vasos y demuestra que eres un excelente buscador.</p>
+        <p>¡Ayuda a encontrar la moneda que se perdió! Presta mucha atención a las vasijas y demuestra que eres un excelente buscador.</p>
         <button class="btn" onclick="mostrarBriefing()">Comenzar Búsqueda</button>
         <div class="rank-box">
             <h3>Mejores Buscadores</h3>
@@ -255,17 +263,17 @@
 
     <div id="briefing-screen" class="screen hidden">
         <h2 style="color:var(--ouro)">¿Dónde está el Tesoro?</h2>
-        <p>"Alegraos conmigo, porque he hallado la dracma que había perdido." (Lucas 15:9)</p>
-        <p style="background:none; border:none; margin-top:10px">La moneda se esconderá bajo uno de los vasos. ¡No le quites el ojo de encima!</p>
+        <p>"Gozaos conmigo, porque he hallado la dracma que había perdido." (Lucas 15:9)</p>
+        <p style="background:none; border:none; margin-top:10px">La moneda se esconderá bajo una de las vasijas. ¡No le quites el ojo de encima!</p>
         <button class="btn" onclick="iniciarJogo()">¡Estoy Listo!</button>
     </div>
 
     <div id="gameover-screen" class="screen hidden">
         <h1 style="color: #ffb86b">¡No fue esta vez!</h1>
         <div style="background: rgba(0,0,0,0.6); padding: 15px; border-radius: 15px; border: 1px solid #ffb86b; margin-bottom: 10px;">
-            <h2 style="margin:0">Dracmas Encontradas: <span id="final-score">0</span></h2>
+            <h2 style="margin:0">Dracmas Halladas: <span id="final-score">0</span></h2>
         </div>
-        <p id="gameover-msg">¡No te rindas! Quien busca con fe y atención siempre acaba encontrando.</p>
+        <p id="gameover-msg">¡No te rindas! Quien busca con fe y atención siempre termina encontrando.</p>
         <button class="btn" onclick="voltarMenu()">Intentar de Nuevo</button>
     </div>
 
@@ -319,7 +327,7 @@
                 return;
             }
             rank.slice(0, 5).forEach((r, i) => {
-                listEl.innerHTML += `<div class="rank-item" style="display:flex; justify-content:space-between; width:100%; margin: 2px 0;"><span>${i+1}º Lugar</span><span>${r} pts</span></div>`;
+                listEl.innerHTML += `<div class="rank-item"><span>${i+1}º Lugar</span> <span>${r} pts</span></div>`;
             });
         }
 
