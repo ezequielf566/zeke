@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Lost Drachma</title>
+    <title>The Lost Coin</title>
     <style>
-        /* --- GENERAL STYLES AND SCENERY --- */
+        /* --- ESTILOS GERAIS E CENÁRIO --- */
         :root {
             --mesa-cor: #8B4513;
             --toalha-cor: #a01818;
@@ -40,7 +40,7 @@
 
         .hidden { display: none !important; }
 
-        /* --- GAME UI --- */
+        /* --- UI DO JOGO --- */
         #game-area {
             position: relative;
             width: 100%;
@@ -94,7 +94,7 @@
             opacity: 0.9;
         }
 
-        /* --- OBJECTS --- */
+        /* --- OBJETOS --- */
         .cup-container {
             position: absolute;
             bottom: 100%;
@@ -127,7 +127,7 @@
             transform: translateX(-50%); 
         }
 
-        /* --- BUTTONS AND TEXTS --- */
+        /* --- BOTÕES E TEXTOS --- */
         h1 { color: var(--ouro); text-shadow: 2px 2px 0 #000; margin-bottom: 10px; text-align: center;}
         h2 { font-size: 1.5rem; margin-bottom: 20px; text-align: center; color: #eee;}
         
@@ -171,6 +171,13 @@
             z-index: 101;
         }
         .rank-box h3 { margin-top: 0; color: var(--ouro); text-align: center; font-size: 1.1rem; }
+
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 2px 0;
+        }
 
         .lift-up { transform: translateY(-110px) !important; }
         
@@ -244,11 +251,11 @@
     </svg>
 
     <div id="menu-screen" class="screen">
-        <h1>The Lost Drachma</h1>
-        <p>Help find the coin that went missing! Pay close attention to the vessels and prove you are an excellent seeker.</p>
+        <h1>The Lost Coin</h1>
+        <p>Help find the missing coin! Pay close attention to the vessels and show that you are an excellent seeker.</p>
         <button class="btn" onclick="mostrarBriefing()">Start Search</button>
         <div class="rank-box">
-            <h3>Top Seekers</h3>
+            <h3>Best Seekers</h3>
             <div id="rank-list"></div>
         </div>
     </div>
@@ -263,16 +270,16 @@
     <div id="gameover-screen" class="screen hidden">
         <h1 style="color: #ffb86b">Not this time!</h1>
         <div style="background: rgba(0,0,0,0.6); padding: 15px; border-radius: 15px; border: 1px solid #ffb86b; margin-bottom: 10px;">
-            <h2 style="margin:0">Drachmas Found: <span id="final-score">0</span></h2>
+            <h2 style="margin:0">Coins Found: <span id="final-score">0</span></h2>
         </div>
-        <p id="gameover-msg">Don't give up! Whoever seeks with faith and focus always finds what they're looking for.</p>
+        <p id="gameover-msg">Don't give up! Those who seek with faith and focus will always find it.</p>
         <button class="btn" onclick="voltarMenu()">Try Again</button>
     </div>
 
     <div id="game-area">
         <div id="hud">
             <span>Level: <span id="level-display">1</span></span>
-            <span>Drachmas: <span id="score-display">0</span></span>
+            <span>Coins: <span id="score-display">0</span></span>
         </div>
         <div id="message-modal">
             <h2 id="modal-title" style="margin:0; color: #2E7D32;">You Found It!</h2>
@@ -298,12 +305,12 @@
         };
 
         const frasesFe = [
-            "Great job! You found what was lost!",
+            "Congratulations! You found what was lost!",
             "What a joy! Shall we look for the next one?",
             "You have eagle eyes!",
-            "There is a big party in heaven!",
-            "Well done! Perfect focus!",
-            "Wow! A master treasure hunter!"
+            "There is great celebration in heaven!",
+            "Well done! Perfect attention!",
+            "Wow! A true master of treasures!"
         ];
 
         const tableEl = document.getElementById('table');
@@ -315,11 +322,11 @@
             const listEl = document.getElementById('rank-list');
             listEl.innerHTML = '';
             if(rank.length === 0) {
-                listEl.innerHTML = '<div class="rank-item"><span>No records yet</span></div>';
+                listEl.innerHTML = '<div class="rank-item"><span>No records</span></div>';
                 return;
             }
             rank.slice(0, 5).forEach((r, i) => {
-                listEl.innerHTML += `<div class="rank-item" style="display:flex; justify-content:space-between; width:100%; margin: 2px 0;"><span>Rank ${i+1}</span><span>${r} pts</span></div>`;
+                listEl.innerHTML += `<div class="rank-item"><span>${i+1}st Place</span> <span>${r} pts</span></div>`;
             });
         }
 
@@ -454,7 +461,7 @@
             ESTADO.pontos += 1;
             atualizarHUD();
             
-            msgModal.querySelector('#modal-title').innerText = "You Found It!";
+            msgModal.querySelector('#modal-title').innerText = "Found It!";
             msgModal.querySelector('#modal-verse').innerText = frasesFe[Math.floor(Math.random() * frasesFe.length)];
             msgModal.classList.add('msg-visible');
 
