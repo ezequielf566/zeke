@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-us">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Saga of Joseph - Final Version</title>
+    <title>Joseph's Saga - Final Version</title>
     <style>
         :root { --gold: #f1c40f; --neon-green: #2ecc71; --red: #ff4757; }
         body, html { 
@@ -14,16 +14,17 @@
 
         #game-container {
             width: 100vw; height: 100vh;
-            background: url('../fundo.jpg') center/cover no-repeat;
+            background: url('fundo.jpg') center/cover no-repeat;
             position: relative; overflow: hidden;
             display: none; touch-action: none;
             transition: filter 1.2s linear;
             padding-bottom: env(safe-area-inset-bottom);
         }
         
+        /* RESPONSIVE MENU */
         #main-menu {
             width: 100vw; height: 100vh;
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('../fundo.jpg') center/cover;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo.jpg') center/cover;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             position: absolute; z-index: 500; text-align: center;
             padding-bottom: 40px;
@@ -39,6 +40,7 @@
         .menu-btn:hover { background: var(--gold); color: black; }
         .btn-survival { border-color: var(--neon-green); }
 
+        /* HUD AND UI */
         #ui-header { position: absolute; top: 15px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 100; pointer-events: none; }
         #hud { width: 90%; display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
         .hud-item {
@@ -51,9 +53,47 @@
         #progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #1e8449, #f1c40f); border-radius: 50px; transition: width 0.5s linear; }
         #walker-container { position: absolute; left: 0%; top: 50%; transform: translate(-50%, -50%); width: 35px; height: 35px; transition: left 0.5s linear; }
 
+        /* --- ORIENTATION WARNING --- */
+        #orientation-warning {
+            display: none; 
+            position: absolute;
+            top: 140px; 
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.85);
+            color: #2c1e14;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 400;
+            pointer-events: none;
+            white-space: nowrap;
+            animation: floatWarn 2s ease-in-out infinite;
+        }
+        @keyframes floatWarn { 0%, 100% {transform: translate(-50%, 0);} 50% {transform: translate(-50%, -5px);} }
+        
+        @media (orientation: portrait) {
+            #orientation-warning { display: block; }
+        }
+
+        /* CHARACTERS AND ELEMENTS */
         #player { width: 110px; height: 110px; position: absolute; left: 12%; z-index: 50; pointer-events: none; }
         #chao { position: absolute; bottom: 0; width: 100%; height: 140px; background: linear-gradient(to bottom, #1e3d1a, #2c1e14); z-index: 10; }
-        #arca-final { position: absolute; bottom: 80px; right: -1000px; width: 500px; z-index: 40; transition: right 4s ease-out; }
+        
+        /* --- RESPONSIVE ARK --- */
+        #arca-final { 
+            position: absolute; 
+            bottom: 80px; 
+            right: -1000px; 
+            z-index: 40; 
+            transition: right 4s ease-out;
+            width: auto;
+            height: auto;
+            max-width: 45vw;  
+            max-height: 50vh; 
+        }
 
         .rock { position: absolute; width: 55px; height: 55px; background: #333; border-radius: 12px; z-index: 30; }
         .rock-glow { background: var(--gold) !important; box-shadow: 0 0 25px var(--gold); }
@@ -69,6 +109,7 @@
             display: none; touch-action: none;
         }
 
+        /* LANDSCAPE ADJUSTMENTS */
         @media (max-height: 500px) {
             #player { width: 80px; height: 80px; }
             #chao { height: 90px; }
@@ -86,17 +127,19 @@
 <body>
 
 <div id="main-menu">
-    <img src="../animal.gif" id="menu-logo">
+    <img src="animal.gif" id="menu-logo">
     <h1 style="color: var(--gold); margin-top: 0; margin-bottom: 20px;">JOSEPH'S SAGA</h1>
     <div class="menu-group">
         <button class="menu-btn" onclick="startGame('jornada', 'normal')">NORMAL</button>
         <button class="menu-btn" onclick="startGame('jornada', 'medio')">MEDIUM</button>
         <button class="menu-btn" onclick="startGame('jornada', 'dificil')">HARD</button>
-        <button class="menu-btn btn-survival" onclick="startGame('sobrevivencia')">SCORE BATTLE</button>
+        <button class="menu-btn btn-survival" onclick="startGame('sobrevivencia')">SCORE ATTACK</button>
     </div>
 </div>
 
 <div id="game-container">
+    <div id="orientation-warning">📱 Best played in landscape mode!</div>
+
     <button id="pause-btn" onclick="togglePause(event)">||</button>
     <button id="jump-btn">JUMP</button>
     <canvas id="chuva" style="position: absolute; top:0; left:0; z-index:20; pointer-events:none;"></canvas>
@@ -109,13 +152,15 @@
         </div>
         <div id="progress-wrapper">
             <div id="progress-fill"></div>
-            <div id="walker-container"><img src="../animal.gif" style="width: 100%;"></div>
+            <div id="walker-container"><img src="animal.gif" style="width: 100%;"></div>
         </div>
     </div>
 
     <div id="story-msg"></div>
-    <div id="player"><img src="../animal.gif" style="width:100%;"></div>
-    <img src="../arca.png" id="arca-final">
+    <div id="player"><img src="animal.gif" style="width:100%;"></div>
+    
+    <img src="arca.png" id="arca-final">
+    
     <div id="chao"></div>
 
     <div id="win-screen" class="overlay">
@@ -124,7 +169,7 @@
     </div>
 
     <div id="lose-screen" class="overlay">
-        <h1 style="color: var(--red);">END OF THE JOURNEY</h1>
+        <h1 style="color: var(--red);">JOURNEY'S END</h1>
         <button class="menu-btn" onclick="location.reload()">TRY AGAIN</button>
     </div>
 </div>
@@ -144,9 +189,9 @@
     const frases = [
         { p: 1, t: "The adventure begins! Guide Joseph to the Ark." },
         { p: 15, t: "Don't waste time! Every jump brings you closer." },
-        { p: 35, t: "Keep going. The Ark is getting closer!" },
-        { p: 55, t: "Night has fallen... just a little further!" },
-        { p: 75, t: "I can see the Ark! Don't give up now!" },
+        { p: 35, t: "Keep going. The Ark is getting nearer." },
+        { p: 55, t: "Night has fallen… just a little further!" },
+        { p: 75, t: "The Ark is in sight! Don't give up now!" },
         { p: 92, t: "FINAL STRETCH! ENTER THE ARK!" }
     ];
 
@@ -203,7 +248,13 @@
 
     function handleJump() {
         if(!gameActive || isPaused || jumps >= 2) return;
-        velocityY = 16;
+        
+        if (jumps === 0) {
+            velocityY = 14;
+        } else {
+            velocityY = 10;
+        }
+        
         jumps++;
     }
 
