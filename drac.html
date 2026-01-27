@@ -173,6 +173,14 @@
         }
         .rank-box h3 { margin-top: 0; color: var(--ouro); text-align: center; font-size: 1.1rem; }
 
+        /* AJUSTE: ESPAÇAMENTO NO PLACAR */
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 2px 0;
+        }
+
         .lift-up { transform: translateY(-110px) !important; }
         
         /* AJUSTE NO BALÃO DE VITÓRIA (DRACMA) */
@@ -289,8 +297,6 @@
     </div>
 
     <script>
-        // O restante do seu Script permanece o mesmo, 
-        // as mudanças de estilo acima já resolvem a aparência.
         const ESTADO = {
             nivel: 1,
             pontos: 0,
@@ -323,7 +329,8 @@
                 return;
             }
             rank.slice(0, 5).forEach((r, i) => {
-                listEl.innerHTML += `<div class="rank-item"><span>${i+1}º Lugar</span><span>${r} pts</span></div>`;
+                /* ADICIONADO ESPAÇO ENTRE OS SPANS */
+                listEl.innerHTML += `<div class="rank-item"><span>${i+1}º Lugar</span> <span>${r} pts</span></div>`;
             });
         }
 
