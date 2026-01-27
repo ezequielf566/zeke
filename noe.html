@@ -3,364 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Runner da Arca - Versão Ajustada</title>
+    <title>A Saga de José - Versão Final Ajustada</title>
     <style>
-        /* --- ESTILOS GERAIS E CENÁRIO --- */
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: linear-gradient(to bottom, #87CEEB, #E0F7FA); /* Céu */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            touch-action: manipulation; /* Melhora resposta ao toque */
+        :root { --gold: #f1c40f; --neon-green: #2ecc71; --red: #ff4757; }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background: #000; font-family: 'Georgia', serif;
+            user-select: none; -webkit-user-select: none;
         }
 
         #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
+            width: 100vw; height: 100vh;
+            background: url('fundo.jpg') center/cover no-repeat;
+            position: relative; overflow: hidden;
+            display: none; touch-action: none;
+            transition: filter 1.2s linear;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        /* MENU RESPONSIVO */
+        #main-menu {
+            width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo.jpg') center/cover;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: absolute; z-index: 500; text-align: center;
+            padding-bottom: 40px;
+        }
+        #menu-logo { width: 160px; margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--gold)); }
+        .menu-group { display: flex; flex-direction: column; gap: 12px; width: 280px; }
+
+        .menu-btn {
+            padding: 15px; border-radius: 50px; border: 2px solid var(--gold);
+            background: rgba(0,0,0,0.8); color: white; font-weight: bold; cursor: pointer;
+            transition: 0.3s; font-size: 16px;
+        }
+        .menu-btn:hover { background: var(--gold); color: black; }
+        .btn-survival { border-color: var(--neon-green); }
+
+        /* HUD E UI */
+        #ui-header { position: absolute; top: 15px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 100; pointer-events: none; }
+        #hud { width: 90%; display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
+        .hud-item {
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            padding: 8px 15px; border-radius: 8px; border: 1px solid var(--gold);
+            color: white; font-weight: bold; font-size: 14px; min-width: 80px; text-align: center;
         }
 
-        /* Chão */
-        #ground {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 60px; /* Altura do chão fixo */
-            background-color: #5D4037;
-            border-top: 5px solid #3E2723;
-            z-index: 10;
-        }
+        #progress-wrapper { width: 80%; height: 12px; background: rgba(0,0,0,0.7); border-radius: 50px; border: 1px solid rgba(255,255,255,0.3); position: relative; margin-top: 10px; }
+        #progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #1e8449, #f1c40f); border-radius: 50px; transition: width 0.5s linear; }
+        #walker-container { position: absolute; left: 0%; top: 50%; transform: translate(-50%, -50%); width: 35px; height: 35px; transition: left 0.5s linear; }
 
-        /* --- AVISO DE ORIENTAÇÃO (NOVIDADE) --- */
-        #orientation-badge {
+        /* --- AVISO DE ORIENTAÇÃO (NOVO) --- */
+        #orientation-warning {
             display: none; /* Oculto por padrão */
             position: absolute;
-            top: 15px;
+            top: 140px; /* Logo abaixo do HUD */
             left: 50%;
             transform: translateX(-50%);
-            background-color: rgba(255, 255, 255, 0.85);
-            color: #333;
-            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.85);
+            color: #2c1e14;
+            padding: 8px 20px;
             border-radius: 20px;
             font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            z-index: 1000;
-            pointer-events: none; /* Permite clicar através dele */
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 400;
+            pointer-events: none;
             white-space: nowrap;
-            animation: fadeIn 0.5s ease;
+            animation: floatWarn 2s ease-in-out infinite;
         }
+        @keyframes floatWarn { 0%, 100% {transform: translate(-50%, 0);} 50% {transform: translate(-50%, -5px);} }
         
-        #orientation-badge span {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Mostra o aviso apenas se a altura for maior que a largura (Retrato) */
+        /* Só mostra se a tela for "retrato" (em pé) */
         @media (orientation: portrait) {
-            #orientation-badge {
-                display: block;
-            }
+            #orientation-warning { display: block; }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translate(-50%, -10px); }
-            to { opacity: 1; transform: translate(-50%, 0); }
-        }
-
-        /* --- OBJETOS DO JOGO --- */
+        /* PERSONAGENS E ELEMENTOS */
+        #player { width: 110px; height: 110px; position: absolute; left: 12%; z-index: 50; pointer-events: none; }
+        #chao { position: absolute; bottom: 0; width: 100%; height: 140px; background: linear-gradient(to bottom, #1e3d1a, #2c1e14); z-index: 10; }
         
-        /* Personagem */
-        #player {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            background-color: #FF5722; /* Cor provisória (substituir por sprite se tiver) */
-            bottom: 60px; /* Começa acima do chão */
-            left: 50px;
-            border-radius: 5px;
-            z-index: 20;
-        }
-
-        /* A Arca (CORREÇÃO DE RESPONSIVIDADE) */
-        #ark {
-            position: absolute;
-            bottom: 65px; /* Levemente acima do chão */
-            right: 10%;   /* Fica ao fundo ou na meta */
-            z-index: 5;
-            opacity: 0.9;
+        /* --- ARCA RESPONSIVA (CORREÇÃO) --- */
+        #arca-final { 
+            position: absolute; 
+            bottom: 80px; 
+            right: -1000px; 
+            z-index: 40; 
+            transition: right 4s ease-out;
             
-            /* Lógica Responsiva Importante: */
-            width: auto;       /* Largura automática baseada na altura */
-            max-width: 35vw;   /* Nunca ocupa mais que 35% da largura da tela */
-            height: auto;      
-            max-height: 40vh;  /* Nunca ocupa mais que 40% da altura da tela */
-        }
-        
-        /* Caso não tenha a imagem real, isso é um placeholder visual da arca */
-        .ark-placeholder {
-            width: 200px;
-            height: 120px;
-            background: #795548;
-            border-radius: 10px 10px 40px 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+            /* Ajuste para não ficar gigante */
+            width: auto;
+            height: auto;
+            max-width: 45vw;  /* Máximo 45% da largura da tela */
+            max-height: 50vh; /* Máximo 50% da altura da tela */
         }
 
-        /* Obstáculos */
-        .obstacle {
-            position: absolute;
-            bottom: 60px;
-            width: 40px;
-            height: 40px;
-            background-color: #2E7D32; /* Arbusto/Pedra */
-            border-radius: 5px;
-            left: 100vw; /* Começa fora da tela */
-            z-index: 15;
+        .rock { position: absolute; width: 55px; height: 55px; background: #333; border-radius: 12px; z-index: 30; }
+        .rock-glow { background: var(--gold) !important; box-shadow: 0 0 25px var(--gold); }
+
+        #story-msg { position: absolute; top: 25%; width: 100%; text-align: center; color: white; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 5px #000; opacity: 0; z-index: 150; transition: opacity 0.5s; pointer-events:none; }
+        #story-msg.active { opacity: 1; }
+
+        #pause-btn { position: absolute; top: 80px; right: 5%; width: 45px; height: 45px; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; border-radius: 50%; z-index: 200; cursor: pointer; }
+        #jump-btn {
+            position: absolute; right: 5%; bottom: 170px; z-index: 200;
+            padding: 18px 25px; border-radius: 20px; border: 3px solid var(--gold);
+            background: rgba(0,0,0,0.6); color: white; font-weight: 800; font-size: 18px;
+            display: none; touch-action: none;
         }
 
-        /* --- INTERFACE DE PONTUAÇÃO --- */
-        #score-board {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: #333;
-            font-size: 20px;
-            font-weight: bold;
-            background: rgba(255,255,255,0.6);
-            padding: 5px 10px;
-            border-radius: 8px;
-            z-index: 100;
+        /* AJUSTES LANDSCAPE */
+        @media (max-height: 500px) {
+            #player { width: 80px; height: 80px; }
+            #chao { height: 90px; }
+            #jump-btn { bottom: 100px; right: 3%; padding: 12px 20px; }
+            #menu-logo { width: 100px; margin-bottom: 10px; }
+            .menu-group { flex-direction: row; flex-wrap: wrap; width: 95%; justify-content: center; gap: 8px; }
+            .menu-btn { padding: 12px; font-size: 13px; min-width: 130px; }
+            #story-msg { font-size: 16px; }
+            #main-menu { padding-bottom: 20px; }
         }
 
-        #game-over {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            z-index: 200;
-        }
-
-        button {
-            background: #FF5722;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 1000; background: rgba(0,0,0,0.9); color: white; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="orientation-badge">
-            <span>📱 Melhor experiência com a tela deitada</span>
+<div id="main-menu">
+    <img src="animal.gif" id="menu-logo">
+    <h1 style="color: var(--gold); margin-top: 0; margin-bottom: 20px;">A SAGA DE JOSÉ</h1>
+    <div class="menu-group">
+        <button class="menu-btn" onclick="startGame('jornada', 'normal')">NORMAL</button>
+        <button class="menu-btn" onclick="startGame('jornada', 'medio')">MÉDIO</button>
+        <button class="menu-btn" onclick="startGame('jornada', 'dificil')">DIFÍCIL</button>
+        <button class="menu-btn btn-survival" onclick="startGame('sobrevivencia')">PONTUAÇÃO</button>
+    </div>
+</div>
+
+<div id="game-container">
+    <div id="orientation-warning">📱 Melhor jogado com a tela deitada!</div>
+
+    <button id="pause-btn" onclick="togglePause(event)">||</button>
+    <button id="jump-btn">PULAR</button>
+    <canvas id="chuva" style="position: absolute; top:0; left:0; z-index:20; pointer-events:none;"></canvas>
+    
+    <div id="ui-header">
+        <div id="hud">
+            <div id="vidas-box" class="hud-item">❤❤❤</div>
+            <div id="dist-box" class="hud-item" style="color: var(--gold);">0m</div>
+            <div id="timer-box" class="hud-item">00:00</div>
         </div>
-
-        <div id="score-board">Pontos: <span id="score">0</span></div>
-        
-        <div id="player"></div>
-        
-        <img id="ark" src="arca.png" alt="Arca de Noé" onerror="this.style.display='none'; document.getElementById('ark-place').style.display='flex'">
-        <div id="ark-place" class="ark-placeholder" style="display:none; position:absolute; bottom:65px; right:10%;">ARCA</div>
-
-        <div id="ground"></div>
-
-        <div id="game-over">
-            <h2>Fim de Jogo!</h2>
-            <p>Pontuação: <span id="final-score">0</span></p>
-            <button onclick="resetGame()">Jogar Novamente</button>
+        <div id="progress-wrapper">
+            <div id="progress-fill"></div>
+            <div id="walker-container"><img src="animal.gif" style="width: 100%;"></div>
         </div>
     </div>
 
-    <script>
-        // --- CONFIGURAÇÕES E VARIÁVEIS ---
-        const player = document.getElementById('player');
-        const gameContainer = document.getElementById('game-container');
-        const scoreElement = document.getElementById('score');
-        const gameOverScreen = document.getElementById('game-over');
-        const finalScoreElement = document.getElementById('final-score');
+    <div id="story-msg"></div>
+    <div id="player"><img src="animal.gif" style="width:100%;"></div>
+    
+    <img src="arca.png" id="arca-final">
+    
+    <div id="chao"></div>
 
-        let isGameOver = false;
-        let score = 0;
+    <div id="win-screen" class="overlay">
+        <h1 style="color: var(--gold);">MISSÃO CUMPRIDA!</h1>
+        <button class="menu-btn" onclick="location.reload()">VOLTAR AO MENU</button>
+    </div>
+
+    <div id="lose-screen" class="overlay">
+        <h1 style="color: var(--red);">FIM DA JORNADA</h1>
+        <button class="menu-btn" onclick="location.reload()">TENTAR NOVAMENTE</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('chuva'), ctx = canvas.getContext('2d');
+    const player = document.getElementById('player'), container = document.getElementById('game-container');
+    const jumpBtn = document.getElementById('jump-btn'), storyMsg = document.getElementById('story-msg');
+    const arca = document.getElementById('arca-final');
+    
+    let gameActive = false, isPaused = false, vidas = 3;
+    let playerY = 0, velocityY = 0, jumps = 0, gravity = 0.8;
+    let obstacles = [], speed = 10, distance = 0, timeElapsed = 0;
+    let totalDuration = 150, lastObstacleTime = 0, gameMode = 'jornada';
+    let brightnessVal = 1;
+
+    const frases = [
+        { p: 1, t: "A aventura começou! Leve o José até a Arca." },
+        { p: 15, t: "Sem perder tempo! Cada salto te leva mais perto." },
+        { p: 35, t: "Continue firme. A Arca está cada vez mais perto." },
+        { p: 55, t: "A noite caiu… falta pouco para chegar!" },
+        { p: 75, t: "Já dá pra ver a Arca! Não desista agora!" },
+        { p: 92, t: "ÚLTIMA RAMPA! ENTRE NA ARCA!" }
+    ];
+
+    if ('ontouchstart' in window) jumpBtn.style.display = "block";
+
+    function startGame(mode, diff) {
+        gameMode = mode;
+        if(diff === 'medio') { speed = 13; totalDuration = 120; }
+        if(diff === 'dificil') { speed = 16; totalDuration = 90; }
         
-        // Variáveis de Física do Pulo
-        let playerBottom = 60; // Posição Y inicial (igual à altura do ground)
-        let gravity = 0.9;
-        let velocityY = 0;
-        let isJumping = false;
-        let jumpsLeft = 2; // Controle de quantos pulos restam
+        document.getElementById('main-menu').style.display = 'none';
+        container.style.display = 'block';
+        gameActive = true;
+        resizeCanvas();
+        requestAnimationFrame(update);
+        setInterval(tick, 1000);
+    }
 
-        // FORÇAS DO PULO (Ajuste "Suave" aqui)
-        const JUMP_STRENGTH = 14;       // Força do 1º pulo (Alto)
-        const DOUBLE_JUMP_STRENGTH = 9; // Força do 2º pulo (Suave/Corretivo)
+    function tick() {
+        if(!gameActive || isPaused) return;
+        timeElapsed++;
+        let percent = (timeElapsed / totalDuration) * 100;
+        
+        document.getElementById('progress-fill').style.width = percent + "%";
+        document.getElementById('walker-container').style.left = percent + "%";
+        
+        frases.forEach(f => { if(Math.floor(percent) === f.p) showStory(f.t); });
+        
+        let brightnessFactor = Math.abs((percent - 50) / 50);
+        brightnessVal = 0.35 + (brightnessFactor * 0.65);
+        container.style.filter = `brightness(${brightnessVal})`;
 
-        let obstacleTimerId;
-        let gameLoopId;
+        if(gameMode === 'jornada') {
+            let remain = Math.max(0, totalDuration - timeElapsed);
+            document.getElementById('timer-box').innerText = `${Math.floor(remain/60)}:${(remain%60).toString().padStart(2,'0')}`;
+            if(timeElapsed >= totalDuration) finishGame();
+        } else {
+            document.getElementById('timer-box').innerText = "∞";
+            speed += 0.05;
+        }
+    }
 
-        // --- CONTROLES ---
-        function handleInput(e) {
-            if (e.type === 'keydown' && e.code !== 'Space' && e.code !== 'ArrowUp') return;
-            if (isGameOver) {
-                // Opcional: Reiniciar com espaço se estiver na tela de game over
-                return;
+    function showStory(txt) {
+        storyMsg.innerText = txt;
+        storyMsg.classList.add('active');
+        setTimeout(() => storyMsg.classList.remove('active'), 3000);
+    }
+
+    function togglePause(e) {
+        e.stopPropagation();
+        isPaused = !isPaused;
+        document.getElementById('pause-btn').innerText = isPaused ? "▶" : "||";
+    }
+
+    // --- LÓGICA DO PULO AJUSTADA ---
+    function handleJump() {
+        if(!gameActive || isPaused || jumps >= 2) return;
+        
+        if (jumps === 0) {
+            // Primeiro pulo (Força total)
+            velocityY = 16;
+        } else {
+            // Segundo pulo (Mais suave, apenas para correção)
+            velocityY = 10;
+        }
+        
+        jumps++;
+    }
+
+    function update(timestamp) {
+        if(!gameActive) return;
+        if(!isPaused) {
+            velocityY -= gravity;
+            playerY += velocityY;
+            if (playerY <= 0) { playerY = 0; velocityY = 0; jumps = 0; }
+
+            const hChao = document.getElementById('chao').offsetHeight;
+            player.style.bottom = (hChao + playerY) + 'px';
+
+            distance += (speed / 10);
+            document.getElementById('dist-box').innerText = Math.floor(distance) + "m";
+
+            if (timestamp - lastObstacleTime > (2000 - speed * 50)) {
+                spawnObstacle();
+                lastObstacleTime = timestamp;
             }
-            performJump();
+            moveObstacles();
+            drawRain();
         }
+        requestAnimationFrame(update);
+    }
 
-        // Suporte a Toque e Teclado
-        document.addEventListener('keydown', handleInput);
-        document.addEventListener('touchstart', (e) => {
-            // Previne zoom duplo toque e comportamento padrão
-            e.preventDefault(); 
-            if (!isGameOver) performJump();
-        }, { passive: false });
+    function spawnObstacle() {
+        const obs = document.createElement('div');
+        obs.classList.add('rock');
+        if(brightnessVal < 0.6) obs.classList.add('rock-glow');
+        obs.style.right = '-60px';
+        obs.style.bottom = document.getElementById('chao').offsetHeight + 'px';
+        container.appendChild(obs);
+        obstacles.push({ el: obs, x: -60 });
+    }
 
-        // --- LÓGICA DO PULO ---
-        function performJump() {
-            // Se está no chão, Pulo 1
-            if (!isJumping) {
-                isJumping = true;
-                velocityY = JUMP_STRENGTH;
-                jumpsLeft = 1; // Resta 1 pulo
-            } 
-            // Se está no ar e tem pulos restantes, Pulo 2 (Suave)
-            else if (jumpsLeft > 0) {
-                velocityY = DOUBLE_JUMP_STRENGTH; // Usa a força mais fraca
-                jumpsLeft = 0; // Acabaram os pulos
+    function moveObstacles() {
+        for(let i = obstacles.length - 1; i >= 0; i--) {
+            let o = obstacles[i];
+            o.x += speed;
+            o.el.style.right = o.x + 'px';
+
+            let pRect = player.getBoundingClientRect();
+            let oRect = o.el.getBoundingClientRect();
+
+            if (pRect.right > oRect.left + 20 && pRect.left < oRect.right - 20 && pRect.bottom > oRect.top + 20) {
+                o.el.remove();
+                obstacles.splice(i, 1);
+                vidas--;
+                document.getElementById('vidas-box').innerText = "❤".repeat(Math.max(0, vidas));
+                if(vidas <= 0) { gameActive = false; document.getElementById('lose-screen').style.display = 'flex'; }
+                continue;
             }
+            if (o.x > window.innerWidth + 100) { o.el.remove(); obstacles.splice(i, 1); }
         }
+    }
 
-        // --- LOOP DO JOGO (FÍSICA) ---
-        function startGameLoop() {
-            gameLoopId = setInterval(() => {
-                if (isGameOver) return;
+    function finishGame() {
+        gameActive = false;
+        arca.style.right = "10%";
+        setTimeout(() => { document.getElementById('win-screen').style.display = 'flex'; }, 3500);
+    }
 
-                // Aplicar gravidade e velocidade
-                velocityY -= gravity;
-                playerBottom += velocityY;
+    container.addEventListener('touchstart', (e) => {
+        if(e.target.tagName !== 'BUTTON') handleJump();
+    }, {passive: true});
 
-                // Colisão com o chão
-                if (playerBottom <= 60) {
-                    playerBottom = 60;
-                    velocityY = 0;
-                    isJumping = false;
-                    jumpsLeft = 2; // Reseta os pulos ao tocar o chão
-                }
+    jumpBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault(); e.stopPropagation(); handleJump();
+    }, {passive: false});
 
-                // Aplica a posição visualmente
-                player.style.bottom = playerBottom + 'px';
+    window.addEventListener('keydown', (e) => { if(e.code === 'Space') handleJump(); });
+    window.addEventListener('resize', resizeCanvas);
 
-                // Pontuação progressiva
-                score++;
-                scoreElement.innerText = Math.floor(score / 10);
-
-            }, 20); // 50fps aprox
-        }
-
-        // --- GERADOR DE OBSTÁCULOS ---
-        function generateObstacles() {
-            if (isGameOver) return;
-
-            // Criação aleatória (entre 1 e 3 segundos)
-            let randomTime = Math.random() * 2000 + 1000;
-            
-            obstacleTimerId = setTimeout(() => {
-                if (isGameOver) return;
-
-                const obstacle = document.createElement('div');
-                obstacle.classList.add('obstacle');
-                gameContainer.appendChild(obstacle);
-                
-                let obstacleLeft = gameContainer.clientWidth; // Começa na direita total
-                obstacle.style.left = obstacleLeft + 'px';
-
-                // Movimento do Obstáculo
-                let timerId = setInterval(() => {
-                    if (isGameOver) {
-                        clearInterval(timerId);
-                        return;
-                    }
-
-                    // Velocidade do jogo
-                    obstacleLeft -= 5; 
-                    obstacle.style.left = obstacleLeft + 'px';
-
-                    // Detectar Colisão
-                    // O Player está a 50px da esquerda e tem 50px de largura
-                    // Obstáculo tem 40px de largura
-                    if (obstacleLeft > 50 && obstacleLeft < 100 && playerBottom < 100) {
-                        // Colisão Simples (ajuste a altura < 100 conforme tamanho do obstáculo)
-                        gameOver();
-                        clearInterval(timerId);
-                    }
-
-                    // Remover obstáculo se sair da tela
-                    if (obstacleLeft < -60) {
-                        clearInterval(timerId);
-                        gameContainer.removeChild(obstacle);
-                    }
-
-                }, 20);
-
-                // Recursão para o próximo obstáculo
-                generateObstacles();
-
-            }, randomTime);
-        }
-
-        // --- FIM DE JOGO ---
-        function gameOver() {
-            isGameOver = true;
-            clearInterval(gameLoopId);
-            clearTimeout(obstacleTimerId);
-            
-            // Pausa visualmente todos os obstáculos
-            let obstacles = document.querySelectorAll('.obstacle');
-            obstacles.forEach(obs => {
-                // Mantém a posição atual mas para de mover (já feito pelo clearInterval dos timers individuais se fossem globais, mas aqui garantimos parada visual se necessário)
-            });
-
-            finalScoreElement.innerText = Math.floor(score / 10);
-            gameOverScreen.style.display = 'block';
-        }
-
-        function resetGame() {
-            // Limpa obstáculos antigos
-            document.querySelectorAll('.obstacle').forEach(e => e.remove());
-            
-            isGameOver = false;
-            score = 0;
-            scoreElement.innerText = 0;
-            gameOverScreen.style.display = 'none';
-            playerBottom = 60;
-            player.style.bottom = playerBottom + 'px';
-            
-            // Reinicia loops
-            startGameLoop();
-            generateObstacles();
-        }
-
-        // Iniciar
-        startGameLoop();
-        generateObstacles();
-
-    </script>
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; resetRain(); }
+    let gotas = [];
+    function resetRain() {
+        gotas = [];
+        for(let i=0; i<45; i++) gotas.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, v: Math.random()*7+7});
+    }
+    function drawRain() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.strokeStyle = `rgba(255,255,255,${0.1 + (1 - brightnessVal)})`;
+        gotas.forEach(g => {
+            ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.lineTo(g.x, g.y+12); ctx.stroke();
+            g.y += g.v; if(g.y > canvas.height) g.y = -15;
+        });
+    }
+</script>
 </body>
 </html>
