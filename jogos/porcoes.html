@@ -21,6 +21,7 @@
             padding-bottom: env(safe-area-inset-bottom);
         }
         
+        /* MENÚ RESPONSIVO */
         #main-menu {
             width: 100vw; height: 100vh;
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('../fundo.jpg') center/cover;
@@ -39,6 +40,7 @@
         .menu-btn:hover { background: var(--gold); color: black; }
         .btn-survival { border-color: var(--neon-green); }
 
+        /* HUD Y UI */
         #ui-header { position: absolute; top: 15px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 100; pointer-events: none; }
         #hud { width: 90%; display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
         .hud-item {
@@ -51,9 +53,47 @@
         #progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #1e8449, #f1c40f); border-radius: 50px; transition: width 0.5s linear; }
         #walker-container { position: absolute; left: 0%; top: 50%; transform: translate(-50%, -50%); width: 35px; height: 35px; transition: left 0.5s linear; }
 
+        /* --- AVISO DE ORIENTACIÓN --- */
+        #orientation-warning {
+            display: none; 
+            position: absolute;
+            top: 140px; 
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.85);
+            color: #2c1e14;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 400;
+            pointer-events: none;
+            white-space: nowrap;
+            animation: floatWarn 2s ease-in-out infinite;
+        }
+        @keyframes floatWarn { 0%, 100% {transform: translate(-50%, 0);} 50% {transform: translate(-50%, -5px);} }
+        
+        @media (orientation: portrait) {
+            #orientation-warning { display: block; }
+        }
+
+        /* PERSONAJES Y ELEMENTOS */
         #player { width: 110px; height: 110px; position: absolute; left: 12%; z-index: 50; pointer-events: none; }
         #chao { position: absolute; bottom: 0; width: 100%; height: 140px; background: linear-gradient(to bottom, #1e3d1a, #2c1e14); z-index: 10; }
-        #arca-final { position: absolute; bottom: 80px; right: -1000px; width: 500px; z-index: 40; transition: right 4s ease-out; }
+        
+        /* --- ARCA RESPONSIVA --- */
+        #arca-final { 
+            position: absolute; 
+            bottom: 80px; 
+            right: -1000px; 
+            z-index: 40; 
+            transition: right 4s ease-out;
+            width: auto;
+            height: auto;
+            max-width: 45vw;  
+            max-height: 50vh; 
+        }
 
         .rock { position: absolute; width: 55px; height: 55px; background: #333; border-radius: 12px; z-index: 30; }
         .rock-glow { background: var(--gold) !important; box-shadow: 0 0 25px var(--gold); }
@@ -69,6 +109,7 @@
             display: none; touch-action: none;
         }
 
+        /* AJUSTES LANDSCAPE */
         @media (max-height: 500px) {
             #player { width: 80px; height: 80px; }
             #chao { height: 90px; }
@@ -97,6 +138,8 @@
 </div>
 
 <div id="game-container">
+    <div id="orientation-warning">📱 ¡Se juega mejor con la pantalla horizontal!</div>
+
     <button id="pause-btn" onclick="togglePause(event)">||</button>
     <button id="jump-btn">SALTAR</button>
     <canvas id="chuva" style="position: absolute; top:0; left:0; z-index:20; pointer-events:none;"></canvas>
@@ -115,7 +158,9 @@
 
     <div id="story-msg"></div>
     <div id="player"><img src="../animal.gif" style="width:100%;"></div>
+    
     <img src="../arca.png" id="arca-final">
+    
     <div id="chao"></div>
 
     <div id="win-screen" class="overlay">
@@ -142,12 +187,12 @@
     let brightnessVal = 1;
 
     const frases = [
-        { p: 1, t: "¡La aventura comenzó! Lleva a José hasta el Arca." },
-        { p: 15, t: "¡Sin perder tiempo! Cada salto te acerca más." },
-        { p: 35, t: "Sigue firme. El Arca está cada vez más cerca." },
-        { p: 55, t: "Cayó la noche… ¡falta poco para llegar!" },
-        { p: 75, t: "¡Ya se ve el Arca! ¡No te rindas ahora!" },
-        { p: 92, t: "¡ÚLTIMA RAMPA! ¡ENTRA AL ARCA!" }
+        { p: 1, t: "¡La aventura ha comenzado! Lleva a José hasta el Arca." },
+        { p: 15, t: "¡No pierdas tiempo! Cada salto te acerca más." },
+        { p: 35, t: "Sigue adelante. El Arca está cada vez más cerca." },
+        { p: 55, t: "Ha caído la noche... ¡falta muy poco para llegar!" },
+        { p: 75, t: "¡Ya se puede ver el Arca! ¡No te rindas ahora!" },
+        { p: 92, t: "¡ÚLTIMO TRAMO! ¡ENTRA EN EL ARCA!" }
     ];
 
     if ('ontouchstart' in window) jumpBtn.style.display = "block";
@@ -203,7 +248,13 @@
 
     function handleJump() {
         if(!gameActive || isPaused || jumps >= 2) return;
-        velocityY = 16;
+        
+        if (jumps === 0) {
+            velocityY = 14;
+        } else {
+            velocityY = 10;
+        }
+        
         jumps++;
     }
 
