@@ -14,7 +14,7 @@
 
         #game-container {
             width: 100vw; height: 100vh;
-            background: url('fundo.jpg') center/cover no-repeat;
+            background: url('../fundo.jpg') center/cover no-repeat;
             position: relative; overflow: hidden;
             display: none; touch-action: none;
             transition: filter 1.2s linear;
@@ -24,7 +24,7 @@
         /* RESPONSIVE MENU */
         #main-menu {
             width: 100vw; height: 100vh;
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fundo.jpg') center/cover;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('../fundo.jpg') center/cover;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             position: absolute; z-index: 500; text-align: center;
             padding-bottom: 40px;
@@ -127,7 +127,7 @@
 <body>
 
 <div id="main-menu">
-    <img src="animal.gif" id="menu-logo">
+    <img src="../animal.gif" id="menu-logo">
     <h1 style="color: var(--gold); margin-top: 0; margin-bottom: 20px;">JOSEPH'S SAGA</h1>
     <div class="menu-group">
         <button class="menu-btn" onclick="startGame('jornada', 'normal')">NORMAL</button>
@@ -152,14 +152,14 @@
         </div>
         <div id="progress-wrapper">
             <div id="progress-fill"></div>
-            <div id="walker-container"><img src="animal.gif" style="width: 100%;"></div>
+            <div id="walker-container"><img src="../animal.gif" style="width: 100%;"></div>
         </div>
     </div>
 
     <div id="story-msg"></div>
-    <div id="player"><img src="animal.gif" style="width:100%;"></div>
+    <div id="player"><img src="../animal.gif" style="width:100%;"></div>
     
-    <img src="arca.png" id="arca-final">
+    <img src="../arca.png" id="arca-final">
     
     <div id="chao"></div>
 
