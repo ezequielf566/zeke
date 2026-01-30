@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>A SAGA - Galeria Kids</title>
+    <title>Jornada Kids - Galeria</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -12,7 +12,7 @@
             --snow-white: #f8faff;
             --app-green: #2ecc71;
             --text-dark: #2d3436;
-            --shadow: 0 15px 35px rgba(58, 134, 255, 0.2);
+            --shadow: 0 10px 25px rgba(58, 134, 255, 0.15);
             --gradient-bg: radial-gradient(circle at 50% 50%, var(--snow-white) 70%, #d6e9ff 100%);
         }
 
@@ -29,249 +29,145 @@
             font-family: 'Quicksand', sans-serif;
             color: var(--text-dark);
             min-height: 100vh;
-            overflow-x: hidden; /* Evita rolagem lateral */
+            overflow-x: hidden;
         }
 
-        /* --- TELA DE IDIOMAS (INTRO) --- */
+        /* --- TELA DE IDIOMAS --- */
         #language-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
             z-index: 9999;
-            display: flex; /* Flex para centralizar */
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            transition: opacity 0.5s ease, visibility 0.5s;
+            transition: opacity 0.5s ease;
         }
 
-        .lang-container {
-            text-align: center;
-            max-width: 600px;
-            width: 100%;
-            animation: fadeInUp 0.8s ease-out;
-        }
-
-        .lang-title {
-            color: var(--primary-blue);
-            font-size: 2rem;
-            margin-bottom: 40px;
-            text-transform: uppercase;
-            letter-spacing: -1px;
-            filter: drop-shadow(2px 2px 0px rgba(58, 134, 255, 0.1));
-        }
-
-        .lang-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
+        .lang-container { text-align: center; max-width: 600px; width: 100%; animation: fadeInUp 0.8s ease-out; }
+        .lang-title { color: var(--primary-blue); font-size: 1.8rem; margin-bottom: 30px; text-transform: uppercase; }
+        .lang-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .lang-card {
-            background: white;
-            border-radius: 25px;
-            padding: 25px 15px;
-            cursor: pointer;
-            box-shadow: 0 10px 25px rgba(58, 134, 255, 0.15);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 3px solid transparent;
-            text-decoration: none;
-            color: var(--text-dark);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background: white; border-radius: 20px; padding: 20px 10px; cursor: pointer;
+            box-shadow: var(--shadow); transition: 0.3s; border: 3px solid transparent;
+            display: flex; flex-direction: column; align-items: center; text-decoration: none;
         }
+        .lang-card:active { transform: scale(0.95); border-color: var(--primary-blue); }
+        .flag-icon { font-size: 2.5rem; margin-bottom: 8px; }
+        .lang-name { font-weight: 800; font-size: 0.9rem; color: #636e72; }
 
-        .lang-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            border-color: var(--primary-blue);
-            box-shadow: 0 20px 40px rgba(58, 134, 255, 0.25);
-        }
-
-        .flag-icon {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .lang-name {
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: #636e72;
-        }
-
-        /* Animação de entrada */
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Ocultar conteúdo principal inicialmente para não piscar */
+        /* --- CONTEÚDO PRINCIPAL --- */
         #main-app {
             display: none; 
-            width: 100%;
-            display: flex;
             flex-direction: column;
             align-items: center;
-        }
-
-        /* --- ESTILOS ORIGINAIS DO APP --- */
-        header { 
-            padding: 60px 20px 40px; 
-            text-align: center; 
             width: 100%;
         }
 
-        header h1 { 
-            margin: 0; 
-            font-size: 2.8rem; 
-            color: var(--primary-blue);
-            text-transform: uppercase;
-            letter-spacing: -1px;
-            filter: drop-shadow(2px 4px 0px rgba(58, 134, 255, 0.1));
-        }
+        header { padding: 40px 15px 20px; text-align: center; }
+        header h1 { margin: 0; font-size: 2.2rem; color: var(--primary-blue); text-transform: uppercase; letter-spacing: -1px; }
+        header p { color: #74b9ff; margin: 5px 0 0; font-size: 1rem; font-weight: 600; }
 
-        header p { 
-            color: #74b9ff; 
-            margin: 10px 0 0; 
-            font-size: 1.2rem; 
-            font-weight: 500;
-        }
-
+        /* GRID REFORMULADO: 2 POR LINHA NO MOBILE */
         .game-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
             width: 100%;
-            max-width: 450px; 
-            padding: 20px;
-            margin-bottom: 60px;
+            max-width: 1000px;
+            padding: 15px;
+            margin-bottom: 40px;
         }
 
         .card {
             background: #ffffff;
-            border-radius: 35px;
+            border-radius: 20px;
             overflow: hidden;
             text-decoration: none;
             color: inherit;
             display: flex; 
             flex-direction: column;
             position: relative;
-            box-shadow: var(--shadow);
-            border: 2px solid #ffffff;
-            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease;
         }
 
-        .card:hover, .card:active {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(58, 134, 255, 0.25);
-        }
+        .card:active { transform: scale(0.98); }
 
         .cover {
             width: 100%;
-            height: 320px; 
+            height: 160px; /* Altura reduzida para caber 2 por linha */
             background: #f0f7ff;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            padding: 15px;
+            padding: 10px;
             background-image: linear-gradient(135deg, #e0f2fe 0%, #f8faff 100%);
         }
 
         .cover img {
             max-width: 100%;
             max-height: 100%;
-            object-fit: contain; 
-            border-radius: 15px; 
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));
+            object-fit: contain;
+            filter: drop-shadow(0 5px 8px rgba(0,0,0,0.12));
         }
 
         .info { 
-            padding: 25px; 
+            padding: 12px; 
             text-align: center; 
             background: white;
-            z-index: 2;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
-        .info h2 { 
-            margin: 0; 
-            font-size: 1.6rem; 
-            color: var(--primary-blue);
-        }
-
-        .info p {
-            font-size: 1rem;
-            color: #636e72;
-            margin: 10px 0 20px 0;
-            line-height: 1.5;
-        }
+        .info h2 { margin: 0; font-size: 1rem; color: var(--primary-blue); font-weight: 800; line-height: 1.2; }
+        .info p { font-size: 0.75rem; color: #636e72; margin: 5px 0 10px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
         .status-badge {
-            position: absolute; 
-            top: 20px; 
-            left: 20px;
-            padding: 8px 16px; 
-            border-radius: 20px; 
-            font-size: 0.8rem; 
-            font-weight: 700;
-            background: var(--app-green);
-            color: white;
-            z-index: 3;
-            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+            position: absolute; top: 8px; left: 8px;
+            padding: 4px 8px; border-radius: 10px; 
+            font-size: 0.6rem; font-weight: 800;
+            background: var(--app-green); color: white;
+            z-index: 3; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .play-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
             width: 100%;
-            padding: 16px; 
-            border-radius: 20px; 
+            padding: 8px; 
+            border-radius: 12px; 
             background: var(--app-green); 
             color: #ffffff;
-            font-weight: 700; 
-            font-size: 1.1rem;
-            transition: 0.3s;
-            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+            font-weight: 800; font-size: 0.75rem;
             text-transform: uppercase;
         }
 
-        /* Botão discreto para trocar idioma no rodapé */
         .change-lang-btn {
-            background: none;
-            border: 2px solid #b2bec3;
-            color: #b2bec3;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            margin-top: 10px;
-            text-decoration: none;
-            display: inline-block;
+            background: none; border: 1px solid #b2bec3; color: #b2bec3;
+            padding: 8px 15px; border-radius: 20px; font-size: 0.75rem;
+            cursor: pointer; margin-top: 10px; text-decoration: none; display: inline-block;
         }
 
-        footer { 
-            padding: 40px; 
-            color: #b2bec3; 
-            font-size: 0.9rem; 
-            text-align: center;
-            width: 100%;
-        }
+        footer { padding: 30px 20px; color: #b2bec3; font-size: 0.8rem; text-align: center; width: 100%; }
 
+        /* Tablets e Desktops */
         @media (min-width: 768px) {
-            .game-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                max-width: 950px;
-            }
-            .lang-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
+            .game-grid { grid-template-columns: repeat(3, 1fr); gap: 25px; padding: 30px; }
+            .cover { height: 240px; }
+            .info h2 { font-size: 1.4rem; }
+            .info p { font-size: 0.9rem; -webkit-line-clamp: 3; }
+            .play-btn { font-size: 0.9rem; padding: 12px; }
+            .lang-grid { grid-template-columns: repeat(4, 1fr); }
+            header h1 { font-size: 3rem; }
         }
     </style>
 </head>
@@ -279,24 +175,20 @@
 
     <div id="language-overlay">
         <div class="lang-container">
-            <h1 class="lang-title">Escolha seu idioma<br><span style="font-size: 1rem; opacity: 0.7;">Choose your language</span></h1>
-            
+            <h1 class="lang-title">Escolha seu idioma<br><span style="font-size: 0.9rem; opacity: 0.7;">Choose your language</span></h1>
             <div class="lang-grid">
                 <div class="lang-card" onclick="setLanguage('pt-br', 'index.html')">
                     <span class="flag-icon">🇧🇷</span>
                     <span class="lang-name">Brasil</span>
                 </div>
-
                 <div class="lang-card" onclick="setLanguage('pt-pt', 'indexpt.html')">
                     <span class="flag-icon">🇵🇹</span>
                     <span class="lang-name">Portugal</span>
                 </div>
-
                 <div class="lang-card" onclick="setLanguage('es', 'indexes.html')">
                     <span class="flag-icon">🇪🇸</span>
                     <span class="lang-name">Español</span>
                 </div>
-
                 <div class="lang-card" onclick="setLanguage('en', 'indexen.html')">
                     <span class="flag-icon">🇺🇸</span>
                     <span class="lang-name">English</span>
@@ -305,70 +197,83 @@
         </div>
     </div>
 
-    <div id="main-app" style="display: none;"> <header>
+    <div id="main-app">
+        <header>
             <h1>Jornada Kids</h1>
-            <p>Descubra o amor de Deus brincando!</p>
+            <p>Aprenda e brinque com a Bíblia!</p>
         </header>
 
         <div class="game-grid">
             
-            <a href="drac.html" class="card">
-                <span class="status-badge" style="background: #f1c40f;">NOVIDADE</span>
+            <a href="tetris.html" class="card">
+                <span class="status-badge" style="background: #f1c40f; color: #000;">NOVO</span>
                 <div class="cover">
-                    <img src="draccapa.png" alt="A Dracma Perdida" onerror="this.src='https://via.placeholder.com/300x400/e0f2fe/3a86ff?text=A+Dracma+Perdida'">
+                    <img src="tetris.png" alt="Rocha Eterna" onerror="this.src='https://via.placeholder.com/200x200/e0f2fe/3a86ff?text=Rocha+Eterna'">
+                </div>
+                <div class="info">
+                    <h2>Rocha Eterna</h2>
+                    <p>Construa sua casa sobre a rocha neste desafio de blocos sagrados!</p>
+                    <div class="play-btn">JOGAR</div>
+                </div>
+            </a>
+
+            <a href="drac.html" class="card">
+                <span class="status-badge">DISPONÍVEL</span>
+                <div class="cover">
+                    <img src="draccapa.png" alt="A Dracma Perdida" onerror="this.src='https://via.placeholder.com/200x200/e0f2fe/3a86ff?text=Dracma'">
                 </div>
                 <div class="info">
                     <h2>A Dracma Perdida</h2>
-                    <p>Onde está a moedinha? Olhe com atenção e encontre a dracma escondida!</p>
-                    <div class="play-btn">JOGAR AGORA</div>
+                    <p>Encontre a moedinha perdida nesta aventura de observação!</p>
+                    <div class="play-btn">JOGAR</div>
                 </div>
             </a>
 
             <a href="noe.html" class="card">
                 <span class="status-badge">DISPONÍVEL</span>
                 <div class="cover">
-                    <img src="capa.png" alt="José e a Arca">
+                    <img src="capa.png" alt="José e a Arca" onerror="this.src='https://via.placeholder.com/200x200/e0f2fe/3a86ff?text=Arca'">
                 </div>
                 <div class="info">
                     <h2>José e a Arca</h2>
-                    <p>Ajude o porquinho José a chegar em segurança na arca!</p>
-                    <div class="play-btn">JOGAR AGORA</div>
+                    <p>Ajude o porquinho José a chegar em segurança na arca de Noé!</p>
+                    <div class="play-btn">JOGAR</div>
                 </div>
             </a>
 
             <a href="pesca.html" class="card">
                 <span class="status-badge">DISPONÍVEL</span>
                 <div class="cover">
-                    <img src="capa2.png" alt="Maré de Sorte">
+                    <img src="capa2.png" alt="Maré de Sorte" onerror="this.src='https://via.placeholder.com/200x200/e0f2fe/3a86ff?text=Pesca'">
                 </div>
                 <div class="info">
                     <h2>Maré de Sorte</h2>
-                    <p>Navegue com fé e descubra as maravilhas do mar.</p>
-                    <div class="play-btn">JOGAR AGORA</div>
+                    <p>Navegue com fé e faça a pesca maravilhosa no mar!</p>
+                    <div class="play-btn">JOGAR</div>
                 </div>
             </a>
 
             <a href="mana.html" class="card">
                 <span class="status-badge">DISPONÍVEL</span>
                 <div class="cover">
-                    <img src="capa3.png" alt="Chuva de Bênçãos">
+                    <img src="capa3.png" alt="Chuva de Bênçãos" onerror="this.src='https://via.placeholder.com/200x200/e0f2fe/3a86ff?text=Maná'">
                 </div>
                 <div class="info">
                     <h2>Chuva de Bênçãos</h2>
-                    <p>Receba as bênçãos do céu em um desafio cheio de alegria.</p>
-                    <div class="play-btn">JOGAR AGORA</div>
+                    <p>Colete o maná que cai do céu neste desafio de agilidade!</p>
+                    <div class="play-btn">JOGAR</div>
                 </div>
             </a>
 
             <a href="davi.html" class="card">
                 <span class="status-badge">DISPONÍVEL</span>
                 <div class="cover">
-                    <img src="capa4.png" alt="O Grande Templo" onerror="this.src='https://via.placeholder.com/300x400/e0f2fe/3a86ff?text=O+Templo+de+Salomão'">
+                    <img src="capa4.png" alt="O Grande Templo" onerror="this.src='https://via.placeholder.com/200x200/e0f2fe/3a86ff?text=Templo'">
                 </div>
                 <div class="info">
                     <h2>O Grande Templo</h2>
-                    <p>Seja um mestre construtor e ajude a erguer o majestoso templo!</p>
-                    <div class="play-btn">JOGAR AGORA</div>
+                    <p>Ajude a construir o Templo de Salomão pedra por pedra!</p>
+                    <div class="play-btn">JOGAR</div>
                 </div>
             </a>
 
@@ -381,79 +286,56 @@
     </div>
 
     <script>
-        // CONFIGURAÇÃO
         const storageKey = 'jornadaKidsLang';
         const overlay = document.getElementById('language-overlay');
         const mainApp = document.getElementById('main-app');
 
-        // Função principal ao carregar
         function init() {
-            // 1. Verifica se o usuário clicou em "Trocar Idioma" (reset)
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('reset') === 'true') {
                 localStorage.removeItem(storageKey);
-                // Remove o ?reset=true da URL para ficar limpo, sem recarregar
                 window.history.replaceState({}, document.title, window.location.pathname);
                 showMenu();
                 return;
             }
 
-            // 2. Verifica se já existe idioma salvo
             const savedLang = localStorage.getItem(storageKey);
-
             if (savedLang) {
-                // Se já escolheu BRASIL
                 if (savedLang === 'pt-br') {
                     showContent();
-                } 
-                // Se escolheu OUTRO e estamos no index.html, redireciona
-                else {
+                } else {
                     window.location.href = getUrlForLang(savedLang);
                 }
             } else {
-                // 3. Se não tem nada salvo, mostra o menu
                 showMenu();
             }
         }
 
-        // Mapeamento simples para segurança
         function getUrlForLang(lang) {
-            if (lang === 'pt-pt') return 'indexpt.html';
-            if (lang === 'es') return 'indexes.html';
-            if (lang === 'en') return 'indexen.html';
-            return 'index.html';
+            const urls = { 'pt-pt': 'indexpt.html', 'es': 'indexes.html', 'en': 'indexen.html' };
+            return urls[lang] || 'index.html';
         }
 
-        // Função chamada ao clicar num card
         function setLanguage(lang, url) {
-            // Salva a preferência
             localStorage.setItem(storageKey, lang);
-
-            // Animação de saída
-            if (lang === 'pt-br') {
-                showContent();
-            } else {
-                window.location.href = url;
-            }
+            if (lang === 'pt-br') showContent();
+            else window.location.href = url;
         }
 
-        // Mostra o site e esconde o menu
         function showContent() {
             overlay.style.opacity = '0';
             setTimeout(() => {
                 overlay.style.display = 'none';
-                mainApp.style.display = 'flex'; // Exibe o site
+                mainApp.style.display = 'flex';
             }, 500);
         }
 
-        // Garante que o menu está visível e o site oculto
         function showMenu() {
             overlay.style.display = 'flex';
             overlay.style.opacity = '1';
             mainApp.style.display = 'none';
         }
 
-        // Inicia
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
