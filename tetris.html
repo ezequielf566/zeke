@@ -26,14 +26,20 @@
       height: 100vh;
       overflow: hidden;
       overscroll-behavior: none;
+      
+      /* BLOQUEIO DE SELEÇÃO GLOBAL */
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none; /* Desativa menu de contexto no iOS */
     }
 
-    /* HEADER - AJUSTADO PARA A BARRA DE NOTIFICAÇÕES */
+    /* HEADER */
     .game-header {
       display: flex;
       justify-content: space-around;
       align-items: center;
-      /* env(safe-area-inset-top) empurra o conteúdo para baixo da barra de status se necessário */
       padding: calc(8px + env(safe-area-inset-top)) 8px 8px 8px;
       background: var(--header-blue);
       color: white;
@@ -132,12 +138,11 @@
       object-fit: contain;
     }
 
-    /* CONTROLES - AJUSTADOS PARA OS BOTÕES DO SISTEMA */
+    /* CONTROLES - AJUSTADOS PARA BLOQUEAR MENUS DO CELULAR */
     .controls {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 12px;
-      /* env(safe-area-inset-bottom) sobe os botões caso existam botões virtuais na tela */
       padding: 15px 20px calc(15px + env(safe-area-inset-bottom)) 20px;
       background: white;
       border-radius: 25px 25px 0 0;
@@ -151,13 +156,17 @@
       height: 60px;
       border-radius: 15px;
       font-size: 1.8rem;
-      touch-action: manipulation;
+      touch-action: none; /* Impede gestos do navegador como zoom/scroll no botão */
       display: flex;
       align-items: center;
       justify-content: center;
       box-shadow: 0 4px 0 rgba(0,0,0,0.2);
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+      
+      /* Garantia extra de não seleção */
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .btn-ctrl:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
@@ -180,9 +189,7 @@
     .pulse-text { animation: pulse 1.5s infinite; }
   </style>
 </head>
-<body>
-
-  <header class="game-header">
+<body oncontextmenu="return false;"> <header class="game-header">
     <div class="stat-item">
       <span class="stat-label">Pontos</span>
       <span id="score" class="stat-value">0</span>
@@ -237,9 +244,15 @@
   </div>
 
   <div class="controls">
-    <button class="btn-ctrl btn-left" onpointerdown="startMove(-1)" onpointerup="stopMove()" onpointerleave="stopMove()">◀</button>
-    <button class="btn-ctrl btn-down" onpointerdown="startDrop()" onpointerup="stopDrop()" onpointerleave="stopDrop()">▼</button>
-    <button class="btn-ctrl btn-right" onpointerdown="startMove(1)" onpointerup="stopMove()" onpointerleave="stopMove()">▶</button>
+    <button class="btn-ctrl btn-left" 
+            onpointerdown="startMove(-1)" onpointerup="stopMove()" onpointerleave="stopMove()" 
+            oncontextmenu="return false;">◀</button>
+    <button class="btn-ctrl btn-down" 
+            onpointerdown="startDrop()" onpointerup="stopDrop()" onpointerleave="stopDrop()" 
+            oncontextmenu="return false;">▼</button>
+    <button class="btn-ctrl btn-right" 
+            onpointerdown="startMove(1)" onpointerup="stopMove()" onpointerleave="stopMove()" 
+            oncontextmenu="return false;">▶</button>
   </div>
 
 <script>
