@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>A SAGA - Galeria Kids</title>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-blue: #3a86ff;
@@ -13,7 +13,6 @@
             --app-green: #2ecc71;
             --text-dark: #2d3436;
             --shadow: 0 15px 35px rgba(58, 134, 255, 0.2);
-            --gradient-bg: radial-gradient(circle at 50% 50%, var(--snow-white) 70%, #d6e9ff 100%);
         }
 
         * { 
@@ -25,103 +24,46 @@
             margin: 0; 
             padding: 0;
             background-color: var(--snow-white);
-            background-image: var(--gradient-bg);
+            background-image: radial-gradient(circle at 50% 50%, var(--snow-white) 70%, #d6e9ff 100%);
             font-family: 'Quicksand', sans-serif;
             color: var(--text-dark);
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
-        /* --- TELA DE IDIOMAS (INTRO) --- */
-        #language-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
+        /* Back to Menu Navigation */
+        .back-nav {
             width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            max-width: 950px;
             padding: 20px;
-            transition: opacity 0.5s ease, visibility 0.5s;
+            display: flex;
+            justify-content: flex-start;
         }
 
-        .lang-container {
-            text-align: center;
-            max-width: 600px;
-            width: 100%;
-            animation: fadeInUp 0.8s ease-out;
-        }
-
-        .lang-title {
-            color: var(--primary-blue);
-            font-size: 2rem;
-            margin-bottom: 40px;
-            text-transform: uppercase;
-            letter-spacing: -1px;
-            filter: drop-shadow(2px 2px 0px rgba(58, 134, 255, 0.1));
-        }
-
-        .lang-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
-        .lang-card {
-            background: white;
-            border-radius: 25px;
-            padding: 25px 15px;
-            cursor: pointer;
-            box-shadow: 0 10px 25px rgba(58, 134, 255, 0.15);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 3px solid transparent;
+        .btn-back {
             text-decoration: none;
-            color: var(--text-dark);
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             display: flex;
-            flex-direction: column;
             align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: 0.3s;
         }
 
-        .lang-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            border-color: var(--primary-blue);
-            box-shadow: 0 20px 40px rgba(58, 134, 255, 0.25);
+        .btn-back:hover {
+            transform: scale(1.05);
         }
 
-        .flag-icon {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .lang-name {
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: #636e72;
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        #main-app {
-            display: none; 
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* --- ESTILOS ORIGINAIS DO APP --- */
         header { 
-            padding: 60px 20px 40px; 
+            padding: 20px 20px 40px; 
             text-align: center; 
-            width: 100%;
         }
 
         header h1 { 
@@ -229,7 +171,7 @@
             justify-content: center;
             width: 100%;
             padding: 16px; 
-            border-radius: 20px; 
+            border-radius: 20px;
             background: var(--app-green); 
             color: #ffffff;
             font-weight: 700; 
@@ -239,25 +181,11 @@
             text-transform: uppercase;
         }
 
-        .change-lang-btn {
-            background: none;
-            border: 2px solid #b2bec3;
-            color: #b2bec3;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            margin-top: 10px;
-            text-decoration: none;
-            display: inline-block;
-        }
-
         footer { 
             padding: 40px; 
             color: #b2bec3; 
             font-size: 0.9rem; 
             text-align: center;
-            width: 100%;
         }
 
         @media (min-width: 768px) {
@@ -266,188 +194,99 @@
                 grid-template-columns: repeat(2, 1fr);
                 max-width: 950px;
             }
-            .lang-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
         }
     </style>
 </head>
 <body>
 
-    <div id="language-overlay">
-        <div class="lang-container">
-            <h1 class="lang-title">Escolha seu idioma<br><span style="font-size: 1rem; opacity: 0.7;">Choose your language</span></h1>
-            
-            <div class="lang-grid">
-                <div class="lang-card" onclick="setLanguage('pt-br', 'index.html')">
-                    <span class="flag-icon">🇧🇷</span>
-                    <span class="lang-name">Brasil</span>
-                </div>
+    <nav class="back-nav">
+        <a href="index.html?reset=true" class="btn-back"><span>🏠</span> Menu Principal</a>
+    </nav>
 
-                <div class="lang-card" onclick="setLanguage('pt-pt', 'indexpt.html')">
-                    <span class="flag-icon">🇵🇹</span>
-                    <span class="lang-name">Portugal</span>
-                </div>
+    <header>
+        <h1>Jornada Kids</h1>
+        <p>Descobre o amor de Deus a brincar!</p>
+    </header>
 
-                <div class="lang-card" onclick="setLanguage('es', 'indexes.html')">
-                    <span class="flag-icon">🇪🇸</span>
-                    <span class="lang-name">Español</span>
-                </div>
+    <div class="game-grid">
 
-                <div class="lang-card" onclick="setLanguage('en', 'indexen.html')">
-                    <span class="flag-icon">🇺🇸</span>
-                    <span class="lang-name">English</span>
-                </div>
+        <a href="tetris.html" class="card">
+            <span class="status-badge" style="background: #f1c40f;">NOVO</span>
+            <div class="cover">
+                <img src="tetris.png" alt="Blocos da Fé" onerror="this.src='https://via.placeholder.com/300x400/e0f2fe/3a86ff?text=Blocos+da+Fé'">
             </div>
-        </div>
+            <div class="info">
+                <h2>Blocos da Fé</h2>
+                <p>Encaixa as peças com sabedoria e constrói um caminho de luz!</p>
+                <div class="play-btn">JOGAR AGORA</div>
+            </div>
+        </a>
+        
+        <a href="drac.html" class="card">
+            <span class="status-badge" style="background: #f1c40f;">NOVO</span>
+            <div class="cover">
+                <img src="draccapa.png" alt="A Moeda Perdida" onerror="this.src='https://via.placeholder.com/300x400/e0f2fe/3a86ff?text=A+Moeda+Perdida'">
+            </div>
+            <div class="info">
+                <h2>A Moeda Perdida</h2>
+                <p>Onde está a moedinha? Procura com atenção e encontra a dracma escondida!</p>
+                <div class="play-btn">JOGAR AGORA</div>
+            </div>
+        </a>
+
+        <a href="noe.html" class="card">
+            <span class="status-badge">DISPONÍVEL</span>
+            <div class="cover">
+                <img src="capa.png" alt="José e a Arca">
+            </div>
+            <div class="info">
+                <h2>José e a Arca</h2>
+                <p>Ajuda o porquinho José a chegar à arca em segurança!</p>
+                <div class="play-btn">JOGAR AGORA</div>
+            </div>
+        </a>
+
+        <a href="pesca.html" class="card">
+            <span class="status-badge">DISPONÍVEL</span>
+            <div class="cover">
+                <img src="capa2.png" alt="Maré de Sorte">
+            </div>
+            <div class="info">
+                <h2>Maré de Sorte</h2>
+                <p>Navega com fé e descobre as maravilhas do mar.</p>
+                <div class="play-btn">JOGAR AGORA</div>
+            </div>
+        </a>
+
+        <a href="mana.html" class="card">
+            <span class="status-badge">DISPONÍVEL</span>
+            <div class="cover">
+                <img src="capa3.png" alt="Chuva de Bênçãos">
+            </div>
+            <div class="info">
+                <h2>Chuva de Bênçãos</h2>
+                <p>Recebe bênçãos do céu num desafio cheio de alegria.</p>
+                <div class="play-btn">JOGAR AGORA</div>
+            </div>
+        </a>
+
+        <a href="davi.html" class="card">
+            <span class="status-badge">DISPONÍVEL</span>
+            <div class="cover">
+                <img src="capa4.png" alt="O Grande Templo" onerror="this.src='https://via.placeholder.com/300x400/e0f2fe/3a86ff?text=Templo+de+Salomão'">
+            </div>
+            <div class="info">
+                <h2>O Grande Templo</h2>
+                <p>Sê um mestre construtor e ajuda a erguer o majestoso templo!</p>
+                <div class="play-btn">JOGAR AGORA</div>
+            </div>
+        </a>
+
     </div>
 
-    <div id="main-app"> 
-        <header>
-            <h1>Jornada Kids</h1>
-            <p>Descubra o amor de Deus brincando!</p>
-        </header>
+    <footer>
+        &copy; 2026 A Saga Games<br>A semear amor e diversão
+    </footer>
 
-        <div class="game-grid">
-            
-            <a href="tetris.html" class="card">
-                <span class="status-badge" style="background: #f1c40f;">NOVIDADE</span>
-                <div class="cover">
-                    <img src="tetris.png" alt="Blocos da Fé" onerror="this.src='https://via.placeholder.com/300x400/e0f2fe/3a86ff?text=Blocos+da+Fé'">
-                </div>
-                <div class="info">
-                    <h2>Blocos da Fé</h2>
-                    <p>Encaixe as peças com sabedoria e construa um caminho de luz!</p>
-                    <div class="play-btn">JOGAR AGORA</div>
-                </div>
-            </a>
-
-            <a href="drac.html" class="card">
-                <span class="status-badge" style="background: #f1c40f;">NOVIDADE</span>
-                <div class="cover">
-                    <img src="draccapa.png" alt="A Dracma Perdida" onerror="this.src='https://via.placeholder.com/300x400/e0f2fe/3a86ff?text=A+Dracma+Perdida'">
-                </div>
-                <div class="info">
-                    <h2>A Dracma Perdida</h2>
-                    <p>Onde está a moedinha? Olhe com atenção e encontre a dracma escondida!</p>
-                    <div class="play-btn">JOGAR AGORA</div>
-                </div>
-            </a>
-
-            <a href="noe.html" class="card">
-                <span class="status-badge">DISPONÍVEL</span>
-                <div class="cover">
-                    <img src="capa.png" alt="José e a Arca">
-                </div>
-                <div class="info">
-                    <h2>José e a Arca</h2>
-                    <p>Ajude o porquinho José a chegar em segurança na arca!</p>
-                    <div class="play-btn">JOGAR AGORA</div>
-                </div>
-            </a>
-
-            <a href="pesca.html" class="card">
-                <span class="status-badge">DISPONÍVEL</span>
-                <div class="cover">
-                    <img src="capa2.png" alt="Maré de Sorte">
-                </div>
-                <div class="info">
-                    <h2>Maré de Sorte</h2>
-                    <p>Navegue com fé e descubra as maravilhas do mar.</p>
-                    <div class="play-btn">JOGAR AGORA</div>
-                </div>
-            </a>
-
-            <a href="mana.html" class="card">
-                <span class="status-badge">DISPONÍVEL</span>
-                <div class="cover">
-                    <img src="capa3.png" alt="Chuva de Bênçãos">
-                </div>
-                <div class="info">
-                    <h2>Chuva de Bênçãos</h2>
-                    <p>Receba as bênçãos do céu em um desafio cheio de alegria.</p>
-                    <div class="play-btn">JOGAR AGORA</div>
-                </div>
-            </a>
-
-            <a href="davi.html" class="card">
-                <span class="status-badge">DISPONÍVEL</span>
-                <div class="cover">
-                    <img src="capa4.png" alt="O Grande Templo" onerror="this.src='https://via.placeholder.com/300x400/e0f2fe/3a86ff?text=O+Templo+de+Salomão'">
-                </div>
-                <div class="info">
-                    <h2>O Grande Templo</h2>
-                    <p>Seja um mestre construtor e ajude a erguer o majestoso templo!</p>
-                    <div class="play-btn">JOGAR AGORA</div>
-                </div>
-            </a>
-
-        </div>
-
-        <footer>
-            &copy; 2026 A Saga Games<br>Semeando amor e diversão<br><br>
-            <a href="index.html?reset=true" class="change-lang-btn">Trocar Idioma / Change Language</a>
-        </footer>
-    </div>
-
-    <script>
-        const storageKey = 'jornadaKidsLang';
-        const overlay = document.getElementById('language-overlay');
-        const mainApp = document.getElementById('main-app');
-
-        function init() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('reset') === 'true') {
-                localStorage.removeItem(storageKey);
-                window.history.replaceState({}, document.title, window.location.pathname);
-                showMenu();
-                return;
-            }
-
-            const savedLang = localStorage.getItem(storageKey);
-
-            if (savedLang) {
-                if (savedLang === 'pt-br') {
-                    showContent();
-                } else {
-                    window.location.href = getUrlForLang(savedLang);
-                }
-            } else {
-                showMenu();
-            }
-        }
-
-        function getUrlForLang(lang) {
-            if (lang === 'pt-pt') return 'indexpt.html';
-            if (lang === 'es') return 'indexes.html';
-            if (lang === 'en') return 'indexen.html';
-            return 'index.html';
-        }
-
-        function setLanguage(lang, url) {
-            localStorage.setItem(storageKey, lang);
-            if (lang === 'pt-br') {
-                showContent();
-            } else {
-                window.location.href = url;
-            }
-        }
-
-        function showContent() {
-            overlay.style.opacity = '0';
-            setTimeout(() => {
-                overlay.style.display = 'none';
-                mainApp.style.display = 'flex';
-            }, 500);
-        }
-
-        function showMenu() {
-            overlay.style.display = 'flex';
-            overlay.style.opacity = '1';
-            mainApp.style.display = 'none';
-        }
-
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
 </body>
 </html>
