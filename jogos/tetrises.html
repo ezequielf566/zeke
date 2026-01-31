@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Roca Eterna Kids</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #f59e0b;
+      --header-blue: #2563eb;
+      --text-dark: #1e293b;
+      --soft-bg: #f1f5f9;
+      --success: #22c55e;
+    }
+
+    body {
+      background: var(--soft-bg);
+      background-image: radial-gradient(circle at center, #ffffff 0%, #e2e8f0 100%);
+      color: var(--text-dark);
+      font-family: 'Montserrat', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      overscroll-behavior: none;
+      
+      /* BLOQUEO DE SELECCIÓN GLOBAL */
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    /* HEADER */
+    .game-header {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: calc(8px + env(safe-area-inset-top)) 8px 8px 8px;
+      background: var(--header-blue);
+      color: white;
+      z-index: 10;
+      border-bottom: 4px solid var(--gold);
+    }
+
+    .stat-item { text-align: center; min-width: 60px; }
+    .stat-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; display: block; color: rgba(255,255,255,0.8); }
+    .stat-value { font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80px; }
+
+    /* PANTALLAS DE OVERLAY */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.98);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .hidden { display: none !important; }
+
+    .menu-card {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      width: 80%;
+      max-width: 300px;
+    }
+
+    .verse-box {
+      font-size: 0.85rem;
+      background: #fef3c7;
+      padding: 12px;
+      border-radius: 12px;
+      margin: 15px 0;
+      border: 2px dashed var(--gold);
+      color: #92400e;
+    }
+
+    /* ESTILO TUTORIAL */
+    .tutorial-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin: 20px 0;
+      text-align: left;
+    }
+    .tuto-item { font-size: 0.8rem; display: flex; align-items: center; gap: 8px; }
+    .tuto-icon { background: #e2e8f0; padding: 5px; border-radius: 8px; font-weight: bold; min-width: 30px; text-align: center; }
+
+    /* BOTONES */
+    .btn-main {
+      background: var(--header-blue);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-family: 'Cinzel';
+      border-radius: 50px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 10px;
+      transition: transform 0.1s;
+    }
+
+    .btn-main:active { transform: scale(0.95); }
+    .btn-alt { background: var(--gold); }
+
+    /* ÁREA DEL JUEGO */
+    .game-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 5px;
+      overflow: hidden;
+    }
+
+    canvas {
+      background: #ffffff;
+      border: 4px solid var(--header-blue);
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      height: 100%;
+      max-width: 95vw;
+      object-fit: contain;
+    }
+
+    /* CONTROLES */
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      padding: 15px 20px calc(15px + env(safe-area-inset-bottom)) 20px;
+      background: white;
+      border-radius: 25px 25px 0 0;
+      box-shadow: 0 -5px 20px rgba(0,0,0,0.08);
+      z-index: 10;
+    }
+
+    .btn-ctrl {
+      border: none;
+      color: white;
+      height: 60px;
+      border-radius: 15px;
+      font-size: 1.8rem;
+      touch-action: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .btn-ctrl:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+    .btn-left { background: #ef4444; }
+    .btn-down { background: #eab308; }
+    .btn-right { background: #22c55e; }
+
+    .rank-list { width: 100%; margin: 15px 0; max-height: 200px; overflow-y: auto; }
+    .rank-item {
+        display: flex; justify-content: space-between;
+        padding: 8px 12px; background: #f1f5f9;
+        margin-bottom: 4px; border-radius: 8px; font-weight: bold; font-size: 0.9rem;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+      100% { opacity: 0.6; transform: scale(1); }
+    }
+    .pulse-text { animation: pulse 1.5s infinite; }
+  </style>
+</head>
+<body oncontextmenu="return false;"> 
+  <header class="game-header">
+    <div class="stat-item">
+      <span class="stat-label">Puntos</span>
+      <span id="score" class="stat-value">0</span>
+    </div>
+    <div style="text-align: center; flex: 1;">
+        <h1 style="font-family: 'Cinzel'; font-size: 0.8rem; margin: 0;">ROCA ETERNA</h1>
+        <span id="verse-ref" style="font-size: 0.55rem; font-weight: bold; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 8px;">Mateo 7:24</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Nivel</span>
+      <span id="level" class="stat-value">1</span>
+    </div>
+  </header>
+
+  <div class="game-container">
+    <canvas id="game" width="320" height="640" onclick="doRotate()"></canvas>
+    
+    <div id="menu-start" class="overlay">
+      <div class="menu-card">
+        <h2 style="font-family: 'Cinzel'; color: var(--header-blue); margin-top:0;">BIENVENIDO</h2>
+        <p style="font-size: 0.8rem;">¡Edifica tu construcción sobre la Roca!</p>
+        <button class="btn-main" onclick="showTutorial()">JUGAR</button>
+        <button class="btn-main btn-alt" onclick="toggleRank(true)">RANKING</button>
+      </div>
+    </div>
+
+    <div id="menu-tutorial" class="overlay hidden" onclick="startGame()">
+        <div class="menu-card">
+            <h2 style="font-family: 'Cinzel'; color: var(--header-blue);">CÓMO JUGAR</h2>
+            <div class="tutorial-grid">
+                <div class="tuto-item"><span class="tuto-icon">◀ ▶</span> Mover</div>
+                <div class="tuto-item"><span class="tuto-icon">▼</span> Bajar</div>
+                <div class="tuto-item" style="grid-column: span 2;"><span class="tuto-icon">TOCA EL MAPA</span> Gira la pieza</div>
+            </div>
+            <p class="pulse-text" style="font-size: 0.75rem; color: var(--gold); font-weight: bold;">TOCA LA PANTALLA PARA EMPEZAR</p>
+        </div>
+    </div>
+
+    <div id="menu-rank" class="overlay hidden">
+        <h2 style="font-family: 'Cinzel'; color: var(--gold);">TOP 10 OBREROS</h2>
+        <div id="ranking-list" class="rank-list"></div>
+        <button class="btn-main" onclick="toggleRank(false)">VOLVER</button>
+    </div>
+
+    <div id="overlay-gameover" class="overlay hidden">
+      <h2 style="font-family: 'Cinzel'; color: #ef4444;">FIN DEL JUEGO</h2>
+      <p id="final-verse" class="verse-box"></p>
+      <div id="final-rank-display" class="rank-list"></div>
+      <button class="btn-main" onclick="showTutorial()">JUGAR DE NUEVO</button>
+      <button class="btn-main btn-alt" onclick="showMenu()">MENÚ</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn-ctrl btn-left" 
+            onpointerdown="startMove(-1)" onpointerup="stopMove()" onpointerleave="stopMove()" 
+            oncontextmenu="return false;">◀</button>
+    <button class="btn-ctrl btn-down" 
+            onpointerdown="startDrop()" onpointerup="stopDrop()" onpointerleave="stopDrop()" 
+            oncontextmenu="return false;">▼</button>
+    <button class="btn-ctrl btn-right" 
+            onpointerdown="startMove(1)" onpointerup="stopMove()" onpointerleave="stopMove()" 
+            oncontextmenu="return false;">▶</button>
+  </div>
+
+<script>
+const canvas = document.getElementById('game');
+const context = canvas.getContext('2d');
+const grid = 32;
+
+const verses = [
+  {t: "Cualquiera, pues, que me oye estas palabras, y las hace, le compararé a un hombre prudente, que edificó su casa sobre la roca.", r: "Mateo 7:24"},
+  {t: "Si Jehová no edificare la casa, en vano trabajan los que la edifican.", r: "Salmos 127:1"},
+  {t: "La piedra que desecharon los edificadores ha venido a ser cabeza del ángulo.", r: "Salmos 118:22"},
+  {t: "Así que, amados hermanos míos, estad firmes y constantes, creciendo en la obra del Señor siempre.", r: "1 Cor 15:58"},
+  {t: "Jehová es mi roca y mi fortaleza, y mi libertador.", r: "Salmos 18:2"}
+];
+
+const colors = { 'I': '#38bdf8', 'J': '#818cf8', 'L': '#fb923c', 'O': '#facc15', 'S': '#4ade80', 'Z': '#f87171', 'T': '#c084fc' };
+const shapes = {
+  'I': [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+  'J': [[1,0,0],[1,1,1],[0,0,0]],
+  'L': [[0,0,1],[1,1,1],[0,0,0]],
+  'O': [[1,1],[1,1]],
+  'S': [[0,1,1],[1,1,0],[0,0,0]],
+  'Z': [[1,1,0],[0,1,1],[0,0,0]],
+  'T': [[0,1,0],[1,1,1],[0,0,0]]
+};
+
+let playfield, score, level, isGameOver, activeTetromino, lastTime, dropCounter;
+let moveInterval, dropFastInterval;
+
+function initVariables() {
+    playfield = Array.from({length: 20}, () => new Array(10).fill(0));
+    score = 0; level = 1; isGameOver = false; dropCounter = 0; lastTime = 0;
+    updateScoreUI();
+    document.getElementById('level').innerText = '1';
+}
+
+function updateScoreUI() {
+    const scoreElement = document.getElementById('score');
+    if (score > 999999) {
+        scoreElement.innerText = "999k+";
+    } else {
+        scoreElement.innerText = score.toString();
+    }
+}
+
+function getDropInterval() {
+    return Math.max(100, 800 - (level - 1) * 70);
+}
+
+function generateSequence() {
+  const pieces = ['I', 'J', 'L', 'O', 'S', 'T', 'Z'];
+  const seq = [];
+  while (pieces.length) {
+    const rand = Math.floor(Math.random() * pieces.length);
+    seq.push(pieces.splice(rand, 1)[0]);
+  }
+  return seq;
+}
+
+let sequence = [];
+function getNextTetromino() {
+  if (sequence.length === 0) sequence = generateSequence();
+  const name = sequence.pop();
+  return { name, matrix: shapes[name], row: name === 'I' ? -1 : -2, col: 4 };
+}
+
+function startMove(dir) {
+    if(isGameOver) return;
+    move(dir);
+    clearInterval(moveInterval);
+    moveInterval = setInterval(() => move(dir), 100);
+}
+function stopMove() { clearInterval(moveInterval); }
+
+function startDrop() {
+    if(isGameOver) return;
+    drop();
+    clearInterval(dropFastInterval);
+    dropFastInterval = setInterval(() => drop(), 50);
+}
+function stopDrop() { clearInterval(dropFastInterval); }
+
+function move(dir) {
+    if (isValidMove(activeTetromino.matrix, activeTetromino.row, activeTetromino.col + dir)) {
+        activeTetromino.col += dir;
+    }
+}
+
+function doRotate() {
+    if (isGameOver) return;
+    const matrix = activeTetromino.matrix[0].map((_, i) => activeTetromino.matrix.map(c => c[i]).reverse());
+    if (isValidMove(matrix, activeTetromino.row, activeTetromino.col)) {
+        activeTetromino.matrix = matrix;
+    }
+}
+
+function drop() {
+    if (isGameOver) return;
+    if (isValidMove(activeTetromino.matrix, activeTetromino.row + 1, activeTetromino.col)) {
+        activeTetromino.row++;
+        dropCounter = 0;
+    } else {
+        placeTetromino();
+    }
+}
+
+function isValidMove(matrix, cellRow, cellCol) {
+  for (let r = 0; r < matrix.length; r++) {
+    for (let c = 0; c < matrix[r].length; c++) {
+      if (matrix[r][c] && (cellCol + c < 0 || cellCol + c >= 10 || cellRow + r >= 20 || (cellRow + r >= 0 && playfield[cellRow + r][cellCol + c]))) return false;
+    }
+  }
+  return true;
+}
+
+function getGhostRow() {
+    let ghostRow = activeTetromino.row;
+    while (isValidMove(activeTetromino.matrix, ghostRow + 1, activeTetromino.col)) { ghostRow++; }
+    return ghostRow;
+}
+
+function placeTetromino() {
+  activeTetromino.matrix.forEach((row, r) => {
+    row.forEach((value, c) => {
+      if (value) {
+        if (activeTetromino.row + r < 0) return endGame();
+        playfield[activeTetromino.row + r][activeTetromino.col + c] = activeTetromino.name;
+      }
+    });
+  });
+
+  let lines = 0;
+  for (let r = playfield.length - 1; r >= 0; ) {
+    if (playfield[r].every(cell => !!cell)) {
+      lines++;
+      playfield.splice(r, 1);
+      playfield.unshift(new Array(10).fill(0));
+    } else r--;
+  }
+
+  if (lines > 0) {
+    score += lines * 100;
+    level = Math.floor(score / 500) + 1;
+    updateScoreUI();
+    document.getElementById('level').innerText = level.toString();
+    document.getElementById('verse-ref').innerText = verses[Math.floor(Math.random()*verses.length)].r;
+  }
+  activeTetromino = getNextTetromino();
+}
+
+function saveScore(s) {
+    let scores = JSON.parse(localStorage.getItem('rocha_ranks_v2') || '[]');
+    scores.push(s);
+    scores.sort((a,b) => b-a);
+    localStorage.setItem('rocha_ranks_v2', JSON.stringify(scores.slice(0, 10)));
+}
+
+function renderRanking(elementId) {
+    const scores = JSON.parse(localStorage.getItem('rocha_ranks_v2') || '[]');
+    const container = document.getElementById(elementId);
+    if(scores.length === 0) {
+        container.innerHTML = "<p>¡Aún no hay récords!</p>";
+        return;
+    }
+    container.innerHTML = scores.map((s, i) => 
+        `<div class="rank-item">
+            <span>${i+1}º Lugar</span> <span>${s > 999999 ? '999k+' : s} pts</span>
+        </div>`
+    ).join('');
+}
+
+function showMenu() {
+    document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
+    document.getElementById('menu-start').classList.remove('hidden');
+    isGameOver = true;
+}
+
+function showTutorial() {
+    document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
+    document.getElementById('menu-tutorial').classList.remove('hidden');
+}
+
+function toggleRank(show) {
+    if(show) {
+        renderRanking('ranking-list');
+        document.getElementById('menu-rank').classList.remove('hidden');
+    } else {
+        document.getElementById('menu-rank').classList.add('hidden');
+    }
+}
+
+function startGame() {
+    initVariables();
+    document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
+    activeTetromino = getNextTetromino();
+    requestAnimationFrame(loop);
+}
+
+function endGame() {
+  isGameOver = true;
+  saveScore(score);
+  renderRanking('final-rank-display');
+  document.getElementById('final-verse').innerText = verses[Math.floor(Math.random()*verses.length)].t;
+  document.getElementById('overlay-gameover').classList.remove('hidden');
+}
+
+function loop(time = 0) {
+  if (isGameOver) return;
+  const deltaTime = time - lastTime;
+  lastTime = time;
+  dropCounter += deltaTime;
+  if (dropCounter > getDropInterval()) drop();
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  
+  context.strokeStyle = 'rgba(37, 99, 235, 0.05)';
+  for(let i=0; i<=10; i++) { context.beginPath(); context.moveTo(i*grid,0); context.lineTo(i*grid,canvas.height); context.stroke(); }
+  for(let i=0; i<=20; i++) { context.beginPath(); context.moveTo(0,i*grid); context.lineTo(canvas.width,i*grid); context.stroke(); }
+
+  playfield.forEach((row, r) => row.forEach((cell, c) => {
+    if (cell) drawBlock(c, r, colors[cell]);
+  }));
+
+  if (activeTetromino) {
+    const ghostRow = getGhostRow();
+    activeTetromino.matrix.forEach((row, r) => row.forEach((val, c) => {
+      if (val) {
+          drawBlock(activeTetromino.col + c, ghostRow + r, colors[activeTetromino.name], true);
+          drawBlock(activeTetromino.col + c, activeTetromino.row + r, colors[activeTetromino.name]);
+      }
+    }));
+  }
+  requestAnimationFrame(loop);
+}
+
+function drawBlock(x, y, color, isGhost = false) {
+  const px = x * grid + 1;
+  const py = y * grid + 1;
+  const sz = grid - 2;
+  context.save();
+  if (isGhost) context.globalAlpha = 0.15;
+  context.fillStyle = color;
+  context.beginPath();
+  context.roundRect(px, py, sz, sz, 6);
+  context.fill();
+  if(!isGhost) {
+      context.fillStyle = 'rgba(255,255,255,0.2)';
+      context.fillRect(px + 4, py + 4, sz - 15, 4);
+  }
+  context.restore();
+}
+
+document.addEventListener('keydown', e => {
+    if(isGameOver) return;
+    if(e.repeat) return;
+    if(e.key === "ArrowLeft") startMove(-1);
+    if(e.key === "ArrowRight") startMove(1);
+    if(e.key === "ArrowDown") startDrop();
+    if(e.key === "ArrowUp") doRotate();
+});
+document.addEventListener('keyup', e => {
+    if(e.key === "ArrowLeft" || e.key === "ArrowRight") stopMove();
+    if(e.key === "ArrowDown") stopDrop();
+});
+
+// Inicio
+isGameOver = true;
+showMenu();
+</script>
+</body>
+</html>
